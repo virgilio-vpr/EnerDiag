@@ -359,3 +359,74 @@ endpoints:
     controller: null
     method: null
     route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/simulations/{simulationId}/pdf'
+    metadata:
+      custom: []
+      groupName: Simulações
+      groupDescription: 'Envio e processamento de faturas de energia'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Baixar relatório em PDF'
+      description: 'Retorna o relatório concluído em PDF para o cliente proprietário.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      simulationId:
+        custom: []
+        name: simulationId
+        description: 'Identificador da simulação.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      simulationId: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: PDF
+        headers: []
+        description: 'Relatório PDF'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado."}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado."}'
+        headers: []
+        description: 'Simulação não encontrada para este cliente'
+      -
+        custom: []
+        status: 409
+        content: '{"message":"O relatório ainda não está disponível."}'
+        headers: []
+        description: 'Simulação ainda não concluída'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreSimulationRequest;
 use App\Invoices\Exceptions\UnsupportedDistributorException;
 use App\Models\Simulation;
+use App\Reports\PdfReportGenerator;
 use App\Services\SubmitSimulation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -122,6 +123,30 @@ class SimulationController extends Controller
             'r_values',
             'k_values',
         ])]);
+    }
+
+    #[Authenticated]
+    #[Endpoint('Baixar relatório em PDF', 'Retorna o relatório concluído em PDF para o cliente proprietário.')]
+    #[UrlParam('simulationId', 'integer', 'Identificador da simulação.', example: 1)]
+    #[Response(status: 200, content: 'PDF', description: 'Relatório PDF')]
+    #[Response(status: 401, content: '{"message":"Não autenticado."}', description: 'Token ausente ou inválido')]
+    #[Response(status: 404, content: '{"message":"Recurso não encontrado."}', description: 'Simulação não encontrada para este cliente')]
+    #[Response(status: 409, content: '{"message":"O relatório ainda não está disponível."}', description: 'Simulação ainda não concluída')]
+    public function pdf(Request $request, int $simulationId, PdfReportGenerator $generator): \Symfony\Component\HttpFoundation\Response
+    {
+        $simulation = $request->user()->simulations()->with('report')->findOrFail($simulationId);
+        if ($simulation->status !== 'completed' || $simulation->report === null) {
+            return response()->json([
+                'message' => 'O relatório ainda não está disponível.',
+                'code' => 'REPORT_NOT_READY',
+                'errors' => null,
+            ], 409);
+        }
+
+        return response($generator->generate($simulation->report), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="relatorio-enerdiag-'.$simulation->id.'.pdf"',
+        ]);
     }
 
     /**

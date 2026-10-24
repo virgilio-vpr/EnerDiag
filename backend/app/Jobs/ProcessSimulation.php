@@ -7,11 +7,13 @@ use App\Invoices\Pdf\TemporaryPdfTextExtractor;
 use App\Invoices\Readers\InvoiceReaderResolver;
 use App\Invoices\Validation\InvoiceExtractionValidator;
 use App\Invoices\Validation\InvoiceProcessingFailureRecorder;
+use App\Mail\SimulationCompleted;
 use App\Models\Simulation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -152,6 +154,11 @@ class ProcessSimulation implements ShouldQueue
                 'total_yearly_savings' => $attributes['total_yearly_savings'] ?? '0.00',
             ])->save();
         });
+
+        $completed = Simulation::query()->with(['user', 'report'])->findOrFail($simulation->id);
+        if ($completed->user !== null && $completed->report !== null) {
+            Mail::to($completed->user->email)->send(new SimulationCompleted($completed->report));
+        }
 
         $disk->deleteDirectory($directory);
     }

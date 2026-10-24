@@ -12,6 +12,7 @@ use App\Invoices\Readers\InvoiceReaderResolver;
 use App\Invoices\Validation\InvoiceExtractionValidator;
 use App\Invoices\Validation\InvoiceProcessingFailureRecorder;
 use App\Jobs\ProcessSimulation;
+use App\Mail\SimulationCompleted;
 use App\Models\CustomerProfile;
 use App\Models\Distributor;
 use App\Models\Invoice;
@@ -21,6 +22,7 @@ use App\Models\Simulation;
 use App\Models\User;
 use Database\Seeders\RegulatoryParameterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
@@ -38,6 +40,7 @@ class ProcessSimulationTest extends TestCase
 
     public function test_job_persists_invoices_creates_report_and_is_idempotent(): void
     {
+        Mail::fake();
         [$simulation] = $this->simulationWithFiles();
         $fixture = file_get_contents(base_path('tests/Fixtures/enel-reference-blue.txt'));
         $this->app->instance(InvoiceReaderResolver::class, new InvoiceReaderResolver([new EnelInvoiceReader]));
@@ -67,6 +70,7 @@ class ProcessSimulationTest extends TestCase
         $this->assertContains('demand_invoice_reconciliation_mismatch', $report->warnings);
         $this->assertSame('0.820000', $report->r_values[0]['ratio']);
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
+        Mail::assertSent(SimulationCompleted::class, fn (SimulationCompleted $mail): bool => $mail->report->simulation_id === $simulation->id);
     }
 
     public function test_final_read_failure_records_file_error_and_removes_temporary_pdf(): void

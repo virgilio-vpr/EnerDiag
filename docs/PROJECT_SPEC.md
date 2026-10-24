@@ -156,7 +156,7 @@ Ref: RN-3, RN-4, RC, DB, API (Cliente)
   - Teste: job com fixtures completa; falha de leitura após enfileirar vira `failed` com erro associado ao arquivo; cliente consulta o erro em `/status`; retry é idempotente e não duplica dados; temporários apagados em sucesso, falha e timeout.
 - [x] 5.3 `GET /simulations`, `GET /simulations/{id}/status` e `GET /simulations/{id}/report`.
   - Teste: cada cliente vê só as próprias simulações; transições `queued` → `processing` → `completed` ou `failed`; status de falha inclui código e erros por arquivo; relatório com indicadores, séries e avisos.
-- [ ] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (biblioteca de PDF a avaliar).
+- [x] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (geração de PDF autocontida, sem nova dependência).
   - Teste: PDF gerado não vazio e com os indicadores; e-mail enviado ao concluir (fake mail).
 - [ ] 5.5 Expurgo: comando diário agendado remove simulação e todos os dados relacionados (faturas, itens, relatórios e revisões) após 180 dias.
   - Teste: simulação com 181 dias e seus dados relacionados removidos; com 179 dias mantida; conta e `contact_requested_at` preservados.

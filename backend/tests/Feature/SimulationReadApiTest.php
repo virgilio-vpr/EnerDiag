@@ -122,6 +122,39 @@ class SimulationReadApiTest extends TestCase
         $this->getJson('/api/v1/simulations')->assertUnauthorized();
         $this->getJson('/api/v1/simulations/'.$simulation->id.'/status')->assertUnauthorized();
         $this->getJson('/api/v1/simulations/'.$simulation->id.'/report')->assertUnauthorized();
+        $this->getJson('/api/v1/simulations/'.$simulation->id.'/pdf')->assertUnauthorized();
+    }
+
+    public function test_customer_can_download_non_empty_pdf_with_report_indicators_only_after_completion(): void
+    {
+        $customer = User::factory()->create();
+        $otherCustomer = User::factory()->create();
+        $simulation = $this->simulation($customer, 'completed');
+        Report::query()->create([
+            'simulation_id' => $simulation->id,
+            'total_monthly_savings' => '54.42',
+            'total_yearly_savings' => '653.04',
+            'savings_percentage' => '12.50',
+            'reactive_savings_monthly' => '54.42',
+            'reactive_savings_yearly' => '653.04',
+            'warnings' => ['demand optimization pending'],
+        ]);
+        $token = $customer->createToken('simulation-pdf')->plainTextToken;
+
+        $response = $this->withToken($token)->get('/api/v1/simulations/'.$simulation->id.'/pdf')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename="relatorio-enerdiag-'.$simulation->id.'.pdf"');
+        $this->assertStringStartsWith('%PDF-1.4', $response->getContent());
+        $this->assertStringContainsString('54.42', $response->getContent());
+        $this->assertStringContainsString('653.04', $response->getContent());
+
+        $this->withToken($token)->get('/api/v1/simulations/'.$this->simulation($customer, 'queued')->id.'/pdf')
+            ->assertStatus(409);
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($otherCustomer->createToken('simulation-pdf')->plainTextToken)
+            ->get('/api/v1/simulations/'.$simulation->id.'/pdf')->assertNotFound();
     }
 
     /** @param list<array{file: string, code: string, errors: array<string, string>}>|null $errors */
