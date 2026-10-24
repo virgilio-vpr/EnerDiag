@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Calculation\Data\ExtractedInvoiceItemData;
 use App\Invoices\Readers\EnelInvoiceReader;
+use App\Invoices\Validation\InvoiceExtractionValidator;
 use Tests\TestCase;
 
 class EnelInvoiceReaderTest extends TestCase
@@ -45,6 +46,7 @@ class EnelInvoiceReaderTest extends TestCase
         $this->assertSame('energy_tusd', $this->item($invoice->items, 'active_consumption', 'peak')->tariffComponent);
         $this->assertSame('reactive_demand_excess', $this->item($invoice->items, 'reactive_demand_excess', 'off_peak')->itemType);
         $this->assertSame('reactive_energy_excess', $this->item($invoice->items, 'reactive_energy_excess', 'late_night_weekend')->itemType);
+        $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
     }
 
     public function test_it_returns_no_idle_demand_items_when_the_invoice_has_no_idle_demand_line(): void
