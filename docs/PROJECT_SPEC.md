@@ -98,7 +98,7 @@ Ref: RN-1, RN-2, RN-3, API (Auth, Me)
   - Teste: fluxo completo; token reutilizado; token expirado; e-mail inexistente com a mesma resposta.
 - [x] 2.5 Autorização por perfil (admin e cliente) com policies.
   - Teste: cliente em rota admin → 403; cliente acessando recurso de outro cliente → 403 ou 404.
-- [ ] 2.6 `GET/PUT /me` e `DELETE /me` (exclusão de dados a pedido do titular).
+- [x] 2.6 `GET/PUT /me` e `DELETE /me` (exclusão de dados a pedido do titular).
   - Teste: perfil atualizado; exclusão remove conta e dados relacionados; sem token → 401.
 - [ ] 2.7 `POST /me/contact-request`: registra `contact_requested_at` (necessário para D11).
   - Teste: grava a data; sobrevive ao expurgo de simulações (ver 5.5).

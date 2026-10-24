@@ -1,0 +1,252 @@
+name: 'Minha conta'
+description: 'Consulta, atualização e exclusão da conta autenticada'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/me
+    metadata:
+      custom: []
+      groupName: 'Minha conta'
+      groupDescription: 'Consulta, atualização e exclusão da conta autenticada'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consultar minha conta'
+      description: 'Retorna os dados públicos da conta autenticada e seu perfil de cliente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","phone":"11999999999","role":"customer","email_verified_at":"2026-10-24T12:00:00Z","contact_requested_at":null,"profile":{"company_name":"Empresa Exemplo Ltda.","cnpj":null,"distributor_id":1,"transformer_power_kva":500,"address_details":null,"substation_same_address":true,"substation_address":null}}}'
+        headers: []
+        description: 'Conta autenticada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: api/v1/me
+    metadata:
+      custom: []
+      groupName: 'Minha conta'
+      groupDescription: 'Consulta, atualização e exclusão da conta autenticada'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar minha conta'
+      description: 'Atualiza nome, telefone e dados de perfil permitidos da conta autenticada.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Nome do responsável.'
+        required: true
+        example: 'Ana Souza'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Telefone de contato.'
+        required: true
+        example: '11999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      company_name:
+        custom: []
+        name: company_name
+        description: 'Nome da empresa.'
+        required: true
+        example: 'Empresa Exemplo Ltda.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cnpj:
+        custom: []
+        name: cnpj
+        description: 'Must not be greater than 18 characters.'
+        required: false
+        example: zmiyvdljnikhwayk
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      distributor_id:
+        custom: []
+        name: distributor_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      transformer_power_kva:
+        custom: []
+        name: transformer_power_kva
+        description: 'Must be at least 0. Must not be greater than 99999999.99.'
+        required: false
+        example: 22
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      address_details:
+        custom: []
+        name: address_details
+        description: 'Must not be greater than 5000 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      substation_same_address:
+        custom: []
+        name: substation_same_address
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      substation_address:
+        custom: []
+        name: substation_address
+        description: 'This field is required when <code>substation_same_address</code> is <code>false</code>. Must not be greater than 5000 characters.'
+        required: false
+        example: z
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: 'Ana Souza'
+      phone: '11999999999'
+      company_name: 'Empresa Exemplo Ltda.'
+      cnpj: zmiyvdljnikhwayk
+      distributor_id: 16
+      transformer_power_kva: 22
+      address_details: g
+      substation_same_address: true
+      substation_address: z
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","phone":"11999999999","role":"customer","profile":{"company_name":"Empresa Exemplo Ltda."}}}'
+        headers: []
+        description: 'Conta atualizada'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: api/v1/me
+    metadata:
+      custom: []
+      groupName: 'Minha conta'
+      groupDescription: 'Consulta, atualização e exclusão da conta autenticada'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir minha conta'
+      description: 'Exclui a conta autenticada e os dados relacionados conforme a solicitação do titular.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 204
+        content: null
+        headers: []
+        description: 'Conta e dados relacionados excluídos'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

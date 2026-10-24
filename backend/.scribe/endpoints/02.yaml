@@ -117,7 +117,7 @@ endpoints:
         name: substation_same_address
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -176,7 +176,7 @@ endpoints:
       distributor_id: 16
       transformer_power_kva: 22
       address_details: g
-      substation_same_address: true
+      substation_same_address: false
       substation_address: z
       terms_accepted: true
       password: EnergiaSegura2026

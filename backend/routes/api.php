@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\ExampleController;
+use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\StatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,12 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [MeController::class, 'show']);
+    Route::put('/me', [MeController::class, 'update']);
+    Route::delete('/me', [MeController::class, 'destroy']);
+});
 
 Route::get('/user', CurrentUserController::class)->middleware('auth:sanctum');
 
