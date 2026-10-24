@@ -20,6 +20,7 @@ class ReportRevision extends Model
         'user_id',
         'explanatory_texts',
         'recommendations',
+        'calculation_snapshot',
         'reason',
     ];
 
@@ -49,6 +50,7 @@ class ReportRevision extends Model
         return [
             'explanatory_texts' => 'array',
             'recommendations' => 'array',
+            'calculation_snapshot' => 'array',
         ];
     }
 }

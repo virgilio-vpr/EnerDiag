@@ -128,7 +128,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: mês coerente com a fatura não gera aviso; mês divergente gera aviso e o custo atual daquele mês usa o valor faturado.
 - [x] 3.11 Indicadores e séries dos gráficos (RC-6).
   - Teste: valores esperados de economia mensal, anual e %; rótulo do percentual; divisão por zero protegida; séries por mês corretas.
-- [ ] 3.12 Serviço de recálculo a partir dos dados extraídos: gera nova versão do relatório (`algorithm_version`, tarifas vigentes no momento) sem reler PDFs.
+- [x] 3.12 Serviço de recálculo a partir dos dados extraídos: gera nova versão do relatório (`algorithm_version`, tarifas vigentes no momento) sem reler PDFs.
   - Teste: recalcular após atualização de tarifa muda o resultado; a versão anterior e o histórico de revisões permanecem.
 - [ ] 3.13 Benchmark com as planilhas `Analise_Faturas_Energia_Preenchida_*` (quando anexadas).
   - Teste: o resultado do motor iguala a planilha, com tolerância de centavos. Depende de §9.
