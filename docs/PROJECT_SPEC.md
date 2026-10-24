@@ -154,7 +154,7 @@ Ref: RN-3, RN-4, RC, DB, API (Cliente)
   - Teste: sucesso; validações; distribuidora sem leitor → 422 com código `DISTRIBUTOR_UNSUPPORTED` e lead registrado; sem token → 401.
 - [x] 5.2 Job de processamento: extrai, valida, grava `invoices` e `invoice_items`, calcula (com a reconciliação de RC-1b), gera `reports` e atualiza o status (`processing`, `completed` ou `failed`); descarta temporários. Partes dependentes das regras ainda abertas no §9 ficam indisponíveis com aviso.
   - Teste: job com fixtures completa; falha de leitura após enfileirar vira `failed` com erro associado ao arquivo; cliente consulta o erro em `/status`; retry é idempotente e não duplica dados; temporários apagados em sucesso, falha e timeout.
-- [ ] 5.3 `GET /simulations`, `GET /simulations/{id}/status` e `GET /simulations/{id}/report`.
+- [x] 5.3 `GET /simulations`, `GET /simulations/{id}/status` e `GET /simulations/{id}/report`.
   - Teste: cada cliente vê só as próprias simulações; transições `queued` → `processing` → `completed` ou `failed`; status de falha inclui código e erros por arquivo; relatório com indicadores, séries e avisos.
 - [ ] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (biblioteca de PDF a avaliar).
   - Teste: PDF gerado não vazio e com os indicadores; e-mail enviado ao concluir (fake mail).

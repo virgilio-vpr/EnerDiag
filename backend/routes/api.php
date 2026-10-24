@@ -20,8 +20,10 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])-
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/simulations', [SimulationController::class, 'index']);
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
     Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status']);
+    Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report']);
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);
