@@ -1,0 +1,50 @@
+name: Autenticação
+description: 'Endpoints que exigem uma sessão de acesso autenticada'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/user
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Endpoints que exigem uma sessão de acesso autenticada'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consultar usuário autenticado'
+      description: 'Retorna os dados públicos do usuário do token de acesso.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","phone":"11999999999","role":"customer"}'
+        headers: []
+        description: 'Usuário autenticado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

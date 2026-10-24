@@ -23,7 +23,7 @@ O "como testar" de cada tarefa está na linha `Teste:` do spec. Regras gerais:
 ## Comandos (confirmar na tarefa 0.7)
 - No Codespace atual, o PHP 8.5 está em `$HOME/.config/herd-lite/bin`; se `php -v` mostrar PHP 8.4, execute `export PATH="$HOME/.config/herd-lite/bin:$PATH"` e confira `php -v` antes dos comandos PHP/Composer.
 - Banco (na raiz): `docker compose up -d`; verificar: `docker compose ps` e `docker compose exec -T postgres pg_isready -U enerdiag -d enerdiag`
-- API: `cd backend && php artisan serve --host=0.0.0.0`
+- API (em `backend/`): `php artisan scribe:generate` gera a documentação em `/docs`; `php artisan serve --host=0.0.0.0` inicia a API.
 - Testes da API (em `backend/`): `php artisan test` (um teste: `--filter=Nome`); formatar: `./vendor/bin/pint`
 - Reset destrutivo do banco (em `backend/`; apaga todas as tabelas e dados): `php artisan migrate:fresh --seed`. Só executar com autorização explícita e após confirmar que não há dados a preservar.
 - Front: `cd frontend && npm run dev -- --host 0.0.0.0`

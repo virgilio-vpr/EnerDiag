@@ -1,0 +1,58 @@
+name: Exemplos
+description: 'Endpoints de exemplo para validação da documentação'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/example/validate
+    metadata:
+      custom: []
+      groupName: Exemplos
+      groupDescription: 'Endpoints de exemplo para validação da documentação'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Validação de Exemplo'
+      description: 'Endpoint de demonstração de contratos de sucesso e erro da API.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Endereço de e-mail corporativo válido.'
+        required: true
+        example: contato@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: contato@empresa.com.br
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status":"ok","message":"Dados validados com sucesso.","data":{"email":"contato@empresa.com.br"}}'
+        headers: []
+        description: 'Requisição processada com sucesso'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"O campo e-mail é obrigatório.","code":"VALIDATION_ERROR","errors":{"email":["O campo e-mail é obrigatório."]}}'
+        headers: []
+        description: 'Falha de validação dos campos'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

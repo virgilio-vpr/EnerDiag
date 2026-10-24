@@ -66,10 +66,11 @@ cd backend
 composer install
 php artisan key:generate
 php artisan migrate
+php artisan scribe:generate
 php artisan serve --host=0.0.0.0
 ```
 
-A API ficará disponível na porta 8000.
+A API ficará disponível na porta 8000, com a documentação em `/docs` e o OpenAPI em `/docs.openapi`.
 
 ## Instalar e iniciar o frontend
 

@@ -24,6 +24,10 @@
 /storage/*.key
 /storage/pail
 **/vendor/
+backend/.scribe/.filehashes
+backend/.scribe/endpoints.cache/
+backend/resources/views/scribe/
+backend/public/vendor/scribe/
 *.tmp
 *.temp
 _ide_helper.php
