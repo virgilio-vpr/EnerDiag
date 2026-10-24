@@ -124,7 +124,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: um cenário em que a Verde vence, um em que a Azul vence e um sem ganho; tarifas da outra modalidade vindas da tabela ANEEL e convertidas por `k` (TUSD de demanda e TUSD de consumo ponta obrigatoriamente da tabela ANEEL; proibido reaproveitar a TUSD de consumo ponta da fatura Azul na Verde); `r` aplicada à tarifa de demanda da outra modalidade; sem tarifas necessárias da outra modalidade retorna “indisponível” com aviso.
 - [x] 3.9 Valoração e projeção anual (RC-5).
   - Teste: 12 meses; 6 meses (média × 12 com aviso); tarifa vencida usa o histórico com aviso.
-- [ ] 3.10 Reconciliação com a fatura (RC-1b).
+- [x] 3.10 Reconciliação com a fatura (RC-1b).
   - Teste: mês coerente com a fatura não gera aviso; mês divergente gera aviso e o custo atual daquele mês usa o valor faturado.
 - [ ] 3.11 Indicadores e séries dos gráficos (RC-6).
   - Teste: valores esperados de economia mensal, anual e %; rótulo do percentual; divisão por zero protegida; séries por mês corretas.
@@ -318,7 +318,7 @@ Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120
 - O mesmo `r` é aplicado à tarifa de demanda da outra modalidade (RC-4).
 - Os valores de `r` por período e a fonte usada (tributação, preço unitário ou reserva) ficam registrados no relatório.
 
-**RC-1b Reconciliação com a fatura.** Para cada mês, recalcular a cobrança de demanda (RC-1) com as quantidades e tarifas lidas e comparar com os valores faturados nas linhas de demanda (normal, ociosa e ultrapassagem). Divergência acima da tolerância (parâmetro em centavos, padrão a definir na tarefa 3.10 com faturas reais) gera aviso no relatório, e o “custo atual” daquele mês passa a ser o valor faturado.
+**RC-1b Reconciliação com a fatura.** Para cada mês, recalcular a cobrança de demanda (RC-1) com as quantidades e tarifas lidas e comparar com os valores faturados nas linhas de demanda (normal, ociosa e ultrapassagem). Divergência acima da tolerância de **R$ 0,02** gera aviso no relatório, e o “custo atual” daquele mês passa a ser o valor faturado. Diferenças iguais ou inferiores à tolerância são consideradas coerentes.
 
 **RC-1c Calibração tributária (`k`).** A fatura ENEL traz, por item, o preço unitário com tributos e a tarifa unitária sem tributos (coluna “Tarifa unit”). Para cada mês e item: `k` = preço unitário com tributos ÷ tarifa unitária sem tributos; equivale a 1 ÷ (1 − alíquota de ICMS − PIS/COFINS%), com PIS/COFINS% = PIS/COFINS ÷ valor do item (fixture ENEL: 1 ÷ (1 − 18% − 4,49%) ≈ 1,2902). O `k` do mês é o mesmo em todos os itens com ICMS normal (demanda, TUSD e TE); essa igualdade, dentro do arredondamento de 5 casas, é uma verificação automática, e divergência acima da tolerância (parâmetro, padrão a definir com faturas reais) gera aviso.
 - Para a versão 1, o `k` mensal é a média aritmética dos fatores calculáveis por item, arredondada half-up a 6 casas. A tolerância absoluta de divergência entre os fatores é `0,00003`; acima dela, o relatório inclui aviso. Esse limite cobre o intervalo máximo observado nos cinco fatores da fatura de referência (aprox. `0,000028`).
@@ -402,7 +402,7 @@ Itens regulatórios conferidos em `docs/REN 1000.pdf` e dados da fatura ENEL con
 - [x] Fator de calibração tributária `k` comprovado: `k = Preço com tributos ÷ Tarifa unit ≈ 1,29021` em todos os itens tributados da fatura de referência, equivalendo a `1 ÷ (1 − 18% − 4,4935%)`.
 - [ ] Confirmar o formato do conjunto de dados abertos da ANEEL (nome, colunas, vigência) e o mapeamento de subgrupo, modalidade e posto para os do sistema; confirmar que a “Tarifa unit” da fatura ENEL (sem tributos) coincide com a tarifa de aplicação da ANEEL; confirmar que a TE é igual nas duas modalidades nas tabelas da ENEL SP; outros layouts de fatura podem não trazer a tarifa sem tributos nem o ICMS por item.
 - [x] Tolerância de divergência entre os fatores `k` (RC-1c): `0,00003`; média mensal dos fatores válidos por item, half-up em 6 casas.
-- [ ] Tolerância da reconciliação (RC-1b), em centavos, definida com faturas reais.
+- [x] Tolerância da reconciliação (RC-1b): R$ 0,02, definida para a versão 1.
 - [ ] Faixa padrão da demanda ótima, limites e prazos para alterar a demanda contratada, demanda mínima contratável.
 - [ ] Restrições regulatórias para troca de modalidade (RC-4) e validação da obrigatoriedade da TUSD Consumo Ponta da Verde.
 - [ ] Benchmark: casos das planilhas como testes do motor (tarefa 3.13).
