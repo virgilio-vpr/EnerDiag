@@ -136,7 +136,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
 ### Fase 4 — Leitura das faturas (leitor ENEL)
 Ref: RN-3, RN-4, RN-5, RN-6
 
-- [ ] 4.1 Interface `InvoiceReader` por distribuidora, escolhida por `parser_key`; cada leitor declara se reconhece a linha de demanda ociosa.
+- [x] 4.1 Interface `InvoiceReader` por distribuidora, escolhida por `parser_key`; cada leitor declara se reconhece a linha de demanda ociosa.
   - Teste: a ENEL resolve o leitor correto e declara que reconhece a linha; distribuidora sem leitor lança exceção específica.
 - [ ] 4.2 Extração de texto do PDF (biblioteca a avaliar: smalot/pdfparser ou pdftotext) em arquivo temporário em disco privado (fora de `public`), apagado ao final inclusive em erro; rotina diária apaga temporários órfãos com mais de 1 hora (prazo maior que o tempo máximo de espera na fila).
   - Teste: PDF de exemplo gera texto; após sucesso, falha e limpeza de órfão, nenhum arquivo temporário permanece.
