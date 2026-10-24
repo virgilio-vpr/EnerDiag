@@ -203,6 +203,128 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - POST
+    uri: api/v1/auth/verify-email
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Confirmar e-mail'
+      description: 'Confirma o endereço de e-mail usando o código numérico enviado.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'E-mail da conta.'
+        required: true
+        example: ana@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      code:
+        custom: []
+        name: code
+        description: 'Código numérico de seis dígitos.'
+        required: true
+        example: '482913'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: ana@empresa.com.br
+      code: '482913'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"E-mail confirmado."}'
+        headers: []
+        description: 'E-mail confirmado'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"code":["Código inválido, expirado ou com limite de tentativas excedido."]}}'
+        headers: []
+        description: 'Código inválido, expirado ou bloqueado'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/resend-code
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Reenviar código de confirmação'
+      description: 'Envia um novo código se o e-mail pertencer a uma conta ainda não confirmada.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'E-mail informado no cadastro.'
+        required: true
+        example: ana@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: ana@empresa.com.br
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Se a conta existir e ainda não estiver confirmada, enviaremos um novo código."}'
+        headers: []
+        description: 'Solicitação processada'
+      -
+        custom: []
+        status: 429
+        content: '{"message":"Muitas requisições. Tente novamente mais tarde.","code":"TOO_MANY_REQUESTS","errors":null}'
+        headers: []
+        description: 'Limite de reenvios atingido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - GET
     uri: api/v1/user
     metadata:

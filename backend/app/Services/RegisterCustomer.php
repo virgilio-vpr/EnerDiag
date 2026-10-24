@@ -2,13 +2,11 @@
 
 namespace App\Services;
 
-use App\Mail\EmailVerificationCode;
 use App\Models\Consent;
 use App\Models\CustomerProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 
 class RegisterCustomer
 {
@@ -19,9 +17,11 @@ class RegisterCustomer
      */
     public function handle(array $validated, ?string $ipAddress): User
     {
-        $verificationCode = (string) random_int(100000, 999999);
+        $verificationCode = '';
 
-        $user = DB::transaction(function () use ($validated, $ipAddress, $verificationCode): User {
+        $verification = app(EmailVerificationService::class);
+
+        $user = DB::transaction(function () use ($validated, $ipAddress, $verification, &$verificationCode): User {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -49,16 +49,12 @@ class RegisterCustomer
                 'ip_address' => $ipAddress,
             ]);
 
-            $user->verificationCodes()->create([
-                'code_hash' => Hash::make($verificationCode),
-                'expires_at' => now()->addMinutes(15),
-                'attempts' => 0,
-            ]);
+            $verificationCode = $verification->storeCode($user);
 
             return $user;
         });
 
-        Mail::to($user->email)->send(new EmailVerificationCode($verificationCode));
+        $verification->sendCode($user, $verificationCode);
 
         return $user;
     }

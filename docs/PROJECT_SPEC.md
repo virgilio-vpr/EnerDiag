@@ -90,7 +90,7 @@ Ref: RN-1, RN-2, RN-3, API (Auth, Me)
 
 - [x] 2.1 `POST /auth/register`: valida dados e senha (≥ 10, letras e números, confirmação, bloqueio de senhas comuns ou vazadas), grava consentimento (`consents`: versão, IP, data), cria o cliente com e-mail não verificado e envia código numérico.
   - Teste: sucesso; senha fraca; e-mail duplicado; sem aceite dos termos; e-mail com o código enviado (fake mail).
-- [ ] 2.2 `POST /auth/verify-email` e `POST /auth/resend-code`: código com hash, expiração e limite de tentativas.
+- [x] 2.2 `POST /auth/verify-email` e `POST /auth/resend-code`: código com hash, expiração e limite de tentativas.
   - Teste: código correto, errado, expirado, limite de tentativas excedido; reenvio com throttle.
 - [ ] 2.3 `POST /auth/login` e `/auth/logout` com Sanctum: token de 2 h fixas, login bloqueado sem e-mail verificado, logout revoga o token.
   - Teste: login ok; credenciais inválidas (401, sem revelar se o usuário existe); e-mail não verificado (403); token expira após 2 h (simular o tempo); token revogado no logout.

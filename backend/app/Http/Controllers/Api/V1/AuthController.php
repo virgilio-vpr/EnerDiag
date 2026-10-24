@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\RegisterRequest;
+use App\Http\Requests\Api\V1\ResendVerificationCodeRequest;
+use App\Http\Requests\Api\V1\VerifyEmailRequest;
+use App\Services\EmailVerificationService;
 use App\Services\RegisterCustomer;
 use Illuminate\Http\JsonResponse;
 use Knuckles\Scribe\Attributes\BodyParam;
@@ -47,5 +50,40 @@ class AuthController extends Controller
                 'role' => $user->role,
             ],
         ], 201);
+    }
+
+    /**
+     * Verify the email address using the current numeric code.
+     */
+    #[Endpoint('Confirmar e-mail', 'Confirma o endereço de e-mail usando o código numérico enviado.')]
+    #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
+    #[BodyParam('code', 'string', 'Código numérico de seis dígitos.', required: true, example: '482913')]
+    #[Response(status: 200, content: '{"message":"E-mail confirmado."}', description: 'E-mail confirmado')]
+    #[Response(
+        status: 422,
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"code":["Código inválido, expirado ou com limite de tentativas excedido."]}}',
+        description: 'Código inválido, expirado ou bloqueado'
+    )]
+    public function verifyEmail(VerifyEmailRequest $request, EmailVerificationService $verification): JsonResponse
+    {
+        $verification->verify($request->string('email')->toString(), $request->string('code')->toString());
+
+        return response()->json(['message' => 'E-mail confirmado.']);
+    }
+
+    /**
+     * Resend a verification code without exposing whether an account exists.
+     */
+    #[Endpoint('Reenviar código de confirmação', 'Envia um novo código se o e-mail pertencer a uma conta ainda não confirmada.')]
+    #[BodyParam('email', 'string', 'E-mail informado no cadastro.', required: true, example: 'ana@empresa.com.br')]
+    #[Response(status: 200, content: '{"message":"Se a conta existir e ainda não estiver confirmada, enviaremos um novo código."}', description: 'Solicitação processada')]
+    #[Response(status: 429, content: '{"message":"Muitas requisições. Tente novamente mais tarde.","code":"TOO_MANY_REQUESTS","errors":null}', description: 'Limite de reenvios atingido')]
+    public function resendCode(ResendVerificationCodeRequest $request, EmailVerificationService $verification): JsonResponse
+    {
+        $verification->resend($request->string('email')->toString());
+
+        return response()->json([
+            'message' => 'Se a conta existir e ainda não estiver confirmada, enviaremos um novo código.',
+        ]);
     }
 }
