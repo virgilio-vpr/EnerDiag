@@ -158,7 +158,7 @@ Ref: RN-3, RN-4, RC, DB, API (Cliente)
   - Teste: cada cliente vê só as próprias simulações; transições `queued` → `processing` → `completed` ou `failed`; status de falha inclui código e erros por arquivo; relatório com indicadores, séries e avisos.
 - [x] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (geração de PDF autocontida, sem nova dependência).
   - Teste: PDF gerado não vazio e com os indicadores; e-mail enviado ao concluir (fake mail).
-- [ ] 5.5 Expurgo: comando diário agendado remove simulação e todos os dados relacionados (faturas, itens, relatórios e revisões) após 180 dias.
+- [x] 5.5 Expurgo: comando diário agendado remove simulação e todos os dados relacionados (faturas, itens, relatórios e revisões) após 180 dias.
   - Teste: simulação com 181 dias e seus dados relacionados removidos; com 179 dias mantida; conta e `contact_requested_at` preservados.
 - [ ] 5.6 `POST /leads` (interesse em distribuidora não atendida).
   - Teste: grava o lead; validação de e-mail; limite de requisições.

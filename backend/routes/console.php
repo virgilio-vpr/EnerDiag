@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\PurgeExpiredSimulations;
 use App\Invoices\Pdf\OrphanedInvoicePdfCleaner;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -14,3 +15,4 @@ Artisan::command('invoices:clean-temporary-files', function (OrphanedInvoicePdfC
 })->purpose('Remove temporary invoice files older than one hour');
 
 Schedule::command('invoices:clean-temporary-files')->daily();
+Schedule::command(PurgeExpiredSimulations::class)->daily();
