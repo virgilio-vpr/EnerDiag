@@ -74,7 +74,7 @@ Ref: §1
 ### Fase 1 — Banco de dados, seeds e base da API
 Ref: DB, RN-7, API (padrões)
 
-- [ ] 1.1 Migrations na ordem das chaves estrangeiras (pais antes das filhas), incluindo as tabelas padrão do Laravel.
+- [x] 1.1 Migrations na ordem das chaves estrangeiras (pais antes das filhas), incluindo as tabelas padrão do Laravel.
   - Teste: `migrate:fresh` sem erro; `migrate:rollback` e `migrate` de novo sem erro.
 - [ ] 1.2 Models com relacionamentos, `$fillable` explícito e casts decimais nos valores monetários.
   - Teste: testes unitários dos relacionamentos e do cast decimal (sem ponto flutuante).
