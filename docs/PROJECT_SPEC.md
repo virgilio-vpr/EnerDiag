@@ -188,7 +188,7 @@ Ref: FE, RN-7
 
 - [x] 7.1 Estrutura de pastas (`features`, `components`, `pages`, `services/api`, `hooks`, `routes`, `types`) e configuração do Tailwind.
   - Teste: `npm run build` e `npm run test` passam.
-- [ ] 7.2 Tema claro e escuro com botão, escuro confortável (nunca preto absoluto), preferência salva e contraste WCAG AA.
+- [x] 7.2 Tema claro e escuro com botão, escuro confortável (nunca preto absoluto), preferência salva e contraste WCAG AA.
   - Teste: alternar o tema persiste a preferência; verificação de contraste das paletas.
 - [ ] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
   - Teste: mock de 401 redireciona; mock de 422 e 429 exibe a mensagem correta.
