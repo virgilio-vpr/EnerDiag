@@ -192,7 +192,7 @@ Ref: FE, RN-7
   - Teste: alternar o tema persiste a preferência; verificação de contraste das paletas.
 - [x] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
   - Teste: mock de 401 redireciona; mock de 422 e 429 exibe a mensagem correta.
-- [ ] 7.4 Rotas protegidas por perfil (cliente e admin).
+- [x] 7.4 Rotas protegidas por perfil (cliente e admin).
   - Teste: sem login vai ao login; cliente em rota admin vê 403.
 - [ ] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
   - Teste: cada código renderiza a mensagem amigável; a 503 mostra a previsão.
