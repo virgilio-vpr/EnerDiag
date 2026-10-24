@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
     Route::get('/simulations', [AdminSimulationController::class, 'index']);
     Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
+    Route::post('/simulations/{id}/recalculate', [AdminSimulationController::class, 'recalculate'])->whereNumber('id');
     Route::put('/reports/{id}', [AdminReportController::class, 'update'])->whereNumber('id');
     Route::post('/reports/{id}/resend', [AdminReportController::class, 'resend'])->whereNumber('id');
 });

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Calculation\Exceptions\ExpiredSimulationException;
+use App\Calculation\Services\ReportRecalculationService;
 use App\Http\Controllers\Controller;
 use App\Models\Simulation;
 use Illuminate\Http\JsonResponse;
@@ -49,6 +51,30 @@ class SimulationController extends Controller
             ->findOrFail($id);
 
         return response()->json(['data' => $this->simulationData($simulation, true)]);
+    }
+
+    /** Recalculate a simulation report from its extracted invoice data. */
+    #[Authenticated]
+    #[Endpoint('Recalcular relatório', 'Recalcula os resultados a partir dos dados extraídos e registra uma nova versão.')]
+    #[Response(status: 200, content: '{"data":{"id":1,"total_monthly_savings":"100.00","total_yearly_savings":"1200.00","algorithm_version":"2.0"}}', description: 'Relatório recalculado')]
+    #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
+    #[Response(status: 404, content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}', description: 'Simulação não encontrada')]
+    #[Response(status: 422, content: '{"message":"Simulações expiradas não podem ser recalculadas.","code":"SIMULATION_EXPIRED","errors":null}', description: 'Simulação expirada')]
+    public function recalculate(Request $request, int $id, ReportRecalculationService $recalculationService): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        try {
+            $report = $recalculationService->recalculate($id);
+        } catch (ExpiredSimulationException) {
+            return response()->json([
+                'message' => 'Simulações expiradas não podem ser recalculadas.',
+                'code' => 'SIMULATION_EXPIRED',
+                'errors' => null,
+            ], 422);
+        }
+
+        return response()->json(['data' => $report]);
     }
 
     private function authorizeAdmin(Request $request): void

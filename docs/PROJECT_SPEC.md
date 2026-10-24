@@ -170,7 +170,7 @@ Ref: RN-1, DB, API (Admin)
   - Teste: admin ok; cliente 403; paginação; nenhum campo de arquivo PDF exposto.
 - [x] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
   - Teste: edição textual gera revisão com autor sem alterar resultados; tentativa de alterar resultado é rejeitada; reenvio dispara e-mail; cliente 403.
-- [ ] 6.3 Recálculo: `POST /admin/simulations/{id}/recalculate` gera nova versão do relatório a partir dos dados extraídos (serviço 3.12).
+- [x] 6.3 Recálculo: `POST /admin/simulations/{id}/recalculate` gera nova versão do relatório a partir dos dados extraídos (serviço 3.12).
   - Teste: admin ok; cliente 403; cria nova versão sem alterar os dados extraídos; simulação expirada não pode ser recalculada.
 - [ ] 6.4 Tarifas: `GET/POST/PUT /admin/tariffs`, com `includes_taxes` obrigatório (`true` para preço com tributos; `false` para tarifa sem tributos, como as da ANEEL), sem sobreposição de vigência; tarifa vigente ou histórica não pode ser sobrescrita, alterações criam nova versão com nova vigência.
   - Teste: cria tarifa com `includes_taxes` `true` e `false`; `includes_taxes` ausente rejeitado (422); vigência sobreposta rejeitada (422); versão histórica permanece inalterada após reajuste; cliente 403.
