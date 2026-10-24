@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Api\V1\Admin\LeadController as AdminLeadController;
+use App\Http\Controllers\Api\V1\Admin\RegulatoryParameterController as AdminRegulatoryParameterController;
+use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
+use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
+use App\Http\Controllers\Api\V1\Admin\TariffImportController as AdminTariffImportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\ExampleController;
@@ -20,6 +27,23 @@ Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
 Route::post('/leads', LeadController::class)->middleware('throttle:leads');
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/customers', [AdminCustomerController::class, 'index']);
+    Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
+    Route::get('/simulations', [AdminSimulationController::class, 'index']);
+    Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
+    Route::post('/simulations/{id}/recalculate', [AdminSimulationController::class, 'recalculate'])->whereNumber('id');
+    Route::get('/tariffs', [AdminTariffController::class, 'index']);
+    Route::post('/tariffs', [AdminTariffController::class, 'store']);
+    Route::put('/tariffs/{id}', [AdminTariffController::class, 'update'])->whereNumber('id');
+    Route::post('/tariffs/import', [AdminTariffImportController::class, 'store']);
+    Route::get('/parameters', [AdminRegulatoryParameterController::class, 'index']);
+    Route::post('/parameters', [AdminRegulatoryParameterController::class, 'store']);
+    Route::get('/leads', [AdminLeadController::class, 'index']);
+    Route::put('/reports/{id}', [AdminReportController::class, 'update'])->whereNumber('id');
+    Route::post('/reports/{id}/resend', [AdminReportController::class, 'resend'])->whereNumber('id');
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/simulations', [SimulationController::class, 'index']);

@@ -1,0 +1,4 @@
+DatGeracaoConjuntoDados;DscREH;SigAgente;NumCNPJDistribuidora;DatInicioVigencia;DatFimVigencia;DscBaseTarifaria;DscSubGrupo;DscModalidadeTarifaria;DscClasse;DscSubClasse;DscDetalhe;NomPostoTarifario;DscUnidadeTerciaria;SigAgenteAcessante;VlrTUSD;VlrTE
+2026-10-01;REH 1234/2026;Distribuidora de teste;12345678000199;2026-10-01;;Tarifa de Aplicação;A4;Horária Azul;Não se aplica;Não se aplica;Não se aplica;Ponta;kW;Não se aplica;29.30000;
+2026-10-01;REH 1234/2026;Distribuidora de teste;12345678000199;2026-10-01;;Tarifa de Aplicação;A4;Horária Azul;Não se aplica;Não se aplica;Não se aplica;Ponta;MWh;Não se aplica;125.05000;439.13000
+2026-10-01;REH 1234/2026;Distribuidora de teste;12345678000199;2026-10-01;;Tarifa de Aplicação;B1;Convencional;Residencial;Residencial;Não se aplica;Não se aplica;kWh;Não se aplica;100.00000;200.00000

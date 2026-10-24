@@ -166,21 +166,21 @@ Ref: RN-3, RN-4, RC, DB, API (Cliente)
 ### Fase 6 — API do admin
 Ref: RN-1, DB, API (Admin)
 
-- [ ] 6.1 Clientes e simulações: `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}` (dados extraídos, nunca PDFs), com paginação.
+- [x] 6.1 Clientes e simulações: `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}` (dados extraídos, nunca PDFs), com paginação.
   - Teste: admin ok; cliente 403; paginação; nenhum campo de arquivo PDF exposto.
-- [ ] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
+- [x] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
   - Teste: edição textual gera revisão com autor sem alterar resultados; tentativa de alterar resultado é rejeitada; reenvio dispara e-mail; cliente 403.
-- [ ] 6.3 Recálculo: `POST /admin/simulations/{id}/recalculate` gera nova versão do relatório a partir dos dados extraídos (serviço 3.12).
+- [x] 6.3 Recálculo: `POST /admin/simulations/{id}/recalculate` gera nova versão do relatório a partir dos dados extraídos (serviço 3.12).
   - Teste: admin ok; cliente 403; cria nova versão sem alterar os dados extraídos; simulação expirada não pode ser recalculada.
-- [ ] 6.4 Tarifas: `GET/POST/PUT /admin/tariffs`, com `includes_taxes` obrigatório (`true` para preço com tributos; `false` para tarifa sem tributos, como as da ANEEL), sem sobreposição de vigência; tarifa vigente ou histórica não pode ser sobrescrita, alterações criam nova versão com nova vigência.
+- [x] 6.4 Tarifas: `GET/POST/PUT /admin/tariffs`, com `includes_taxes` obrigatório (`true` para preço com tributos; `false` para tarifa sem tributos, como as da ANEEL), sem sobreposição de vigência; tarifa vigente ou histórica não pode ser sobrescrita, alterações criam nova versão com nova vigência.
   - Teste: cria tarifa com `includes_taxes` `true` e `false`; `includes_taxes` ausente rejeitado (422); vigência sobreposta rejeitada (422); versão histórica permanece inalterada após reajuste; cliente 403.
-- [ ] 6.5 Importação de tarifas da ANEEL: `POST /admin/tariffs/import` recebe o CSV oficial (tarifas de aplicação, sem tributos) e grava em `tariffs` com `includes_taxes = false`, `source = aneel_import` e a referência da resolução; registra a importação em `tariff_imports`. Aceita só Grupo A, subgrupos A4 e AS, modalidades Azul e Verde e distribuidoras ativas; ignora o resto; reimportar o mesmo arquivo não duplica; a vigência anterior é encerrada, nunca sobrescrita. O formato do CSV deve ser confirmado no portal de dados abertos da ANEEL (§9).
+- [x] 6.5 Importação de tarifas da ANEEL: `POST /admin/tariffs/import` recebe o CSV oficial (tarifas de aplicação, sem tributos) e grava em `tariffs` com `includes_taxes = false`, `source = aneel_import` e a referência da resolução; registra a importação em `tariff_imports`. Aceita só Grupo A, subgrupos A4 e AS, modalidades Azul e Verde e distribuidoras ativas; ignora o resto; reimportar o mesmo arquivo não duplica; a vigência anterior é encerrada, nunca sobrescrita. O formato do CSV deve ser confirmado no portal de dados abertos da ANEEL (§9).
   - Teste: importa um arquivo de exemplo (fixture); reimportação não duplica; linhas fora do escopo são ignoradas e contadas; CSV inválido → 422; vigência anterior encerrada sem alterar seus valores; cliente 403.
-- [ ] 6.6 Parâmetros: `GET /admin/parameters` e `POST /admin/parameters`; cada alteração cria nova versão com vigência, preservando os valores usados por relatórios existentes.
+- [x] 6.6 Parâmetros: `GET /admin/parameters` e `POST /admin/parameters`; cada alteração cria nova versão com vigência, preservando os valores usados por relatórios existentes.
   - Teste: admin cria nova versão de um parâmetro nacional (por exemplo a reserva da demanda ociosa); versão anterior permanece inalterada; cliente 403.
-- [ ] 6.7 `GET /admin/leads` (leads de distribuidora não atendida e pedidos de contato).
+- [x] 6.7 `GET /admin/leads` (leads de distribuidora não atendida e pedidos de contato).
   - Teste: lista paginada; cliente 403.
-- [ ] 6.8 Fechar a documentação da API: todos os endpoints com exemplos e erros, e coleção Postman/OpenAPI.
+- [x] 6.8 Fechar a documentação da API: todos os endpoints com exemplos e erros, e coleção Postman/OpenAPI.
   - Teste: a geração roda; conferir que cada endpoint de §6 está documentado.
 
 ### Fase 7 — Frontend: base

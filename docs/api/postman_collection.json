@@ -1,0 +1,1802 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost:8000"
+        }
+    ],
+    "info": {
+        "name": "EnerDiag \u2014 Documenta\u00e7\u00e3o da API",
+        "_postman_id": "2facb075-62df-406f-8e76-67d7603780cc",
+        "description": "API do EnerDiag para an\u00e1lise de faturas de energia do Grupo A.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Administra\u00e7\u00e3o: clientes",
+            "description": "Consulta paginada de clientes e seus perfis",
+            "item": [
+                {
+                    "name": "Listar clientes",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/customers",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/customers"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna clientes em p\u00e1ginas, com dados de contato e perfil."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"11999999999\",\"role\":\"customer\",\"email_verified_at\":\"2026-10-24T12:00:00Z\",\"contact_requested_at\":null,\"profile\":{\"company_name\":\"Empresa Exemplo Ltda.\"}}],\"links\":{},\"meta\":{\"current_page\":1,\"per_page\":15,\"total\":1}}",
+                            "name": "Clientes paginados"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Esta a\u00e7\u00e3o n\u00e3o \u00e9 autorizada.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar cliente",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/customers\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/customers\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "564",
+                                    "description": "The ID of the customer."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os dados de contato e perfil de um cliente."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"11999999999\",\"role\":\"customer\",\"profile\":{\"company_name\":\"Empresa Exemplo Ltda.\"}}}",
+                            "name": "Cliente encontrado"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"N\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Cliente n\u00e3o encontrado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o: leads",
+            "description": "Lista solicita\u00e7\u00f5es de distribuidoras n\u00e3o atendidas e pedidos de contato",
+            "item": [
+                {
+                    "name": "Listar leads e pedidos de contato",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/leads",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/leads"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna uma lista paginada com leads de distribuidoras e solicita\u00e7\u00f5es de contato de clientes."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"type\":\"unsupported_distributor\",\"id\":1,\"email\":\"cliente@empresa.com.br\",\"distributor_name\":\"Distribuidora X\",\"reason\":\"Fora da \u00e1rea atendida\",\"customer_name\":null,\"requested_at\":\"2026-10-24T12:00:00Z\"}],\"links\":{},\"meta\":{\"current_page\":1,\"per_page\":15,\"total\":1}}",
+                            "name": "Leads paginados"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o: par\u00e2metros",
+            "description": "Consulta e versionamento de par\u00e2metros regulat\u00f3rios nacionais",
+            "item": [
+                {
+                    "name": "Listar par\u00e2metros regulat\u00f3rios",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/parameters",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/parameters"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os par\u00e2metros e suas vig\u00eancias em ordem decrescente."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"id\":1,\"key\":\"idle_demand_discount_fallback\",\"value\":\"0.18000\",\"state\":null,\"valid_from\":\"2021-01-01\",\"valid_to\":null}],\"links\":{},\"meta\":{}}",
+                            "name": "Par\u00e2metros paginados"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar vers\u00e3o de par\u00e2metro regulat\u00f3rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/parameters",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/parameters"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"key\":\"idle_demand_discount_fallback\",\"value\":\"0.18000\",\"valid_from\":\"2027-01-01\",\"valid_to\":\"architecto\"}"
+                        },
+                        "description": "Registra um novo valor nacional com vig\u00eancia, preservando vers\u00f5es anteriores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"id\":2,\"key\":\"idle_demand_discount_fallback\",\"value\":\"0.20000\",\"state\":null,\"valid_from\":\"2027-01-01\",\"valid_to\":null}}",
+                            "name": "Nova vers\u00e3o criada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Dados inv\u00e1lidos ou vig\u00eancia sobreposta"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o: relat\u00f3rios",
+            "description": "Edi\u00e7\u00e3o de textos e reenvio de relat\u00f3rios",
+            "item": [
+                {
+                    "name": "Editar relat\u00f3rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/reports\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/reports\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": 564,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"explanatory_texts\":[\"Ajuste recomendado da demanda.\"],\"recommendations\":[\"Avalie a adequa\u00e7\u00e3o da demanda contratada.\"]}"
+                        },
+                        "description": "Atualiza textos explicativos e recomenda\u00e7\u00f5es, preservando os resultados calculados e registrando uma revis\u00e3o."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"total_monthly_savings\":\"100.00\",\"explanatory_texts\":[\"Texto revisado\"],\"recommendations\":[\"Recomenda\u00e7\u00e3o revisada\"]}}",
+                            "name": "Relat\u00f3rio atualizado e revis\u00e3o registrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Campos inv\u00e1lidos ou tentativa de alterar resultados"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reenviar relat\u00f3rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/reports\/:id\/resend",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/reports\/:id\/resend",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": 564,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Envia manualmente por e-mail o resumo atual do relat\u00f3rio ao cliente."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Relat\u00f3rio reenviado por e-mail.\"}",
+                            "name": "E-mail enviado"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Relat\u00f3rio n\u00e3o encontrado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o: simula\u00e7\u00f5es",
+            "description": "Consulta paginada de simula\u00e7\u00f5es e dados extra\u00eddos",
+            "item": [
+                {
+                    "name": "Listar simula\u00e7\u00f5es",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/simulations",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/simulations"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna simula\u00e7\u00f5es paginadas com identifica\u00e7\u00e3o do cliente."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"id\":1,\"user_id\":1,\"status\":\"completed\",\"months_count\":12,\"total_monthly_savings\":\"100.00\",\"total_yearly_savings\":\"1200.00\",\"expires_at\":null,\"customer\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\"}}],\"links\":{},\"meta\":{\"current_page\":1,\"per_page\":15,\"total\":1}}",
+                            "name": "Simula\u00e7\u00f5es paginadas"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Esta a\u00e7\u00e3o n\u00e3o \u00e9 autorizada.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar simula\u00e7\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/simulations\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/simulations\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": 564,
+                                    "description": "The ID of the simulation."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os dados extra\u00eddos das faturas e o relat\u00f3rio, sem documentos PDF."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"status\":\"completed\",\"invoices\":[],\"report\":null}}",
+                            "name": "Simula\u00e7\u00e3o encontrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"N\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o n\u00e3o encontrada"
+                        }
+                    ]
+                },
+                {
+                    "name": "Recalcular relat\u00f3rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/simulations\/:id\/recalculate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/simulations\/:id\/recalculate",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": 564,
+                                    "description": "The ID of the simulation."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Recalcula os resultados a partir dos dados extra\u00eddos e registra uma nova vers\u00e3o."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"total_monthly_savings\":\"100.00\",\"total_yearly_savings\":\"1200.00\",\"algorithm_version\":\"2.0\"}}",
+                            "name": "Relat\u00f3rio recalculado"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o n\u00e3o encontrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Simula\u00e7\u00f5es expiradas n\u00e3o podem ser recalculadas.\",\"code\":\"SIMULATION_EXPIRED\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o expirada"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o: tarifas",
+            "description": "Consulta e versionamento de tarifas por vig\u00eancia",
+            "item": [
+                {
+                    "name": "Listar tarifas",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/tariffs",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/tariffs"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna tarifas paginadas, incluindo sua base tribut\u00e1ria e origem."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"id\":1,\"distributor_id\":1,\"subgroup\":\"A4\",\"tariff_modality\":\"blue\",\"time_slot\":\"peak\",\"component\":\"demand\",\"rate\":\"37.80322\",\"includes_taxes\":true,\"source\":\"manual\",\"valid_from\":\"2026-01-01\",\"valid_to\":null}],\"links\":{},\"meta\":{}}",
+                            "name": "Tarifas paginadas"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        }
+                    ]
+                },
+                {
+                    "name": "Cadastrar tarifa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/tariffs",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/tariffs"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"distributor_id\":1,\"subgroup\":\"A4\",\"tariff_modality\":\"blue\",\"time_slot\":\"peak\",\"component\":\"demand\",\"rate\":\"37.80322\",\"includes_taxes\":true,\"valid_from\":\"2026-01-01\",\"valid_to\":\"architecto\",\"source_reference\":\"REH 1234\\\/2026\"}"
+                        },
+                        "description": "Cria uma tarifa sem sobreposi\u00e7\u00e3o de vig\u00eancia."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"id\":1,\"includes_taxes\":false,\"source\":\"manual\"}}",
+                            "name": "Tarifa criada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Dados inv\u00e1lidos ou vig\u00eancia sobreposta"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar nova vers\u00e3o de tarifa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/tariffs\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/tariffs\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": 564,
+                                    "description": "The ID of the tariff."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"distributor_id\":1,\"subgroup\":\"A4\",\"tariff_modality\":\"blue\",\"time_slot\":\"peak\",\"component\":\"demand\",\"rate\":\"40.00000\",\"includes_taxes\":true,\"valid_from\":\"2027-01-01\",\"valid_to\":\"architecto\",\"source_reference\":\"REH 5678\\\/2027\"}"
+                        },
+                        "description": "Preserva os valores da vers\u00e3o existente e cria outra tarifa com nova vig\u00eancia."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"id\":2,\"includes_taxes\":false,\"source\":\"manual\"}}",
+                            "name": "Nova vers\u00e3o criada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Tarifa n\u00e3o encontrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Dados inv\u00e1lidos ou vig\u00eancia sobreposta"
+                        }
+                    ]
+                },
+                {
+                    "name": "Importar tarifas da ANEEL",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/tariffs\/import",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/tariffs\/import"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Importa as tarifas de aplica\u00e7\u00e3o em CSV, sem tributos, para os subgrupos A4 e AS de distribuidoras ativas."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Importa\u00e7\u00e3o conclu\u00edda.\",\"data\":{\"rows_accepted\":3,\"rows_ignored\":1,\"import_id\":1}}",
+                            "name": "Resumo da importa\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Acesso n\u00e3o autorizado.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "Acesso restrito ao admin"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Arquivo inv\u00e1lido"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Autentica\u00e7\u00e3o",
+            "description": "Cadastro e acesso de clientes",
+            "item": [
+                {
+                    "name": "Cadastrar cliente",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/register",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/register"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"i\",\"company_name\":\"Empresa Exemplo Ltda.\",\"cnpj\":\"vdljnikhwaykcmyu\",\"distributor_id\":16,\"transformer_power_kva\":22,\"address_details\":\"g\",\"substation_same_address\":true,\"substation_address\":\"z\",\"terms_accepted\":true,\"password\":\"EnergiaSegura2026\",\"password_confirmation\":\"EnergiaSegura2026\"}"
+                        },
+                        "description": "Cria a conta de cliente e envia um c\u00f3digo num\u00e9rico para confirma\u00e7\u00e3o do e-mail.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"message\":\"Cadastro realizado. Verifique seu e-mail para confirmar a conta.\",\"data\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"role\":\"customer\"}}",
+                            "name": "Conta criada e c\u00f3digo enviado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{\"email\":[\"Este e-mail j\u00e1 est\u00e1 cadastrado.\"]}}",
+                            "name": "Dados inv\u00e1lidos"
+                        }
+                    ]
+                },
+                {
+                    "name": "Confirmar e-mail",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/verify-email",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/verify-email"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ana@empresa.com.br\",\"code\":\"482913\"}"
+                        },
+                        "description": "Confirma o endere\u00e7o de e-mail usando o c\u00f3digo num\u00e9rico enviado.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"E-mail confirmado.\"}",
+                            "name": "E-mail confirmado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{\"code\":[\"C\u00f3digo inv\u00e1lido, expirado ou com limite de tentativas excedido.\"]}}",
+                            "name": "C\u00f3digo inv\u00e1lido, expirado ou bloqueado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reenviar c\u00f3digo de confirma\u00e7\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/resend-code",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/resend-code"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ana@empresa.com.br\"}"
+                        },
+                        "description": "Envia um novo c\u00f3digo se o e-mail pertencer a uma conta ainda n\u00e3o confirmada.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Se a conta existir e ainda n\u00e3o estiver confirmada, enviaremos um novo c\u00f3digo.\"}",
+                            "name": "Solicita\u00e7\u00e3o processada"
+                        },
+                        {
+                            "header": [],
+                            "code": 429,
+                            "body": "{\"message\":\"Muitas requisi\u00e7\u00f5es. Tente novamente mais tarde.\",\"code\":\"TOO_MANY_REQUESTS\",\"errors\":null}",
+                            "name": "Limite de reenvios atingido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Entrar",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ana@empresa.com.br\",\"password\":\"EnergiaSegura2026\"}"
+                        },
+                        "description": "Autentica a conta confirmada e devolve um token Bearer v\u00e1lido por duas horas.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"token\":\"1|token-em-texto-plano\",\"token_type\":\"Bearer\",\"expires_at\":\"2026-10-24T18:00:00Z\",\"user\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"role\":\"customer\"}}",
+                            "name": "Autentica\u00e7\u00e3o conclu\u00edda"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"E-mail ou senha inv\u00e1lidos.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Credenciais inv\u00e1lidas"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Confirme seu e-mail antes de entrar.\",\"code\":\"FORBIDDEN\",\"errors\":null}",
+                            "name": "E-mail ainda n\u00e3o confirmado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Sair",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoga o token Bearer usado na requisi\u00e7\u00e3o.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Sess\u00e3o encerrada.\"}",
+                            "name": "Token revogado"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Solicitar redefini\u00e7\u00e3o de senha",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/forgot-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/forgot-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ana@empresa.com.br\"}"
+                        },
+                        "description": "Envia um link de redefini\u00e7\u00e3o quando a conta existe.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Se o e-mail estiver cadastrado, enviaremos as instru\u00e7\u00f5es de redefini\u00e7\u00e3o.\"}",
+                            "name": "Resposta neutra"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{\"email\":[\"Informe um e-mail v\u00e1lido.\"]}}",
+                            "name": "Formato de e-mail inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Redefinir senha",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/reset-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"ana@empresa.com.br\",\"token\":\"token-de-uso-unico\",\"password\":\"NovaSenhaSegura2026\",\"password_confirmation\":\"NovaSenhaSegura2026\"}"
+                        },
+                        "description": "Redefine a senha usando o link de uso \u00fanico recebido por e-mail.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Senha redefinida com sucesso.\"}",
+                            "name": "Senha atualizada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{\"token\":[\"O link \u00e9 inv\u00e1lido ou expirou.\"]}}",
+                            "name": "Link inv\u00e1lido, expirado ou j\u00e1 utilizado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar usu\u00e1rio autenticado",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/user"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os dados p\u00fablicos do usu\u00e1rio do token de acesso."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"11999999999\",\"role\":\"customer\"}",
+                            "name": "Usu\u00e1rio autenticado"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Exemplos",
+            "description": "Endpoints de exemplo para valida\u00e7\u00e3o da documenta\u00e7\u00e3o",
+            "item": [
+                {
+                    "name": "Valida\u00e7\u00e3o de Exemplo",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/example\/validate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/example\/validate"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"contato@empresa.com.br\"}"
+                        },
+                        "description": "Endpoint de demonstra\u00e7\u00e3o de contratos de sucesso e erro da API.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\":\"ok\",\"message\":\"Dados validados com sucesso.\",\"data\":{\"email\":\"contato@empresa.com.br\"}}",
+                            "name": "Requisi\u00e7\u00e3o processada com sucesso"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"O campo e-mail \u00e9 obrigat\u00f3rio.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{\"email\":[\"O campo e-mail \u00e9 obrigat\u00f3rio.\"]}}",
+                            "name": "Falha de valida\u00e7\u00e3o dos campos"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Leads",
+            "description": "Interesse em distribuidoras ainda n\u00e3o atendidas",
+            "item": [
+                {
+                    "name": "Registrar interesse em distribuidora",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/leads",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/leads"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"cliente@empresa.com.br\",\"distributor_name\":\"Distribuidora Regional\",\"reason\":\"unsupported_distributor\"}"
+                        },
+                        "description": "Registra um lead para uma distribuidora sem atendimento dispon\u00edvel.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"id\":1,\"email\":\"cliente@empresa.com.br\",\"distributor_name\":\"Distribuidora Regional\",\"reason\":\"unsupported_distributor\"}}",
+                            "name": "Lead registrado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\"}",
+                            "name": "Dados inv\u00e1lidos"
+                        },
+                        {
+                            "header": [],
+                            "code": 429,
+                            "body": "{\"message\":\"Muitas requisi\u00e7\u00f5es.\",\"code\":\"TOO_MANY_REQUESTS\"}",
+                            "name": "Limite de requisi\u00e7\u00f5es excedido"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Minha conta",
+            "description": "Consulta, atualiza\u00e7\u00e3o e exclus\u00e3o da conta autenticada",
+            "item": [
+                {
+                    "name": "Consultar minha conta",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/me",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/me"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os dados p\u00fablicos da conta autenticada e seu perfil de cliente."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"11999999999\",\"role\":\"customer\",\"email_verified_at\":\"2026-10-24T12:00:00Z\",\"contact_requested_at\":null,\"profile\":{\"company_name\":\"Empresa Exemplo Ltda.\",\"cnpj\":null,\"distributor_id\":1,\"transformer_power_kva\":500,\"address_details\":null,\"substation_same_address\":true,\"substation_address\":null}}}",
+                            "name": "Conta autenticada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar minha conta",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/me",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/me"
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Ana Souza\",\"phone\":\"11999999999\",\"company_name\":\"Empresa Exemplo Ltda.\",\"cnpj\":\"zmiyvdljnikhwayk\",\"distributor_id\":16,\"transformer_power_kva\":22,\"address_details\":\"g\",\"substation_same_address\":true,\"substation_address\":\"z\"}"
+                        },
+                        "description": "Atualiza nome, telefone e dados de perfil permitidos da conta autenticada."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"name\":\"Ana Souza\",\"email\":\"ana@empresa.com.br\",\"phone\":\"11999999999\",\"role\":\"customer\",\"profile\":{\"company_name\":\"Empresa Exemplo Ltda.\"}}}",
+                            "name": "Conta atualizada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Os dados informados s\u00e3o inv\u00e1lidos.\",\"code\":\"VALIDATION_ERROR\",\"errors\":{}}",
+                            "name": "Dados inv\u00e1lidos"
+                        }
+                    ]
+                },
+                {
+                    "name": "Excluir minha conta",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/me",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/me"
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Exclui a conta autenticada e os dados relacionados conforme a solicita\u00e7\u00e3o do titular."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 204,
+                            "body": null,
+                            "name": "Conta e dados relacionados exclu\u00eddos"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Solicitar contato",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/me\/contact-request",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/me\/contact-request"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Registra a solicita\u00e7\u00e3o de contato comercial do titular da conta."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Solicita\u00e7\u00e3o de contato registrada.\",\"contact_requested_at\":\"2026-10-24T12:00:00Z\"}",
+                            "name": "Solicita\u00e7\u00e3o registrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Simula\u00e7\u00f5es",
+            "description": "Envio e processamento de faturas de energia",
+            "item": [
+                {
+                    "name": "Listar simula\u00e7\u00f5es",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/simulations",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/simulations"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna as simula\u00e7\u00f5es do cliente autenticado, com pagina\u00e7\u00e3o."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"id\":1,\"status\":\"completed\",\"months_count\":12,\"total_monthly_savings\":\"1200.00\",\"total_yearly_savings\":\"14400.00\"}],\"meta\":{\"current_page\":1,\"per_page\":15,\"total\":1}}",
+                            "name": "Simula\u00e7\u00f5es do cliente"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar simula\u00e7\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/simulations",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/simulations"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "company_name",
+                                    "value": "Empresa Exemplo Ltda.",
+                                    "type": "text",
+                                    "description": "Nome da empresa."
+                                },
+                                {
+                                    "key": "cnpj",
+                                    "value": "ngzmiyvdljnikhwa",
+                                    "type": "text",
+                                    "description": "Must not be greater than 18 characters."
+                                },
+                                {
+                                    "key": "distributor_id",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": "Identificador da distribuidora atendida."
+                                },
+                                {
+                                    "key": "distributor_name",
+                                    "value": "Distribuidora Exemplo",
+                                    "type": "text",
+                                    "description": "Nome de uma distribuidora ainda n\u00e3o atendida."
+                                },
+                                {
+                                    "key": "transformer_power_kva",
+                                    "value": "7",
+                                    "type": "text",
+                                    "description": "Must be at least 0. Must not be greater than 99999999.99."
+                                },
+                                {
+                                    "key": "address_details",
+                                    "value": "Rua Exemplo, 100, S\u00e3o Paulo\/SP",
+                                    "type": "text",
+                                    "description": "Endere\u00e7o da empresa."
+                                },
+                                {
+                                    "key": "substation_same_address",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": "Indica se o endere\u00e7o da subesta\u00e7\u00e3o \u00e9 o mesmo da fatura."
+                                },
+                                {
+                                    "key": "substation_address",
+                                    "value": "m",
+                                    "type": "text",
+                                    "description": "This field is required when <code>substation_same_address<\/code> is <code>false<\/code>. Must not be greater than 5000 characters."
+                                },
+                                {
+                                    "key": "invoices[]",
+                                    "src": [],
+                                    "type": "file"
+                                },
+                                {
+                                    "key": "invoices[]",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Valida os dados da empresa e as faturas PDF e registra uma simula\u00e7\u00e3o na fila."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 202,
+                            "body": "{\"data\":{\"id\":1,\"status\":\"queued\",\"created_at\":\"2026-10-24T12:00:00Z\"}}",
+                            "name": "Simula\u00e7\u00e3o registrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"A distribuidora selecionada ainda n\u00e3o possui leitor dispon\u00edvel.\",\"code\":\"DISTRIBUTOR_UNSUPPORTED\",\"errors\":null}",
+                            "name": "Distribuidora sem leitor"
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar status da simula\u00e7\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/simulations\/:simulationId\/status",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/simulations\/:simulationId\/status",
+                            "variable": [
+                                {
+                                    "id": "simulationId",
+                                    "key": "simulationId",
+                                    "value": 1,
+                                    "description": "Identificador da simula\u00e7\u00e3o."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna o estado atual e erros por arquivo, quando houver."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"status\":\"failed\",\"processing_errors\":[{\"file\":\"01-conta.pdf\",\"code\":\"INVOICE_READ_FAILED\",\"errors\":{\"message\":\"N\u00e3o foi poss\u00edvel ler este arquivo.\"}}]}}",
+                            "name": "Status da simula\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o n\u00e3o encontrada para este cliente"
+                        }
+                    ]
+                },
+                {
+                    "name": "Consultar relat\u00f3rio da simula\u00e7\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/simulations\/:simulationId\/report",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/simulations\/:simulationId\/report",
+                            "variable": [
+                                {
+                                    "id": "simulationId",
+                                    "key": "simulationId",
+                                    "value": 1,
+                                    "description": "Identificador da simula\u00e7\u00e3o."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os indicadores, s\u00e9ries e avisos do relat\u00f3rio conclu\u00eddo."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"id\":1,\"simulation_id\":1,\"total_monthly_savings\":\"1200.00\",\"total_yearly_savings\":\"14400.00\",\"chart_series\":{},\"warnings\":[]}}",
+                            "name": "Relat\u00f3rio da simula\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\",\"code\":\"UNAUTHENTICATED\",\"errors\":null}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\",\"code\":\"NOT_FOUND\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o n\u00e3o encontrada para este cliente"
+                        },
+                        {
+                            "header": [],
+                            "code": 409,
+                            "body": "{\"message\":\"O relat\u00f3rio ainda n\u00e3o est\u00e1 dispon\u00edvel.\",\"code\":\"REPORT_NOT_READY\",\"errors\":null}",
+                            "name": "Simula\u00e7\u00e3o ainda n\u00e3o conclu\u00edda"
+                        }
+                    ]
+                },
+                {
+                    "name": "Baixar relat\u00f3rio em PDF",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/simulations\/:simulationId\/pdf",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/simulations\/:simulationId\/pdf",
+                            "variable": [
+                                {
+                                    "id": "simulationId",
+                                    "key": "simulationId",
+                                    "value": 1,
+                                    "description": "Identificador da simula\u00e7\u00e3o."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna o relat\u00f3rio conclu\u00eddo em PDF para o cliente propriet\u00e1rio."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "PDF",
+                            "name": "Relat\u00f3rio PDF"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"N\u00e3o autenticado.\"}",
+                            "name": "Token ausente ou inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Recurso n\u00e3o encontrado.\"}",
+                            "name": "Simula\u00e7\u00e3o n\u00e3o encontrada para este cliente"
+                        },
+                        {
+                            "header": [],
+                            "code": 409,
+                            "body": "{\"message\":\"O relat\u00f3rio ainda n\u00e3o est\u00e1 dispon\u00edvel.\"}",
+                            "name": "Simula\u00e7\u00e3o ainda n\u00e3o conclu\u00edda"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Sistema",
+            "description": "Endpoints do sistema e integridade da API",
+            "item": [
+                {
+                    "name": "Status da API",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/status",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/status"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna o status operacional da API EnerDiag v1.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\":\"ok\",\"version\":\"v1\",\"environment\":\"local\"}",
+                            "name": "API em funcionamento normal"
+                        },
+                        {
+                            "header": [],
+                            "code": 500,
+                            "body": "{\"message\":\"Erro interno do servidor.\",\"code\":\"INTERNAL_SERVER_ERROR\",\"errors\":null}",
+                            "name": "Erro interno"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "key",
+                "type": "string"
+            }
+        ]
+    }
+}

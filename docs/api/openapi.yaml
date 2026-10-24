@@ -1,0 +1,3615 @@
+openapi: 3.0.3
+info:
+  title: 'EnerDiag — Documentação da API'
+  description: 'API do EnerDiag para análise de faturas de energia do Grupo A.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+tags:
+  -
+    name: 'Administração: clientes'
+    description: 'Consulta paginada de clientes e seus perfis'
+  -
+    name: 'Administração: leads'
+    description: 'Lista solicitações de distribuidoras não atendidas e pedidos de contato'
+  -
+    name: 'Administração: parâmetros'
+    description: 'Consulta e versionamento de parâmetros regulatórios nacionais'
+  -
+    name: 'Administração: relatórios'
+    description: 'Edição de textos e reenvio de relatórios'
+  -
+    name: 'Administração: simulações'
+    description: 'Consulta paginada de simulações e dados extraídos'
+  -
+    name: 'Administração: tarifas'
+    description: 'Consulta e versionamento de tarifas por vigência'
+  -
+    name: Autenticação
+    description: 'Cadastro e acesso de clientes'
+  -
+    name: Exemplos
+    description: 'Endpoints de exemplo para validação da documentação'
+  -
+    name: Leads
+    description: 'Interesse em distribuidoras ainda não atendidas'
+  -
+    name: 'Minha conta'
+    description: 'Consulta, atualização e exclusão da conta autenticada'
+  -
+    name: Simulações
+    description: 'Envio e processamento de faturas de energia'
+  -
+    name: Sistema
+    description: 'Endpoints do sistema e integridade da API'
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Envie o token de acesso no cabeçalho <code>Authorization: Bearer {token}</code> para os endpoints protegidos.'
+security:
+  -
+    default: []
+paths:
+  /api/v1/admin/customers:
+    get:
+      summary: 'Listar clientes'
+      operationId: listarClientes
+      description: 'Retorna clientes em páginas, com dados de contato e perfil.'
+      parameters: []
+      responses:
+        200:
+          description: 'Clientes paginados'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Ana Souza'
+                      email: ana@empresa.com.br
+                      phone: '11999999999'
+                      role: customer
+                      email_verified_at: '2026-10-24T12:00:00Z'
+                      contact_requested_at: null
+                      profile:
+                        company_name: 'Empresa Exemplo Ltda.'
+                  links: {}
+                  meta:
+                    current_page: 1
+                    per_page: 15
+                    total: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Ana Souza'
+                        email: ana@empresa.com.br
+                        phone: '11999999999'
+                        role: customer
+                        email_verified_at: '2026-10-24T12:00:00Z'
+                        contact_requested_at: null
+                        profile:
+                          company_name: 'Empresa Exemplo Ltda.'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Ana Souza'
+                        email:
+                          type: string
+                          example: ana@empresa.com.br
+                        phone:
+                          type: string
+                          example: '11999999999'
+                        role:
+                          type: string
+                          example: customer
+                        email_verified_at:
+                          type: string
+                          example: '2026-10-24T12:00:00Z'
+                        contact_requested_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        profile:
+                          type: object
+                          properties:
+                            company_name:
+                              type: string
+                              example: 'Empresa Exemplo Ltda.'
+                  links:
+                    type: object
+                    properties: {}
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 15
+                      total:
+                        type: integer
+                        example: 1
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Esta ação não é autorizada.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Esta ação não é autorizada.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: clientes'
+  '/api/v1/admin/customers/{id}':
+    get:
+      summary: 'Consultar cliente'
+      operationId: consultarCliente
+      description: 'Retorna os dados de contato e perfil de um cliente.'
+      parameters: []
+      responses:
+        200:
+          description: 'Cliente encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Ana Souza'
+                    email: ana@empresa.com.br
+                    phone: '11999999999'
+                    role: customer
+                    profile:
+                      company_name: 'Empresa Exemplo Ltda.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Ana Souza'
+                      email:
+                        type: string
+                        example: ana@empresa.com.br
+                      phone:
+                        type: string
+                        example: '11999999999'
+                      role:
+                        type: string
+                        example: customer
+                      profile:
+                        type: object
+                        properties:
+                          company_name:
+                            type: string
+                            example: 'Empresa Exemplo Ltda.'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Cliente não encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: clientes'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the customer.'
+        example: '564'
+        required: true
+        schema:
+          type: string
+  /api/v1/admin/leads:
+    get:
+      summary: 'Listar leads e pedidos de contato'
+      operationId: listarLeadsEPedidosDeContato
+      description: 'Retorna uma lista paginada com leads de distribuidoras e solicitações de contato de clientes.'
+      parameters: []
+      responses:
+        200:
+          description: 'Leads paginados'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      type: unsupported_distributor
+                      id: 1
+                      email: cliente@empresa.com.br
+                      distributor_name: 'Distribuidora X'
+                      reason: 'Fora da área atendida'
+                      customer_name: null
+                      requested_at: '2026-10-24T12:00:00Z'
+                  links: {}
+                  meta:
+                    current_page: 1
+                    per_page: 15
+                    total: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        type: unsupported_distributor
+                        id: 1
+                        email: cliente@empresa.com.br
+                        distributor_name: 'Distribuidora X'
+                        reason: 'Fora da área atendida'
+                        customer_name: null
+                        requested_at: '2026-10-24T12:00:00Z'
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: unsupported_distributor
+                        id:
+                          type: integer
+                          example: 1
+                        email:
+                          type: string
+                          example: cliente@empresa.com.br
+                        distributor_name:
+                          type: string
+                          example: 'Distribuidora X'
+                        reason:
+                          type: string
+                          example: 'Fora da área atendida'
+                        customer_name:
+                          type: string
+                          example: null
+                          nullable: true
+                        requested_at:
+                          type: string
+                          example: '2026-10-24T12:00:00Z'
+                  links:
+                    type: object
+                    properties: {}
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 15
+                      total:
+                        type: integer
+                        example: 1
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: leads'
+  /api/v1/admin/parameters:
+    get:
+      summary: 'Listar parâmetros regulatórios'
+      operationId: listarParmetrosRegulatrios
+      description: 'Retorna os parâmetros e suas vigências em ordem decrescente.'
+      parameters: []
+      responses:
+        200:
+          description: 'Parâmetros paginados'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      key: idle_demand_discount_fallback
+                      value: '0.18000'
+                      state: null
+                      valid_from: '2021-01-01'
+                      valid_to: null
+                  links: {}
+                  meta: {}
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        key: idle_demand_discount_fallback
+                        value: '0.18000'
+                        state: null
+                        valid_from: '2021-01-01'
+                        valid_to: null
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        key:
+                          type: string
+                          example: idle_demand_discount_fallback
+                        value:
+                          type: string
+                          example: '0.18000'
+                        state:
+                          type: string
+                          example: null
+                          nullable: true
+                        valid_from:
+                          type: string
+                          example: '2021-01-01'
+                        valid_to:
+                          type: string
+                          example: null
+                          nullable: true
+                  links:
+                    type: object
+                    properties: {}
+                  meta:
+                    type: object
+                    properties: {}
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: parâmetros'
+    post:
+      summary: 'Criar versão de parâmetro regulatório'
+      operationId: criarVersoDeParmetroRegulatrio
+      description: 'Registra um novo valor nacional com vigência, preservando versões anteriores.'
+      parameters: []
+      responses:
+        201:
+          description: 'Nova versão criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 2
+                    key: idle_demand_discount_fallback
+                    value: '0.20000'
+                    state: null
+                    valid_from: '2027-01-01'
+                    valid_to: null
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 2
+                      key:
+                        type: string
+                        example: idle_demand_discount_fallback
+                      value:
+                        type: string
+                        example: '0.20000'
+                      state:
+                        type: string
+                        example: null
+                        nullable: true
+                      valid_from:
+                        type: string
+                        example: '2027-01-01'
+                      valid_to:
+                        type: string
+                        example: null
+                        nullable: true
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Dados inválidos ou vigência sobreposta'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Administração: parâmetros'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  description: 'Chave do parâmetro.'
+                  example: idle_demand_discount_fallback
+                value:
+                  type: number
+                  description: 'Novo valor decimal.'
+                  example: '0.18000'
+                valid_from:
+                  type: string
+                  description: 'Início da nova vigência.'
+                  example: '2027-01-01'
+                valid_to:
+                  type: string
+                  description: 'Fim opcional da vigência.'
+                  example: architecto
+              required:
+                - key
+                - value
+                - valid_from
+  '/api/v1/admin/reports/{id}':
+    put:
+      summary: 'Editar relatório'
+      operationId: editarRelatrio
+      description: 'Atualiza textos explicativos e recomendações, preservando os resultados calculados e registrando uma revisão.'
+      parameters: []
+      responses:
+        200:
+          description: 'Relatório atualizado e revisão registrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    total_monthly_savings: '100.00'
+                    explanatory_texts:
+                      - 'Texto revisado'
+                    recommendations:
+                      - 'Recomendação revisada'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      total_monthly_savings:
+                        type: string
+                        example: '100.00'
+                      explanatory_texts:
+                        type: array
+                        example:
+                          - 'Texto revisado'
+                        items:
+                          type: string
+                      recommendations:
+                        type: array
+                        example:
+                          - 'Recomendação revisada'
+                        items:
+                          type: string
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Campos inválidos ou tentativa de alterar resultados'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Administração: relatórios'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                explanatory_texts:
+                  type: array
+                  description: 'Textos explicativos do relatório.'
+                  example:
+                    - 'Ajuste recomendado da demanda.'
+                  items:
+                    type: string
+                recommendations:
+                  type: array
+                  description: 'Recomendações do relatório.'
+                  example:
+                    - 'Avalie a adequação da demanda contratada.'
+                  items:
+                    type: string
+                simulation_id:
+                  type: string
+                  description: ''
+                  example: null
+                total_monthly_savings:
+                  type: string
+                  description: ''
+                  example: null
+                total_yearly_savings:
+                  type: string
+                  description: ''
+                  example: null
+                savings_percentage:
+                  type: string
+                  description: ''
+                  example: null
+                demand_savings_monthly:
+                  type: string
+                  description: ''
+                  example: null
+                demand_savings_yearly:
+                  type: string
+                  description: ''
+                  example: null
+                overrun_savings_monthly:
+                  type: string
+                  description: ''
+                  example: null
+                overrun_savings_yearly:
+                  type: string
+                  description: ''
+                  example: null
+                reactive_savings_monthly:
+                  type: string
+                  description: ''
+                  example: null
+                reactive_savings_yearly:
+                  type: string
+                  description: ''
+                  example: null
+                migration_savings_monthly:
+                  type: string
+                  description: ''
+                  example: null
+                migration_savings_yearly:
+                  type: string
+                  description: ''
+                  example: null
+                recommended_modality:
+                  type: string
+                  description: ''
+                  example: null
+                optimal_demand_peak:
+                  type: string
+                  description: ''
+                  example: null
+                optimal_demand_off_peak:
+                  type: string
+                  description: ''
+                  example: null
+                optimal_demand_single:
+                  type: string
+                  description: ''
+                  example: null
+                chart_series:
+                  type: string
+                  description: ''
+                  example: null
+                warnings:
+                  type: string
+                  description: ''
+                  example: null
+                r_values:
+                  type: string
+                  description: ''
+                  example: null
+                k_values:
+                  type: string
+                  description: ''
+                  example: null
+                algorithm_version:
+                  type: string
+                  description: ''
+                  example: null
+                tariff_version_ids:
+                  type: string
+                  description: ''
+                  example: null
+                regulatory_parameter_version_ids:
+                  type: string
+                  description: ''
+                  example: null
+              required:
+                - explanatory_texts
+                - recommendations
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report.'
+        example: 564
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/reports/{id}/resend':
+    post:
+      summary: 'Reenviar relatório'
+      operationId: reenviarRelatrio
+      description: 'Envia manualmente por e-mail o resumo atual do relatório ao cliente.'
+      parameters: []
+      responses:
+        200:
+          description: 'E-mail enviado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Relatório reenviado por e-mail.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Relatório reenviado por e-mail.'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Relatório não encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: relatórios'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report.'
+        example: 564
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/simulations:
+    get:
+      summary: 'Listar simulações'
+      operationId: listarSimulaes
+      description: 'Retorna simulações paginadas com identificação do cliente.'
+      parameters: []
+      responses:
+        200:
+          description: 'Simulações paginadas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      user_id: 1
+                      status: completed
+                      months_count: 12
+                      total_monthly_savings: '100.00'
+                      total_yearly_savings: '1200.00'
+                      expires_at: null
+                      customer:
+                        id: 1
+                        name: 'Ana Souza'
+                        email: ana@empresa.com.br
+                  links: {}
+                  meta:
+                    current_page: 1
+                    per_page: 15
+                    total: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        user_id: 1
+                        status: completed
+                        months_count: 12
+                        total_monthly_savings: '100.00'
+                        total_yearly_savings: '1200.00'
+                        expires_at: null
+                        customer:
+                          id: 1
+                          name: 'Ana Souza'
+                          email: ana@empresa.com.br
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        user_id:
+                          type: integer
+                          example: 1
+                        status:
+                          type: string
+                          example: completed
+                        months_count:
+                          type: integer
+                          example: 12
+                        total_monthly_savings:
+                          type: string
+                          example: '100.00'
+                        total_yearly_savings:
+                          type: string
+                          example: '1200.00'
+                        expires_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        customer:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'Ana Souza'
+                            email:
+                              type: string
+                              example: ana@empresa.com.br
+                  links:
+                    type: object
+                    properties: {}
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 15
+                      total:
+                        type: integer
+                        example: 1
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Esta ação não é autorizada.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Esta ação não é autorizada.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: simulações'
+  '/api/v1/admin/simulations/{id}':
+    get:
+      summary: 'Consultar simulação'
+      operationId: consultarSimulao
+      description: 'Retorna os dados extraídos das faturas e o relatório, sem documentos PDF.'
+      parameters: []
+      responses:
+        200:
+          description: 'Simulação encontrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: completed
+                    invoices: []
+                    report: null
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: completed
+                      invoices:
+                        type: array
+                        example: []
+                      report:
+                        type: string
+                        example: null
+                        nullable: true
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Simulação não encontrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: simulações'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the simulation.'
+        example: 564
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/simulations/{id}/recalculate':
+    post:
+      summary: 'Recalcular relatório'
+      operationId: recalcularRelatrio
+      description: 'Recalcula os resultados a partir dos dados extraídos e registra uma nova versão.'
+      parameters: []
+      responses:
+        200:
+          description: 'Relatório recalculado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    total_monthly_savings: '100.00'
+                    total_yearly_savings: '1200.00'
+                    algorithm_version: '2.0'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      total_monthly_savings:
+                        type: string
+                        example: '100.00'
+                      total_yearly_savings:
+                        type: string
+                        example: '1200.00'
+                      algorithm_version:
+                        type: string
+                        example: '2.0'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Simulação não encontrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Simulação expirada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Simulações expiradas não podem ser recalculadas.'
+                  code: SIMULATION_EXPIRED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Simulações expiradas não podem ser recalculadas.'
+                  code:
+                    type: string
+                    example: SIMULATION_EXPIRED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: simulações'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the simulation.'
+        example: 564
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/tariffs:
+    get:
+      summary: 'Listar tarifas'
+      operationId: listarTarifas
+      description: 'Retorna tarifas paginadas, incluindo sua base tributária e origem.'
+      parameters: []
+      responses:
+        200:
+          description: 'Tarifas paginadas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      distributor_id: 1
+                      subgroup: A4
+                      tariff_modality: blue
+                      time_slot: peak
+                      component: demand
+                      rate: '37.80322'
+                      includes_taxes: true
+                      source: manual
+                      valid_from: '2026-01-01'
+                      valid_to: null
+                  links: {}
+                  meta: {}
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        distributor_id: 1
+                        subgroup: A4
+                        tariff_modality: blue
+                        time_slot: peak
+                        component: demand
+                        rate: '37.80322'
+                        includes_taxes: true
+                        source: manual
+                        valid_from: '2026-01-01'
+                        valid_to: null
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        distributor_id:
+                          type: integer
+                          example: 1
+                        subgroup:
+                          type: string
+                          example: A4
+                        tariff_modality:
+                          type: string
+                          example: blue
+                        time_slot:
+                          type: string
+                          example: peak
+                        component:
+                          type: string
+                          example: demand
+                        rate:
+                          type: string
+                          example: '37.80322'
+                        includes_taxes:
+                          type: boolean
+                          example: true
+                        source:
+                          type: string
+                          example: manual
+                        valid_from:
+                          type: string
+                          example: '2026-01-01'
+                        valid_to:
+                          type: string
+                          example: null
+                          nullable: true
+                  links:
+                    type: object
+                    properties: {}
+                  meta:
+                    type: object
+                    properties: {}
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Administração: tarifas'
+    post:
+      summary: 'Cadastrar tarifa'
+      operationId: cadastrarTarifa
+      description: 'Cria uma tarifa sem sobreposição de vigência.'
+      parameters: []
+      responses:
+        201:
+          description: 'Tarifa criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    includes_taxes: false
+                    source: manual
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      includes_taxes:
+                        type: boolean
+                        example: false
+                      source:
+                        type: string
+                        example: manual
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Dados inválidos ou vigência sobreposta'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Administração: tarifas'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                distributor_id:
+                  type: integer
+                  description: 'ID de uma distribuidora ativa.'
+                  example: 1
+                subgroup:
+                  type: string
+                  description: 'Subgrupo tarifário.'
+                  example: A4
+                tariff_modality:
+                  type: string
+                  description: 'Modalidade tarifária.'
+                  example: blue
+                time_slot:
+                  type: string
+                  description: 'Posto tarifário.'
+                  example: peak
+                component:
+                  type: string
+                  description: 'Componente da tarifa.'
+                  example: demand
+                rate:
+                  type: number
+                  description: 'Valor unitário com até cinco casas decimais.'
+                  example: '37.80322'
+                includes_taxes:
+                  type: boolean
+                  description: 'Indica se o valor inclui tributos.'
+                  example: true
+                valid_from:
+                  type: string
+                  description: 'Início da vigência.'
+                  example: '2026-01-01'
+                valid_to:
+                  type: string
+                  description: 'Fim opcional da vigência.'
+                  example: architecto
+                source_reference:
+                  type: string
+                  description: 'Referência regulatória de origem.'
+                  example: 'REH 1234/2026'
+              required:
+                - distributor_id
+                - subgroup
+                - tariff_modality
+                - time_slot
+                - component
+                - rate
+                - includes_taxes
+                - valid_from
+  '/api/v1/admin/tariffs/{id}':
+    put:
+      summary: 'Criar nova versão de tarifa'
+      operationId: criarNovaVersoDeTarifa
+      description: 'Preserva os valores da versão existente e cria outra tarifa com nova vigência.'
+      parameters: []
+      responses:
+        201:
+          description: 'Nova versão criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 2
+                    includes_taxes: false
+                    source: manual
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 2
+                      includes_taxes:
+                        type: boolean
+                        example: false
+                      source:
+                        type: string
+                        example: manual
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Tarifa não encontrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Dados inválidos ou vigência sobreposta'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Administração: tarifas'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                distributor_id:
+                  type: integer
+                  description: 'ID de uma distribuidora ativa.'
+                  example: 1
+                subgroup:
+                  type: string
+                  description: 'Subgrupo tarifário.'
+                  example: A4
+                tariff_modality:
+                  type: string
+                  description: 'Modalidade tarifária.'
+                  example: blue
+                time_slot:
+                  type: string
+                  description: 'Posto tarifário.'
+                  example: peak
+                component:
+                  type: string
+                  description: 'Componente da tarifa.'
+                  example: demand
+                rate:
+                  type: number
+                  description: 'Valor unitário com até cinco casas decimais.'
+                  example: '40.00000'
+                includes_taxes:
+                  type: boolean
+                  description: 'Indica se o valor inclui tributos.'
+                  example: true
+                valid_from:
+                  type: string
+                  description: 'Início da nova vigência.'
+                  example: '2027-01-01'
+                valid_to:
+                  type: string
+                  description: 'Fim opcional da vigência.'
+                  example: architecto
+                source_reference:
+                  type: string
+                  description: 'Referência regulatória de origem.'
+                  example: 'REH 5678/2027'
+              required:
+                - distributor_id
+                - subgroup
+                - tariff_modality
+                - time_slot
+                - component
+                - rate
+                - includes_taxes
+                - valid_from
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the tariff.'
+        example: 564
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/tariffs/import:
+    post:
+      summary: 'Importar tarifas da ANEEL'
+      operationId: importarTarifasDaANEEL
+      description: 'Importa as tarifas de aplicação em CSV, sem tributos, para os subgrupos A4 e AS de distribuidoras ativas.'
+      parameters: []
+      responses:
+        200:
+          description: 'Resumo da importação'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Importação concluída.'
+                  data:
+                    rows_accepted: 3
+                    rows_ignored: 1
+                    import_id: 1
+                properties:
+                  message:
+                    type: string
+                    example: 'Importação concluída.'
+                  data:
+                    type: object
+                    properties:
+                      rows_accepted:
+                        type: integer
+                        example: 3
+                      rows_ignored:
+                        type: integer
+                        example: 1
+                      import_id:
+                        type: integer
+                        example: 1
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'Acesso restrito ao admin'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Acesso não autorizado.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Acesso não autorizado.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Arquivo inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Administração: tarifas'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 'CSV de tarifas de aplicação obtido no portal de dados abertos da ANEEL.'
+              required:
+                - file
+  /api/v1/auth/register:
+    post:
+      summary: 'Cadastrar cliente'
+      operationId: cadastrarCliente
+      description: 'Cria a conta de cliente e envia um código numérico para confirmação do e-mail.'
+      parameters: []
+      responses:
+        201:
+          description: 'Conta criada e código enviado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Cadastro realizado. Verifique seu e-mail para confirmar a conta.'
+                  data:
+                    id: 1
+                    name: 'Ana Souza'
+                    email: ana@empresa.com.br
+                    role: customer
+                properties:
+                  message:
+                    type: string
+                    example: 'Cadastro realizado. Verifique seu e-mail para confirmar a conta.'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Ana Souza'
+                      email:
+                        type: string
+                        example: ana@empresa.com.br
+                      role:
+                        type: string
+                        example: customer
+        422:
+          description: 'Dados inválidos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors:
+                    email:
+                      - 'Este e-mail já está cadastrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'Este e-mail já está cadastrado.'
+                        items:
+                          type: string
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome do responsável.'
+                  example: 'Ana Souza'
+                email:
+                  type: string
+                  description: 'E-mail de acesso.'
+                  example: ana@empresa.com.br
+                phone:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: i
+                  nullable: true
+                company_name:
+                  type: string
+                  description: 'Nome da empresa.'
+                  example: 'Empresa Exemplo Ltda.'
+                cnpj:
+                  type: string
+                  description: 'Must not be greater than 18 characters.'
+                  example: vdljnikhwaykcmyu
+                  nullable: true
+                distributor_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                  nullable: true
+                transformer_power_kva:
+                  type: number
+                  description: 'Must be at least 0. Must not be greater than 99999999.99.'
+                  example: 22
+                  nullable: true
+                address_details:
+                  type: string
+                  description: 'Must not be greater than 5000 characters.'
+                  example: g
+                  nullable: true
+                substation_same_address:
+                  type: boolean
+                  description: ''
+                  example: true
+                substation_address:
+                  type: string
+                  description: 'This field is required when <code>substation_same_address</code> is <code>false</code>. Must not be greater than 5000 characters.'
+                  example: z
+                  nullable: true
+                terms_accepted:
+                  type: boolean
+                  description: 'Aceite dos Termos de Uso e da Política de Privacidade.'
+                  example: true
+                password:
+                  type: string
+                  description: 'Senha com pelo menos 10 caracteres, letras e números.'
+                  example: EnergiaSegura2026
+                password_confirmation:
+                  type: string
+                  description: 'Confirmação da senha.'
+                  example: EnergiaSegura2026
+              required:
+                - name
+                - email
+                - company_name
+                - substation_same_address
+                - terms_accepted
+                - password
+                - password_confirmation
+      security: []
+  /api/v1/auth/verify-email:
+    post:
+      summary: 'Confirmar e-mail'
+      operationId: confirmarEMail
+      description: 'Confirma o endereço de e-mail usando o código numérico enviado.'
+      parameters: []
+      responses:
+        200:
+          description: 'E-mail confirmado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'E-mail confirmado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'E-mail confirmado.'
+        422:
+          description: 'Código inválido, expirado ou bloqueado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors:
+                    code:
+                      - 'Código inválido, expirado ou com limite de tentativas excedido.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties:
+                      code:
+                        type: array
+                        example:
+                          - 'Código inválido, expirado ou com limite de tentativas excedido.'
+                        items:
+                          type: string
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail da conta.'
+                  example: ana@empresa.com.br
+                code:
+                  type: string
+                  description: 'Código numérico de seis dígitos.'
+                  example: '482913'
+              required:
+                - email
+                - code
+      security: []
+  /api/v1/auth/resend-code:
+    post:
+      summary: 'Reenviar código de confirmação'
+      operationId: reenviarCdigoDeConfirmao
+      description: 'Envia um novo código se o e-mail pertencer a uma conta ainda não confirmada.'
+      parameters: []
+      responses:
+        200:
+          description: 'Solicitação processada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Se a conta existir e ainda não estiver confirmada, enviaremos um novo código.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Se a conta existir e ainda não estiver confirmada, enviaremos um novo código.'
+        429:
+          description: 'Limite de reenvios atingido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Muitas requisições. Tente novamente mais tarde.'
+                  code: TOO_MANY_REQUESTS
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Muitas requisições. Tente novamente mais tarde.'
+                  code:
+                    type: string
+                    example: TOO_MANY_REQUESTS
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail informado no cadastro.'
+                  example: ana@empresa.com.br
+              required:
+                - email
+      security: []
+  /api/v1/auth/login:
+    post:
+      summary: Entrar
+      operationId: entrar
+      description: 'Autentica a conta confirmada e devolve um token Bearer válido por duas horas.'
+      parameters: []
+      responses:
+        200:
+          description: 'Autenticação concluída'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  token: 1|token-em-texto-plano
+                  token_type: Bearer
+                  expires_at: '2026-10-24T18:00:00Z'
+                  user:
+                    id: 1
+                    name: 'Ana Souza'
+                    email: ana@empresa.com.br
+                    role: customer
+                properties:
+                  token:
+                    type: string
+                    example: 1|token-em-texto-plano
+                  token_type:
+                    type: string
+                    example: Bearer
+                  expires_at:
+                    type: string
+                    example: '2026-10-24T18:00:00Z'
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Ana Souza'
+                      email:
+                        type: string
+                        example: ana@empresa.com.br
+                      role:
+                        type: string
+                        example: customer
+        401:
+          description: 'Credenciais inválidas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'E-mail ou senha inválidos.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'E-mail ou senha inválidos.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        403:
+          description: 'E-mail ainda não confirmado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Confirme seu e-mail antes de entrar.'
+                  code: FORBIDDEN
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Confirme seu e-mail antes de entrar.'
+                  code:
+                    type: string
+                    example: FORBIDDEN
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail da conta.'
+                  example: ana@empresa.com.br
+                password:
+                  type: string
+                  description: 'Senha da conta.'
+                  example: EnergiaSegura2026
+              required:
+                - email
+                - password
+      security: []
+  /api/v1/auth/logout:
+    post:
+      summary: Sair
+      operationId: sair
+      description: 'Revoga o token Bearer usado na requisição.'
+      parameters: []
+      responses:
+        200:
+          description: 'Token revogado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Sessão encerrada.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Sessão encerrada.'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Autenticação
+      security: []
+  /api/v1/auth/forgot-password:
+    post:
+      summary: 'Solicitar redefinição de senha'
+      operationId: solicitarRedefinioDeSenha
+      description: 'Envia um link de redefinição quando a conta existe.'
+      parameters: []
+      responses:
+        200:
+          description: 'Resposta neutra'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição.'
+        422:
+          description: 'Formato de e-mail inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors:
+                    email:
+                      - 'Informe um e-mail válido.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'Informe um e-mail válido.'
+                        items:
+                          type: string
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail da conta.'
+                  example: ana@empresa.com.br
+              required:
+                - email
+      security: []
+  /api/v1/auth/reset-password:
+    post:
+      summary: 'Redefinir senha'
+      operationId: redefinirSenha
+      description: 'Redefine a senha usando o link de uso único recebido por e-mail.'
+      parameters: []
+      responses:
+        200:
+          description: 'Senha atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Senha redefinida com sucesso.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Senha redefinida com sucesso.'
+        422:
+          description: 'Link inválido, expirado ou já utilizado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors:
+                    token:
+                      - 'O link é inválido ou expirou.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties:
+                      token:
+                        type: array
+                        example:
+                          - 'O link é inválido ou expirou.'
+                        items:
+                          type: string
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail da conta.'
+                  example: ana@empresa.com.br
+                token:
+                  type: string
+                  description: 'Token recebido no link de redefinição.'
+                  example: token-de-uso-unico
+                password:
+                  type: string
+                  description: 'Nova senha com pelo menos 10 caracteres, letras e números.'
+                  example: NovaSenhaSegura2026
+                password_confirmation:
+                  type: string
+                  description: 'Confirmação da nova senha.'
+                  example: NovaSenhaSegura2026
+              required:
+                - email
+                - token
+                - password
+                - password_confirmation
+      security: []
+  /api/v1/user:
+    get:
+      summary: 'Consultar usuário autenticado'
+      operationId: consultarUsurioAutenticado
+      description: 'Retorna os dados públicos do usuário do token de acesso.'
+      parameters: []
+      responses:
+        200:
+          description: 'Usuário autenticado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'Ana Souza'
+                  email: ana@empresa.com.br
+                  phone: '11999999999'
+                  role: customer
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'Ana Souza'
+                  email:
+                    type: string
+                    example: ana@empresa.com.br
+                  phone:
+                    type: string
+                    example: '11999999999'
+                  role:
+                    type: string
+                    example: customer
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Autenticação
+  /api/v1/example/validate:
+    post:
+      summary: 'Validação de Exemplo'
+      operationId: validaoDeExemplo
+      description: 'Endpoint de demonstração de contratos de sucesso e erro da API.'
+      parameters: []
+      responses:
+        200:
+          description: 'Requisição processada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: ok
+                  message: 'Dados validados com sucesso.'
+                  data:
+                    email: contato@empresa.com.br
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: 'Dados validados com sucesso.'
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        example: contato@empresa.com.br
+        422:
+          description: 'Falha de validação dos campos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'O campo e-mail é obrigatório.'
+                  code: VALIDATION_ERROR
+                  errors:
+                    email:
+                      - 'O campo e-mail é obrigatório.'
+                properties:
+                  message:
+                    type: string
+                    example: 'O campo e-mail é obrigatório.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'O campo e-mail é obrigatório.'
+                        items:
+                          type: string
+      tags:
+        - Exemplos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Endereço de e-mail corporativo válido.'
+                  example: contato@empresa.com.br
+              required:
+                - email
+      security: []
+  /api/v1/leads:
+    post:
+      summary: 'Registrar interesse em distribuidora'
+      operationId: registrarInteresseEmDistribuidora
+      description: 'Registra um lead para uma distribuidora sem atendimento disponível.'
+      parameters: []
+      responses:
+        201:
+          description: 'Lead registrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    email: cliente@empresa.com.br
+                    distributor_name: 'Distribuidora Regional'
+                    reason: unsupported_distributor
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      email:
+                        type: string
+                        example: cliente@empresa.com.br
+                      distributor_name:
+                        type: string
+                        example: 'Distribuidora Regional'
+                      reason:
+                        type: string
+                        example: unsupported_distributor
+        422:
+          description: 'Dados inválidos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+        429:
+          description: 'Limite de requisições excedido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Muitas requisições.'
+                  code: TOO_MANY_REQUESTS
+                properties:
+                  message:
+                    type: string
+                    example: 'Muitas requisições.'
+                  code:
+                    type: string
+                    example: TOO_MANY_REQUESTS
+      tags:
+        - Leads
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'E-mail para contato.'
+                  example: cliente@empresa.com.br
+                distributor_name:
+                  type: string
+                  description: 'Nome da distribuidora de interesse.'
+                  example: 'Distribuidora Regional'
+                reason:
+                  type: string
+                  description: 'Motivo do contato.'
+                  example: unsupported_distributor
+              required:
+                - email
+                - distributor_name
+      security: []
+  /api/v1/me:
+    get:
+      summary: 'Consultar minha conta'
+      operationId: consultarMinhaConta
+      description: 'Retorna os dados públicos da conta autenticada e seu perfil de cliente.'
+      parameters: []
+      responses:
+        200:
+          description: 'Conta autenticada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Ana Souza'
+                    email: ana@empresa.com.br
+                    phone: '11999999999'
+                    role: customer
+                    email_verified_at: '2026-10-24T12:00:00Z'
+                    contact_requested_at: null
+                    profile:
+                      company_name: 'Empresa Exemplo Ltda.'
+                      cnpj: null
+                      distributor_id: 1
+                      transformer_power_kva: 500
+                      address_details: null
+                      substation_same_address: true
+                      substation_address: null
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Ana Souza'
+                      email:
+                        type: string
+                        example: ana@empresa.com.br
+                      phone:
+                        type: string
+                        example: '11999999999'
+                      role:
+                        type: string
+                        example: customer
+                      email_verified_at:
+                        type: string
+                        example: '2026-10-24T12:00:00Z'
+                      contact_requested_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      profile:
+                        type: object
+                        properties:
+                          company_name:
+                            type: string
+                            example: 'Empresa Exemplo Ltda.'
+                          cnpj:
+                            type: string
+                            example: null
+                            nullable: true
+                          distributor_id:
+                            type: integer
+                            example: 1
+                          transformer_power_kva:
+                            type: integer
+                            example: 500
+                          address_details:
+                            type: string
+                            example: null
+                            nullable: true
+                          substation_same_address:
+                            type: boolean
+                            example: true
+                          substation_address:
+                            type: string
+                            example: null
+                            nullable: true
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Minha conta'
+    put:
+      summary: 'Atualizar minha conta'
+      operationId: atualizarMinhaConta
+      description: 'Atualiza nome, telefone e dados de perfil permitidos da conta autenticada.'
+      parameters: []
+      responses:
+        200:
+          description: 'Conta atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Ana Souza'
+                    email: ana@empresa.com.br
+                    phone: '11999999999'
+                    role: customer
+                    profile:
+                      company_name: 'Empresa Exemplo Ltda.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Ana Souza'
+                      email:
+                        type: string
+                        example: ana@empresa.com.br
+                      phone:
+                        type: string
+                        example: '11999999999'
+                      role:
+                        type: string
+                        example: customer
+                      profile:
+                        type: object
+                        properties:
+                          company_name:
+                            type: string
+                            example: 'Empresa Exemplo Ltda.'
+        422:
+          description: 'Dados inválidos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Os dados informados são inválidos.'
+                  code: VALIDATION_ERROR
+                  errors: {}
+                properties:
+                  message:
+                    type: string
+                    example: 'Os dados informados são inválidos.'
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  errors:
+                    type: object
+                    properties: {}
+      tags:
+        - 'Minha conta'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome do responsável.'
+                  example: 'Ana Souza'
+                phone:
+                  type: string
+                  description: 'Telefone de contato.'
+                  example: '11999999999'
+                company_name:
+                  type: string
+                  description: 'Nome da empresa.'
+                  example: 'Empresa Exemplo Ltda.'
+                cnpj:
+                  type: string
+                  description: 'Must not be greater than 18 characters.'
+                  example: zmiyvdljnikhwayk
+                  nullable: true
+                distributor_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                  nullable: true
+                transformer_power_kva:
+                  type: number
+                  description: 'Must be at least 0. Must not be greater than 99999999.99.'
+                  example: 22
+                  nullable: true
+                address_details:
+                  type: string
+                  description: 'Must not be greater than 5000 characters.'
+                  example: g
+                  nullable: true
+                substation_same_address:
+                  type: boolean
+                  description: ''
+                  example: true
+                substation_address:
+                  type: string
+                  description: 'This field is required when <code>substation_same_address</code> is <code>false</code>. Must not be greater than 5000 characters.'
+                  example: z
+                  nullable: true
+              required:
+                - name
+                - phone
+                - company_name
+    delete:
+      summary: 'Excluir minha conta'
+      operationId: excluirMinhaConta
+      description: 'Exclui a conta autenticada e os dados relacionados conforme a solicitação do titular.'
+      parameters: []
+      responses:
+        204:
+          description: 'Conta e dados relacionados excluídos'
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Minha conta'
+  /api/v1/me/contact-request:
+    post:
+      summary: 'Solicitar contato'
+      operationId: solicitarContato
+      description: 'Registra a solicitação de contato comercial do titular da conta.'
+      parameters: []
+      responses:
+        200:
+          description: 'Solicitação registrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Solicitação de contato registrada.'
+                  contact_requested_at: '2026-10-24T12:00:00Z'
+                properties:
+                  message:
+                    type: string
+                    example: 'Solicitação de contato registrada.'
+                  contact_requested_at:
+                    type: string
+                    example: '2026-10-24T12:00:00Z'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - 'Minha conta'
+  /api/v1/simulations:
+    get:
+      summary: 'Listar simulações'
+      operationId: listarSimulaes
+      description: 'Retorna as simulações do cliente autenticado, com paginação.'
+      parameters: []
+      responses:
+        200:
+          description: 'Simulações do cliente'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      status: completed
+                      months_count: 12
+                      total_monthly_savings: '1200.00'
+                      total_yearly_savings: '14400.00'
+                  meta:
+                    current_page: 1
+                    per_page: 15
+                    total: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        status: completed
+                        months_count: 12
+                        total_monthly_savings: '1200.00'
+                        total_yearly_savings: '14400.00'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        status:
+                          type: string
+                          example: completed
+                        months_count:
+                          type: integer
+                          example: 12
+                        total_monthly_savings:
+                          type: string
+                          example: '1200.00'
+                        total_yearly_savings:
+                          type: string
+                          example: '14400.00'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 15
+                      total:
+                        type: integer
+                        example: 1
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Simulações
+    post:
+      summary: 'Criar simulação'
+      operationId: criarSimulao
+      description: 'Valida os dados da empresa e as faturas PDF e registra uma simulação na fila.'
+      parameters: []
+      responses:
+        202:
+          description: 'Simulação registrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: queued
+                    created_at: '2026-10-24T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: queued
+                      created_at:
+                        type: string
+                        example: '2026-10-24T12:00:00Z'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        422:
+          description: 'Distribuidora sem leitor'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'A distribuidora selecionada ainda não possui leitor disponível.'
+                  code: DISTRIBUTOR_UNSUPPORTED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'A distribuidora selecionada ainda não possui leitor disponível.'
+                  code:
+                    type: string
+                    example: DISTRIBUTOR_UNSUPPORTED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Simulações
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                company_name:
+                  type: string
+                  description: 'Nome da empresa.'
+                  example: 'Empresa Exemplo Ltda.'
+                cnpj:
+                  type: string
+                  description: 'Must not be greater than 18 characters.'
+                  example: ngzmiyvdljnikhwa
+                  nullable: true
+                distributor_id:
+                  type: integer
+                  description: 'Identificador da distribuidora atendida.'
+                  example: 1
+                distributor_name:
+                  type: string
+                  description: 'Nome de uma distribuidora ainda não atendida.'
+                  example: 'Distribuidora Exemplo'
+                transformer_power_kva:
+                  type: number
+                  description: 'Must be at least 0. Must not be greater than 99999999.99.'
+                  example: 7
+                  nullable: true
+                address_details:
+                  type: string
+                  description: 'Endereço da empresa.'
+                  example: 'Rua Exemplo, 100, São Paulo/SP'
+                substation_same_address:
+                  type: boolean
+                  description: 'Indica se o endereço da subestação é o mesmo da fatura.'
+                  example: true
+                substation_address:
+                  type: string
+                  description: 'This field is required when <code>substation_same_address</code> is <code>false</code>. Must not be greater than 5000 characters.'
+                  example: m
+                  nullable: true
+                invoices:
+                  type: array
+                  description: 'Must be a file.'
+                  items:
+                    type: string
+                    format: binary
+                'invoices[]':
+                  type: string
+                  format: binary
+                  description: 'Faturas PDF (de 6 a 12 arquivos).'
+              required:
+                - company_name
+                - distributor_id
+                - distributor_name
+                - address_details
+                - substation_same_address
+                - invoices
+                - 'invoices[]'
+  '/api/v1/simulations/{simulationId}/status':
+    get:
+      summary: 'Consultar status da simulação'
+      operationId: consultarStatusDaSimulao
+      description: 'Retorna o estado atual e erros por arquivo, quando houver.'
+      parameters: []
+      responses:
+        200:
+          description: 'Status da simulação'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: failed
+                    processing_errors:
+                      -
+                        file: 01-conta.pdf
+                        code: INVOICE_READ_FAILED
+                        errors:
+                          message: 'Não foi possível ler este arquivo.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: failed
+                      processing_errors:
+                        type: array
+                        example:
+                          -
+                            file: 01-conta.pdf
+                            code: INVOICE_READ_FAILED
+                            errors:
+                              message: 'Não foi possível ler este arquivo.'
+                        items:
+                          type: object
+                          properties:
+                            file:
+                              type: string
+                              example: 01-conta.pdf
+                            code:
+                              type: string
+                              example: INVOICE_READ_FAILED
+                            errors:
+                              type: object
+                              properties:
+                                message:
+                                  type: string
+                                  example: 'Não foi possível ler este arquivo.'
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Simulação não encontrada para este cliente'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Simulações
+    parameters:
+      -
+        in: path
+        name: simulationId
+        description: 'Identificador da simulação.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/simulations/{simulationId}/report':
+    get:
+      summary: 'Consultar relatório da simulação'
+      operationId: consultarRelatrioDaSimulao
+      description: 'Retorna os indicadores, séries e avisos do relatório concluído.'
+      parameters: []
+      responses:
+        200:
+          description: 'Relatório da simulação'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    simulation_id: 1
+                    total_monthly_savings: '1200.00'
+                    total_yearly_savings: '14400.00'
+                    chart_series: {}
+                    warnings: []
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      simulation_id:
+                        type: integer
+                        example: 1
+                      total_monthly_savings:
+                        type: string
+                        example: '1200.00'
+                      total_yearly_savings:
+                        type: string
+                        example: '14400.00'
+                      chart_series:
+                        type: object
+                        properties: {}
+                      warnings:
+                        type: array
+                        example: []
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                  code: UNAUTHENTICATED
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+                  code:
+                    type: string
+                    example: UNAUTHENTICATED
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        404:
+          description: 'Simulação não encontrada para este cliente'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                  code: NOT_FOUND
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+                  code:
+                    type: string
+                    example: NOT_FOUND
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+        409:
+          description: 'Simulação ainda não concluída'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'O relatório ainda não está disponível.'
+                  code: REPORT_NOT_READY
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'O relatório ainda não está disponível.'
+                  code:
+                    type: string
+                    example: REPORT_NOT_READY
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Simulações
+    parameters:
+      -
+        in: path
+        name: simulationId
+        description: 'Identificador da simulação.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/simulations/{simulationId}/pdf':
+    get:
+      summary: 'Baixar relatório em PDF'
+      operationId: baixarRelatrioEmPDF
+      description: 'Retorna o relatório concluído em PDF para o cliente proprietário.'
+      parameters: []
+      responses:
+        200:
+          description: 'Relatório PDF'
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: PDF
+        401:
+          description: 'Token ausente ou inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não autenticado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Não autenticado.'
+        404:
+          description: 'Simulação não encontrada para este cliente'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Recurso não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Recurso não encontrado.'
+        409:
+          description: 'Simulação ainda não concluída'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'O relatório ainda não está disponível.'
+                properties:
+                  message:
+                    type: string
+                    example: 'O relatório ainda não está disponível.'
+      tags:
+        - Simulações
+    parameters:
+      -
+        in: path
+        name: simulationId
+        description: 'Identificador da simulação.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/status:
+    get:
+      summary: 'Status da API'
+      operationId: statusDaAPI
+      description: 'Retorna o status operacional da API EnerDiag v1.'
+      parameters: []
+      responses:
+        200:
+          description: 'API em funcionamento normal'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: ok
+                  version: v1
+                  environment: local
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: v1
+                  environment:
+                    type: string
+                    example: local
+        500:
+          description: 'Erro interno'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Erro interno do servidor.'
+                  code: INTERNAL_SERVER_ERROR
+                  errors: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Erro interno do servidor.'
+                  code:
+                    type: string
+                    example: INTERNAL_SERVER_ERROR
+                  errors:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Sistema
+      security: []
