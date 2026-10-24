@@ -21,6 +21,19 @@ class ExtractedInvoiceDataTest extends TestCase
         }
     }
 
+    public function test_it_requires_the_total_paid_value(): void
+    {
+        $data = $this->invoiceData();
+        unset($data['total_paid']);
+
+        try {
+            ExtractedInvoiceData::fromArray($data);
+            $this->fail('An invoice without total paid must be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('total_paid', $exception->errors());
+        }
+    }
+
     public function test_an_omitted_item_list_is_normalized_to_no_items(): void
     {
         $data = $this->invoiceData();
