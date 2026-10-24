@@ -8,13 +8,21 @@ use DateTimeInterface;
 
 final class RegulatoryParameterService
 {
+    /** @var array<string, RegulatoryParameter|null> */
+    private array $resolvedParameters = [];
+
     public function resolve(string $key, DateTimeInterface|string $date): ?RegulatoryParameter
     {
         $referenceDate = $date instanceof DateTimeInterface
             ? CarbonImmutable::instance($date)->toDateString()
             : CarbonImmutable::parse($date)->toDateString();
 
-        return RegulatoryParameter::query()
+        $cacheKey = $key.'|'.$referenceDate;
+        if (array_key_exists($cacheKey, $this->resolvedParameters)) {
+            return $this->resolvedParameters[$cacheKey];
+        }
+
+        $this->resolvedParameters[$cacheKey] = RegulatoryParameter::query()
             ->where('key', $key)
             ->whereNull('state')
             ->whereDate('valid_from', '<=', $referenceDate)
@@ -24,5 +32,7 @@ final class RegulatoryParameterService
             })
             ->orderByDesc('valid_from')
             ->first();
+
+        return $this->resolvedParameters[$cacheKey];
     }
 }

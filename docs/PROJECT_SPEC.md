@@ -116,7 +116,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: com a fixture ENEL de referência, `k` ≈ 1,2902 em todos os itens (por exemplo demanda ponta 37,80322 ÷ 29,30000; demanda fora de ponta 21,98516 ÷ 17,04000; TUSD 0,16134 ÷ 0,12505; TE 0,56657 ÷ 0,43913 e 0,35293 ÷ 0,27354), com diferença entre itens dentro do arredondamento de 5 casas, e igual a 1 ÷ (1 − 18% − PIS/COFINS%); `k` divergente entre itens acima da tolerância gera aviso; sem a coluna de tarifa sem tributos, `k` vem de 1 ÷ (1 − ICMS − PIS/COFINS%), e sem esses dados a migração fica indisponível; a tarifa sem tributos da fatura confere com a tarifa ANEEL da vigência (aviso se divergir); TE igual nas duas modalidades usa a TE da fatura; TE diferente na tabela recebe `k`; sem tarifa ANEEL da vigência do mês → migração indisponível com aviso.
 - [x] 3.5 Faturamento de demanda por mês e posto (RC-1), usando `r`.
   - Teste: com Dc = 100 kW e `r` = 0,82: Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 140·T; limite exato Dm = 1,05·Dc; com `r` = 1, Dm 80 → 100·T.
-- [ ] 3.6 Demanda ótima (RC-2).
+- [x] 3.6 Demanda ótima (RC-2).
   - Teste: série sintética com ótimo conhecido; Azul com ponta e fora de ponta separados; Verde com demanda única; empate escolhe a menor demanda; sem multa de ultrapassagem desnecessária.
 - [ ] 3.7 Reativos UFER e demanda reativa excedente (RC-3).
   - Teste: série com cobrança (economia = 100% do pago) e sem cobrança (resultado zero, “sem ocorrência no período”).
