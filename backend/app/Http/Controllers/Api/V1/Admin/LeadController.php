@@ -17,6 +17,7 @@ class LeadController extends Controller
     #[Authenticated]
     #[Endpoint('Listar leads e pedidos de contato', 'Retorna uma lista paginada com leads de distribuidoras e solicitações de contato de clientes.')]
     #[Response(status: 200, content: '{"data":[{"type":"unsupported_distributor","id":1,"email":"cliente@empresa.com.br","distributor_name":"Distribuidora X","reason":"Fora da área atendida","customer_name":null,"requested_at":"2026-10-24T12:00:00Z"}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}', description: 'Leads paginados')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     public function index(Request $request): JsonResponse
     {

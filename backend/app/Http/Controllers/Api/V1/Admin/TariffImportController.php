@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Admin\ImportTariffRequest;
 use App\Services\AneelTariffImporter;
 use Illuminate\Http\JsonResponse;
 use Knuckles\Scribe\Attributes\Authenticated;
+use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
 use Knuckles\Scribe\Attributes\Response;
@@ -16,7 +17,9 @@ class TariffImportController extends Controller
 {
     #[Authenticated]
     #[Endpoint('Importar tarifas da ANEEL', 'Importa as tarifas de aplicação em CSV, sem tributos, para os subgrupos A4 e AS de distribuidoras ativas.')]
+    #[BodyParam('file', 'file', 'CSV de tarifas de aplicação obtido no portal de dados abertos da ANEEL.', required: true)]
     #[Response(status: 200, content: '{"message":"Importação concluída.","data":{"rows_accepted":3,"rows_ignored":1,"import_id":1}}', description: 'Resumo da importação')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     #[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}', description: 'Arquivo inválido')]
     public function store(ImportTariffRequest $request, AneelTariffImporter $importer): JsonResponse

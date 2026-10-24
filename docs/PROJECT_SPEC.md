@@ -180,7 +180,7 @@ Ref: RN-1, DB, API (Admin)
   - Teste: admin cria nova versão de um parâmetro nacional (por exemplo a reserva da demanda ociosa); versão anterior permanece inalterada; cliente 403.
 - [x] 6.7 `GET /admin/leads` (leads de distribuidora não atendida e pedidos de contato).
   - Teste: lista paginada; cliente 403.
-- [ ] 6.8 Fechar a documentação da API: todos os endpoints com exemplos e erros, e coleção Postman/OpenAPI.
+- [x] 6.8 Fechar a documentação da API: todos os endpoints com exemplos e erros, e coleção Postman/OpenAPI.
   - Teste: a geração roda; conferir que cada endpoint de §6 está documentado.
 
 ### Fase 7 — Frontend: base

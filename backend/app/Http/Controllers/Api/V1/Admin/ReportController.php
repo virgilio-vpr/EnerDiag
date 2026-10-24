@@ -38,6 +38,7 @@ class ReportController extends Controller
     #[BodyParam('explanatory_texts', 'array', 'Textos explicativos do relatório.', example: ['Ajuste recomendado da demanda.'])]
     #[BodyParam('recommendations', 'array', 'Recomendações do relatório.', example: ['Avalie a adequação da demanda contratada.'])]
     #[Response(status: 200, content: '{"data":{"id":1,"total_monthly_savings":"100.00","explanatory_texts":["Texto revisado"],"recommendations":["Recomendação revisada"]}}', description: 'Relatório atualizado e revisão registrada')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     #[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}', description: 'Campos inválidos ou tentativa de alterar resultados')]
     public function update(UpdateReportRequest $request, int $id): JsonResponse
@@ -69,6 +70,7 @@ class ReportController extends Controller
     #[Authenticated]
     #[Endpoint('Reenviar relatório', 'Envia manualmente por e-mail o resumo atual do relatório ao cliente.')]
     #[Response(status: 200, content: '{"message":"Relatório reenviado por e-mail."}', description: 'E-mail enviado')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     #[Response(status: 404, content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}', description: 'Relatório não encontrado')]
     public function resend(Request $request, int $id): JsonResponse

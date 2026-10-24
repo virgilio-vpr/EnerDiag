@@ -23,6 +23,7 @@ class SimulationController extends Controller
     #[Authenticated]
     #[Endpoint('Listar simulações', 'Retorna simulações paginadas com identificação do cliente.')]
     #[Response(status: 200, content: '{"data":[{"id":1,"user_id":1,"status":"completed","months_count":12,"total_monthly_savings":"100.00","total_yearly_savings":"1200.00","expires_at":null,"customer":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br"}}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}', description: 'Simulações paginadas')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Esta ação não é autorizada.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     public function index(Request $request): JsonResponse
     {
@@ -42,6 +43,8 @@ class SimulationController extends Controller
     #[Authenticated]
     #[Endpoint('Consultar simulação', 'Retorna os dados extraídos das faturas e o relatório, sem documentos PDF.')]
     #[Response(status: 200, content: '{"data":{"id":1,"status":"completed","invoices":[],"report":null}}', description: 'Simulação encontrada')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
+    #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     #[Response(status: 404, content: '{"message":"Não encontrado.","code":"NOT_FOUND","errors":null}', description: 'Simulação não encontrada')]
     public function show(Request $request, int $id): JsonResponse
     {
@@ -57,6 +60,7 @@ class SimulationController extends Controller
     #[Authenticated]
     #[Endpoint('Recalcular relatório', 'Recalcula os resultados a partir dos dados extraídos e registra uma nova versão.')]
     #[Response(status: 200, content: '{"data":{"id":1,"total_monthly_savings":"100.00","total_yearly_savings":"1200.00","algorithm_version":"2.0"}}', description: 'Relatório recalculado')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
     #[Response(status: 404, content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}', description: 'Simulação não encontrada')]
     #[Response(status: 422, content: '{"message":"Simulações expiradas não podem ser recalculadas.","code":"SIMULATION_EXPIRED","errors":null}', description: 'Simulação expirada')]
