@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ApiError, getHttpErrorMessage } from '../services/api/client'
+import { ApiError } from '../services/api/client'
+import { ErrorPage } from '../pages/ErrorPage'
 
 export function ApiErrorHandler() {
   const [error, setError] = useState<ApiError | null>(null)
@@ -18,5 +19,5 @@ export function ApiErrorHandler() {
   }, [])
 
   if (!error) return null
-  return <div role="alert">{getHttpErrorMessage(error.status, error.message)}</div>
+  return <ErrorPage status={error.status} message={error.message} />
 }

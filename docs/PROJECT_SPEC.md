@@ -194,7 +194,7 @@ Ref: FE, RN-7
   - Teste: mock de 401 redireciona; mock de 422 e 429 exibe a mensagem correta.
 - [x] 7.4 Rotas protegidas por perfil (cliente e admin).
   - Teste: sem login vai ao login; cliente em rota admin vê 403.
-- [ ] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
+- [x] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
   - Teste: cada código renderiza a mensagem amigável; a 503 mostra a previsão.
 - [ ] 7.6 Layout responsivo base (desktop, tablet e mobile).
   - Teste: renderização nos três breakpoints; checagem manual no celular.

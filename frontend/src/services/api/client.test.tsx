@@ -36,6 +36,6 @@ describe('API client', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(message as string)
+    expect(await screen.findByRole('main')).toHaveTextContent(message as string)
   })
 })
