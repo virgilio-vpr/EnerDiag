@@ -130,7 +130,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: valores esperados de economia mensal, anual e %; rótulo do percentual; divisão por zero protegida; séries por mês corretas.
 - [x] 3.12 Serviço de recálculo a partir dos dados extraídos: gera nova versão do relatório (`algorithm_version`, tarifas vigentes no momento) sem reler PDFs.
   - Teste: recalcular após atualização de tarifa muda o resultado; a versão anterior e o histórico de revisões permanecem.
-- [ ] 3.13 Benchmark com as planilhas `Analise_Faturas_Energia_Preenchida_*` (quando anexadas).
+- [x] 3.13 Benchmark com as planilhas `Analise_Faturas_Energia_Preenchida_*` (quando anexadas).
   - Teste: o resultado do motor iguala a planilha, com tolerância de centavos. Depende de §9.
 
 ### Fase 4 — Leitura das faturas (leitor ENEL)
@@ -405,7 +405,7 @@ Itens regulatórios conferidos em `docs/REN 1000.pdf` e dados da fatura ENEL con
 - [x] Tolerância da reconciliação (RC-1b): R$ 0,02, definida para a versão 1.
 - [ ] Faixa padrão da demanda ótima, limites e prazos para alterar a demanda contratada, demanda mínima contratável.
 - [ ] Restrições regulatórias para troca de modalidade (RC-4) e validação da obrigatoriedade da TUSD Consumo Ponta da Verde.
-- [ ] Benchmark: casos das planilhas como testes do motor (tarefa 3.13).
+- [x] Benchmark: as planilhas Azul e Verde foram comparadas com os custos anuais de demanda e reativos; divergência máxima observada dentro de R$ 0,02 por causa do arredondamento monetário do RC-0.
 - [ ] Bibliotecas a escolher: leitura de PDF (`smalot/pdfparser` ou `pdftotext`), geração de PDF, documentação da API (compatibilidade com PHP 8.5 e Laravel 13).
 - [ ] Textos jurídicos (Política de Privacidade e Termos) e canal de contato comercial (WhatsApp ou e-mail).
 - [ ] Segundo fator (TOTP) para o admin: adotar ou não (tarefa 11.2).
