@@ -138,7 +138,7 @@ Ref: RN-3, RN-4, RN-5, RN-6
 
 - [x] 4.1 Interface `InvoiceReader` por distribuidora, escolhida por `parser_key`; cada leitor declara se reconhece a linha de demanda ociosa.
   - Teste: a ENEL resolve o leitor correto e declara que reconhece a linha; distribuidora sem leitor lança exceção específica.
-- [x] 4.2 Extração de texto do PDF (biblioteca a avaliar: smalot/pdfparser ou pdftotext) em arquivo temporário em disco privado (fora de `public`), apagado ao final inclusive em erro; rotina diária apaga temporários órfãos com mais de 1 hora (prazo maior que o tempo máximo de espera na fila).
+- [x] 4.2 Extração de texto do PDF (biblioteca `smalot/pdfparser`) em arquivo temporário em disco privado (fora de `public`), apagado ao final inclusive em erro; rotina diária apaga temporários órfãos com mais de 1 hora (prazo maior que o tempo máximo de espera na fila).
   - Teste: PDF de exemplo gera texto; após sucesso, falha e limpeza de órfão, nenhum arquivo temporário permanece.
 - [x] 4.3 Leitor ENEL: lê o quadro de faturamento e devolve os campos de RN-5 com a nomenclatura de RN-6 (por item: quantidade, preço unitário com tributos, tarifa unitária sem tributos, valor, PIS/COFINS, base e alíquota de ICMS e ICMS); a demanda ociosa aceita linhas sem quantidade e sem preço unitário, e as duas linhas de mesmo rótulo são associadas aos postos por matching biunívoco com o menor erro quadrático em relação a $(D_c - D_m) \times P_{trib} \times (1 - \text{ICMS})$, neutralizando inversões da ordem física da fatura; itens ausentes = 0.
   - Teste: fixtures anonimizadas, uma com o quadro de referência (Azul, com as duas linhas “DEMANDA LEI ESTADUAL 16.886/18” sem quantidade, onde a primeira linha física corresponde a Fora de Ponta R$ 1.845,32 e a segunda a Ponta R$ 3.603,28) e outra sem linha ociosa; valores do quadro conferidos à mão (por exemplo demanda ponta 221,760 kW × 37,80322 = 8.383,25; total 98.922,22; PIS/COFINS 4.452,11; ICMS 16.637,37; COSIP 1.043,66); distingue as leituras DMCR da memória do medidor da cobrança UFDR e das linhas de UFER. Anonimizar antes de adicionar a fixture ao repositório.
@@ -150,17 +150,17 @@ Ref: RN-3, RN-4, RN-5, RN-6
 ### Fase 5 — API de simulação e relatório (cliente)
 Ref: RN-3, RN-4, RC, DB, API (Cliente)
 
-- [ ] 5.1 `POST /simulations` (multipart + dados da empresa): valida a requisição e cria a simulação em fila (`queued`); validações de entrada respondem 422 antes de enfileirar.
+- [x] 5.1 `POST /simulations` (multipart + dados da empresa): valida a requisição e cria a simulação em fila (`queued`); validações de entrada respondem 422 antes de enfileirar.
   - Teste: sucesso; validações; distribuidora sem leitor → 422 com código `DISTRIBUTOR_UNSUPPORTED` e lead registrado; sem token → 401.
-- [ ] 5.2 Job de processamento: extrai, valida, grava `invoices` e `invoice_items`, calcula (com a reconciliação de RC-1b), gera `reports` e atualiza o status (`processing`, `completed` ou `failed`); descarta temporários.
+- [x] 5.2 Job de processamento: extrai, valida, grava `invoices` e `invoice_items`, calcula (com a reconciliação de RC-1b), gera `reports` e atualiza o status (`processing`, `completed` ou `failed`); descarta temporários. Partes dependentes das regras ainda abertas no §9 ficam indisponíveis com aviso.
   - Teste: job com fixtures completa; falha de leitura após enfileirar vira `failed` com erro associado ao arquivo; cliente consulta o erro em `/status`; retry é idempotente e não duplica dados; temporários apagados em sucesso, falha e timeout.
-- [ ] 5.3 `GET /simulations`, `GET /simulations/{id}/status` e `GET /simulations/{id}/report`.
+- [x] 5.3 `GET /simulations`, `GET /simulations/{id}/status` e `GET /simulations/{id}/report`.
   - Teste: cada cliente vê só as próprias simulações; transições `queued` → `processing` → `completed` ou `failed`; status de falha inclui código e erros por arquivo; relatório com indicadores, séries e avisos.
-- [ ] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (biblioteca de PDF a avaliar).
+- [x] 5.4 PDF do relatório (`GET /simulations/{id}/pdf`) e e-mail ao concluir (geração de PDF autocontida, sem nova dependência).
   - Teste: PDF gerado não vazio e com os indicadores; e-mail enviado ao concluir (fake mail).
-- [ ] 5.5 Expurgo: comando diário agendado remove simulação e todos os dados relacionados (faturas, itens, relatórios e revisões) após 180 dias.
+- [x] 5.5 Expurgo: comando diário agendado remove simulação e todos os dados relacionados (faturas, itens, relatórios e revisões) após 180 dias.
   - Teste: simulação com 181 dias e seus dados relacionados removidos; com 179 dias mantida; conta e `contact_requested_at` preservados.
-- [ ] 5.6 `POST /leads` (interesse em distribuidora não atendida).
+- [x] 5.6 `POST /leads` (interesse em distribuidora não atendida).
   - Teste: grava o lead; validação de e-mail; limite de requisições.
 
 ### Fase 6 — API do admin
@@ -309,7 +309,7 @@ Ref: RN-7, §9
 Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 140·T. Com `r` = 1: Dm 80 → 100·T.
 
 **RC-1a Proporção da demanda ociosa (`r`).** As linhas de demanda ociosa (“DEMANDA LEI ESTADUAL 16.886/18” na ENEL SP) podem vir sem quantidade e sem preço unitário, só com valor, PIS/COFINS e ICMS 0%. `r` é obtido, por mês e posto, na seguinte ordem:
-1. **Pela tributação (fonte principal):** `r` = 1 − alíquota de ICMS das linhas normais de demanda do mesmo mês, quando a linha ociosa traz base de ICMS e alíquota 0%. Confirmação: o PIS/COFINS% da linha ociosa deve ser ≈ PIS/COFINS% das linhas normais ÷ (1 − ICMS) (fixture ENEL: 4,49% ÷ 0,82 ≈ 5,48%); sem confirmação dentro da tolerância, avisar.
+1. **Pela tributação (fonte principal):** `r` = 1 − alíquota de ICMS das linhas normais de demanda do mesmo mês, quando a linha ociosa traz base de ICMS e alíquota 0%. Confirmação: o PIS/COFINS% da linha ociosa deve ser ≈ PIS/COFINS% das linhas normais ÷ (1 − ICMS) (fixture ENEL: 4,49% ÷ 0,82 ≈ 5,48%), com tolerância de 0,02 ponto percentual; sem confirmação dentro da tolerância, avisar.
 2. **Pelo preço unitário, se a linha o trouxer:** `r` = preço unitário com tributos da demanda ociosa ÷ preço unitário com tributos da demanda normal do mesmo posto.
 3. **Reserva:** `idle_demand_discount_fallback` (padrão 18%, `r` = 0,82), com aviso, quando nenhuma das duas formas revelar `r`.
 - Meses sem a linha ociosa usam o `r` do mesmo período tarifário (uma mudança de tarifa, como o reajuste anual, inicia novo período); sem mês revelador no período, usa-se o `r` do período mais próximo no tempo.
@@ -354,7 +354,7 @@ Tabelas em inglês. Tarifas com 5 casas decimais; grandezas de demanda, consumo 
 - `tariffs` (id, distributor_id, subgroup, tariff_modality, time_slot, component, rate, includes_taxes, source, source_reference, valid_from, valid_to); `component`: `demand`, `energy_te`, `energy_tusd`; `includes_taxes`: `true` para preço com tributos (como na fatura) e `false` para tarifas importadas da ANEEL (somente “tarifas de aplicação”, não a base econômica); `source`: `aneel_import` ou `manual`; `source_reference`: resolução homologatória de origem.
 - `tariff_imports` (id, source_reference, file_name, imported_by, imported_at, rows_accepted, rows_ignored, status)
 - `regulatory_parameters` (id, key, value, state nullable, valid_from, valid_to); na versão 1 só há parâmetros nacionais (`state = null`): `overrun_tolerance = 0.05`, `overrun_multiplier = 2`, `reference_power_factor = 0.92` e `idle_demand_discount_fallback = 0.18`. A coluna `state` fica reservada para evolução futura. Sem sobreposição de vigências para a mesma chave e escopo.
-- `simulations` (id, user_id, status, months_count, total_monthly_savings, total_yearly_savings, expires_at)
+- `simulations` (id, user_id, status, `processing_errors` JSON por arquivo, months_count, total_monthly_savings, total_yearly_savings, expires_at)
 - `invoices` (id, simulation_id, reference_month, consumer_unit, subgroup, tariff_modality, total_paid `DECIMAL(14,2)`); unicidade de `(simulation_id, reference_month)`; a unidade consumidora deve ser a mesma em todas as faturas da simulação.
 - `invoice_items` (id, invoice_id, item_type, tariff_component, time_slot, reactive_nature, quantity, unit, unit_price_taxed, tariff_rate, amount, pis_cofins_amount, icms_base, icms_rate, icms_amount, source_label); `quantity DECIMAL(14,3)`; `unit_price_taxed DECIMAL(14,5)` (preço unitário com tributos) e `tariff_rate DECIMAL(14,5)` (“Tarifa unit”, sem tributos); `amount`, `pis_cofins_amount`, `icms_base` e `icms_amount` `DECIMAL(14,2)`; `icms_rate DECIMAL(6,4)`; `time_slot`: ponta, fora de ponta, única ou madrugada/fim de semana; campos de componente, posto e natureza reativa usam valor `not_applicable` quando não se aplicam, permitindo unicidade de `(invoice_id, item_type, tariff_component, time_slot, reactive_nature)`. Tipos representam demanda contratada/medida, consumo ativo, ultrapassagem, demanda ociosa, UFER e demanda reativa excedente. A demanda ociosa pode ter `quantity`, `unit_price_taxed` e `tariff_rate` nulos; a tarifa de ultrapassagem é derivada no cálculo.
 - `reports` (resultados calculados persistidos: totais mensal/anual, valores por componente, percentual de economia, séries dos gráficos, avisos, textos explicativos e recomendações geradas, valores de `r` por período (com a fonte usada) e de `k` por mês; `algorithm_version`, `tariff_version_ids` e `regulatory_parameter_version_ids` guardam a rastreabilidade sem duplicar valores das tabelas versionadas); `report_revisions` (histórico de textos explicativos/recomendações editados, autor e data; resultados calculados são somente leitura)

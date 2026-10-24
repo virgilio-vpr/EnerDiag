@@ -38,6 +38,15 @@ return [
             'report' => false,
         ],
 
+        'invoice_temp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/invoice-temp'),
+            'visibility' => 'private',
+            'directory_visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

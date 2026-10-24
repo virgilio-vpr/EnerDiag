@@ -20,6 +20,7 @@ class Simulation extends Model
     protected $fillable = [
         'user_id',
         'status',
+        'processing_errors',
         'months_count',
         'total_monthly_savings',
         'total_yearly_savings',
@@ -59,6 +60,7 @@ class Simulation extends Model
     {
         return [
             'months_count' => 'integer',
+            'processing_errors' => 'array',
             'total_monthly_savings' => 'decimal:2',
             'total_yearly_savings' => 'decimal:2',
             'expires_at' => 'datetime',
