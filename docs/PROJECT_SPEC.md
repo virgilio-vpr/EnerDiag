@@ -166,7 +166,7 @@ Ref: RN-3, RN-4, RC, DB, API (Cliente)
 ### Fase 6 — API do admin
 Ref: RN-1, DB, API (Admin)
 
-- [ ] 6.1 Clientes e simulações: `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}` (dados extraídos, nunca PDFs), com paginação.
+- [x] 6.1 Clientes e simulações: `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}` (dados extraídos, nunca PDFs), com paginação.
   - Teste: admin ok; cliente 403; paginação; nenhum campo de arquivo PDF exposto.
 - [ ] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
   - Teste: edição textual gera revisão com autor sem alterar resultados; tentativa de alterar resultado é rejeitada; reenvio dispara e-mail; cliente 403.

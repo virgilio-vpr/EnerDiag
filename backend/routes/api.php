@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\ExampleController;
@@ -17,6 +19,13 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
+
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/customers', [AdminCustomerController::class, 'index']);
+    Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
+    Route::get('/simulations', [AdminSimulationController::class, 'index']);
+    Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [MeController::class, 'show']);
