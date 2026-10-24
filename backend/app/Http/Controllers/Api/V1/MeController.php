@@ -98,6 +98,28 @@ class MeController extends Controller
     }
 
     /**
+     * Record that the account holder requested commercial contact.
+     */
+    #[Authenticated]
+    #[Endpoint('Solicitar contato', 'Registra a solicitação de contato comercial do titular da conta.')]
+    #[Response(status: 200, content: '{"message":"Solicitação de contato registrada.","contact_requested_at":"2026-10-24T12:00:00Z"}', description: 'Solicitação registrada')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
+    public function requestContact(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->contact_requested_at) {
+            $user->forceFill(['contact_requested_at' => now()])->save();
+        }
+
+        return response()->json([
+            'message' => 'Solicitação de contato registrada.',
+            'contact_requested_at' => $user->fresh()->contact_requested_at->toIso8601String(),
+        ]);
+    }
+
+    /**
      * Format the fields exposed for the authenticated account.
      *
      * @return array<string, mixed>

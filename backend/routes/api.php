@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);
+    Route::post('/me/contact-request', [MeController::class, 'requestContact']);
 });
 
 Route::get('/user', CurrentUserController::class)->middleware('auth:sanctum');
