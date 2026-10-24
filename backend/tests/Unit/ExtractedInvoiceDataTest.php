@@ -56,6 +56,21 @@ class ExtractedInvoiceDataTest extends TestCase
         }
     }
 
+    public function test_it_requires_the_tax_fields_on_present_items(): void
+    {
+        $data = $this->invoiceData();
+        $item = $this->itemData('measured_demand', '1.000', '37.80322', '37.80');
+        unset($item['pis_cofins_amount']);
+        $data['items'] = [$item];
+
+        try {
+            ExtractedInvoiceData::fromArray($data);
+            $this->fail('Expected a present item without PIS/COFINS to be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('items.0.pis_cofins_amount', $exception->errors());
+        }
+    }
+
     public function test_it_enforces_decimal_precision_and_rejects_floats(): void
     {
         $data = $this->invoiceData();
@@ -126,6 +141,10 @@ class ExtractedInvoiceDataTest extends TestCase
             'unit_price_taxed' => $unitPrice,
             'tariff_rate' => null,
             'amount' => $amount,
+            'pis_cofins_amount' => '0.00',
+            'icms_base' => '0.00',
+            'icms_rate' => '0.0000',
+            'icms_amount' => '0.00',
             'source_label' => 'DEMANDA LEI ESTADUAL 16.886/18',
         ];
     }

@@ -29,23 +29,6 @@ final readonly class ExtractedInvoiceData
     {
         $data['items'] ??= [];
 
-        if (is_array($data['items'])) {
-            foreach ($data['items'] as $index => $item) {
-                if (! is_array($item)) {
-                    continue;
-                }
-
-                foreach ([
-                    'pis_cofins_amount' => '0.00',
-                    'icms_base' => '0.00',
-                    'icms_rate' => '0.0000',
-                    'icms_amount' => '0.00',
-                ] as $field => $default) {
-                    $data['items'][$index][$field] ??= $default;
-                }
-            }
-        }
-
         $validator = Validator::make($data, [
             'reference_month' => ['required', 'string', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'consumer_unit' => ['required', 'string', 'max:50'],
