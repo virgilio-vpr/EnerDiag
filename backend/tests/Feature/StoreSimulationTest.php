@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Invoices\Pdf\PdfPageCounter;
+use App\Jobs\ProcessSimulation;
 use App\Models\Distributor;
 use App\Models\Lead;
 use App\Models\Simulation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -21,6 +23,7 @@ class StoreSimulationTest extends TestCase
         parent::setUp();
 
         Storage::fake('invoice_temp');
+        Queue::fake();
         $this->mock(PdfPageCounter::class, function ($mock): void {
             $mock->shouldReceive('count')->andReturn(1);
         });
@@ -58,6 +61,7 @@ class StoreSimulationTest extends TestCase
             'address_details' => 'Rua Exemplo, 100, São Paulo/SP',
         ]);
         $this->assertCount(6, Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
+        Queue::assertPushed(ProcessSimulation::class, fn ($job): bool => $job->simulationId === $simulation->id);
     }
 
     public function test_invalid_company_data_is_rejected_before_simulation_or_file_storage(): void

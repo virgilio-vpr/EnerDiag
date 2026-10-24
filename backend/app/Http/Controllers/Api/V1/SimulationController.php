@@ -8,6 +8,7 @@ use App\Invoices\Exceptions\UnsupportedDistributorException;
 use App\Models\Simulation;
 use App\Services\SubmitSimulation;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Knuckles\Scribe\Attributes\Authenticated;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
@@ -17,6 +18,17 @@ use Knuckles\Scribe\Attributes\Response;
 #[Group('Simulações', 'Envio e processamento de faturas de energia')]
 class SimulationController extends Controller
 {
+    public function status(Request $request, int $simulationId): JsonResponse
+    {
+        $simulation = $request->user()->simulations()->findOrFail($simulationId);
+
+        return response()->json(['data' => [
+            'id' => $simulation->id,
+            'status' => $simulation->status,
+            'processing_errors' => $simulation->processing_errors,
+        ]]);
+    }
+
     /**
      * Submit invoices for asynchronous processing.
      */

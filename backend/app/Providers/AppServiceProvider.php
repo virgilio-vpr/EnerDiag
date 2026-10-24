@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Calculation\Contracts\ReportCalculationEngine;
+use App\Calculation\Services\SimulationReportCalculationEngine;
 use App\Invoices\Pdf\PdfPageCounter;
 use App\Invoices\Pdf\PdfTextParser;
 use App\Invoices\Pdf\SmalotPdfPageCounter;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(InvoiceReaderResolver::class, function (): InvoiceReaderResolver {
             return new InvoiceReaderResolver([new EnelInvoiceReader]);
         });
+        $this->app->bind(ReportCalculationEngine::class, SimulationReportCalculationEngine::class);
         $this->app->bind(PdfTextParser::class, SmalotPdfTextParser::class);
         $this->app->bind(PdfPageCounter::class, SmalotPdfPageCounter::class);
     }

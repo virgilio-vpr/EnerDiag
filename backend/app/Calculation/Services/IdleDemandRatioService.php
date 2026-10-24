@@ -134,7 +134,7 @@ final class IdleDemandRatioService
         if ($normalItem !== null) {
             $idleTaxRows = array_filter(
                 $month->idleDemandItems,
-                static fn (ExtractedInvoiceItemData $item): bool => bccomp($item->icmsBase, '0', 2) > 0
+                static fn (ExtractedInvoiceItemData $item): bool => bccomp($item->amount, '0', 2) > 0
                     && bccomp($item->icmsRate, '0', 4) === 0,
             );
 

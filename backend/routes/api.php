@@ -21,6 +21,7 @@ Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->m
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
+    Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status']);
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);

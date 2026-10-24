@@ -6,6 +6,7 @@ use App\Invoices\Exceptions\UnsupportedDistributorException;
 use App\Invoices\Exceptions\UnsupportedInvoiceReaderException;
 use App\Invoices\Readers\InvoiceReaderResolver;
 use App\Invoices\Validation\InvoiceUploadValidator;
+use App\Jobs\ProcessSimulation;
 use App\Models\CustomerProfile;
 use App\Models\Distributor;
 use App\Models\Lead;
@@ -73,12 +74,16 @@ class SubmitSimulation
                 ]);
                 $directory = 'simulation-'.$simulation->id;
 
-                foreach ($files as $file) {
-                    $storedPath = $file->storeAs($directory, Str::uuid().'.pdf', 'invoice_temp');
+                foreach ($files as $index => $file) {
+                    $originalName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+                    $storedName = sprintf('%02d-%s-%s.pdf', $index + 1, Str::uuid(), $originalName !== '' ? $originalName : 'invoice');
+                    $storedPath = $file->storeAs($directory, $storedName, 'invoice_temp');
                     if ($storedPath === false) {
                         throw new \RuntimeException('Não foi possível armazenar uma fatura temporariamente.');
                     }
                 }
+
+                ProcessSimulation::dispatch($simulation->id)->afterCommit();
 
                 return $simulation;
             });
