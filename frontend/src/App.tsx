@@ -1,40 +1,27 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import { useTheme } from './hooks/useTheme'
+import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
   const { theme, toggleTheme } = useTheme()
+  const viewport = useViewport()
 
   return (
-    <>
+    <div className="app-shell" data-testid="app-shell" data-viewport={viewport}>
       <ApiErrorHandler />
-      <button type="button" className="theme-toggle" onClick={toggleTheme}>
-        Tema {theme === 'light' ? 'escuro' : 'claro'}
-      </button>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>EnerDiag</h1>
-          <p>Simule o potencial de economia da sua empresa.</p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((currentCount) => currentCount + 1)}
-        >
-          Count is {count}
+      <header className="app-header">
+        <a className="brand" href="/">EnerDiag</a>
+        <button type="button" className="theme-toggle" onClick={toggleTheme}>
+          Tema {theme === 'light' ? 'escuro' : 'claro'}
         </button>
-      </section>
-    </>
+      </header>
+      <main id="center">
+        <h1>EnerDiag</h1>
+        <p>Simule o potencial de economia da sua empresa.</p>
+      </main>
+      <footer className="app-footer">Eficiência energética para sua empresa</footer>
+    </div>
   )
 }
 
