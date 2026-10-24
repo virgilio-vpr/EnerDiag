@@ -168,7 +168,7 @@ Ref: RN-1, DB, API (Admin)
 
 - [x] 6.1 Clientes e simulações: `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}` (dados extraídos, nunca PDFs), com paginação.
   - Teste: admin ok; cliente 403; paginação; nenhum campo de arquivo PDF exposto.
-- [ ] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
+- [x] 6.2 Relatórios: `PUT /admin/reports/{id}` edita textos explicativos e recomendações e cria nova versão em `report_revisions` (autor e data); resultados calculados são somente leitura. `POST /admin/reports/{id}/resend` reenvia manualmente.
   - Teste: edição textual gera revisão com autor sem alterar resultados; tentativa de alterar resultado é rejeitada; reenvio dispara e-mail; cliente 403.
 - [ ] 6.3 Recálculo: `POST /admin/simulations/{id}/recalculate` gera nova versão do relatório a partir dos dados extraídos (serviço 3.12).
   - Teste: admin ok; cliente 403; cria nova versão sem alterar os dados extraídos; simulação expirada não pode ser recalculada.

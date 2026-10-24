@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
@@ -25,6 +26,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
     Route::get('/simulations', [AdminSimulationController::class, 'index']);
     Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
+    Route::put('/reports/{id}', [AdminReportController::class, 'update'])->whereNumber('id');
+    Route::post('/reports/{id}/resend', [AdminReportController::class, 'resend'])->whereNumber('id');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
