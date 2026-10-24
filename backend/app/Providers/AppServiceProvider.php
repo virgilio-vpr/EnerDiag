@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Invoices\Pdf\PdfPageCounter;
 use App\Invoices\Pdf\PdfTextParser;
+use App\Invoices\Pdf\SmalotPdfPageCounter;
 use App\Invoices\Pdf\SmalotPdfTextParser;
 use App\Invoices\Readers\EnelInvoiceReader;
 use App\Invoices\Readers\InvoiceReaderResolver;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             return new InvoiceReaderResolver([new EnelInvoiceReader]);
         });
         $this->app->bind(PdfTextParser::class, SmalotPdfTextParser::class);
+        $this->app->bind(PdfPageCounter::class, SmalotPdfPageCounter::class);
     }
 
     /**

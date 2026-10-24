@@ -144,7 +144,7 @@ Ref: RN-3, RN-4, RN-5, RN-6
   - Teste: fixtures anonimizadas, uma com o quadro de referência (Azul, com as duas linhas “DEMANDA LEI ESTADUAL 16.886/18” sem quantidade, onde a primeira linha física corresponde a Fora de Ponta R$ 1.845,32 e a segunda a Ponta R$ 3.603,28) e outra sem linha ociosa; valores do quadro conferidos à mão (por exemplo demanda ponta 221,760 kW × 37,80322 = 8.383,25; total 98.922,22; PIS/COFINS 4.452,11; ICMS 16.637,37; COSIP 1.043,66); distingue as leituras DMCR da memória do medidor da cobrança UFDR e das linhas de UFER. Anonimizar antes de adicionar a fixture ao repositório.
 - [x] 4.4 Validações pós-extração: campos obrigatórios, total pago presente, mês duplicado, mesma unidade consumidora e coerência de quantidades, preços e valores extraídos (quantidade × preço unitário com tributos ≈ valor; base de ICMS × alíquota ≈ ICMS).
   - Teste: um teste por validação, incluindo quantidade × preço ≈ valor e base × alíquota ≈ ICMS com tolerância de centavos; não exigir que os itens analisados somem o total da fatura, pois impostos e cobranças fora do escopo não são extraídos; falha após enfileirar marca a simulação como `failed` e associa o erro ao arquivo para consulta em `/status`.
-- [ ] 4.5 Upload seguro: assinatura real de PDF; 6 a 12 arquivos; limite de 20 MB por arquivo, 120 MB por simulação e 600 páginas no total.
+- [x] 4.5 Upload seguro: assinatura real de PDF; 6 a 12 arquivos; limite de 20 MB por arquivo, 120 MB por simulação e 600 páginas no total.
   - Teste: executável renomeado para `.pdf` rejeitado (415); 5 e 13 arquivos rejeitados; limites individual, total e de páginas excedidos rejeitados (413).
 
 ### Fase 5 — API de simulação e relatório (cliente)
