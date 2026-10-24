@@ -76,7 +76,7 @@ Ref: DB, RN-7, API (padrões)
 
 - [x] 1.1 Migrations na ordem das chaves estrangeiras (pais antes das filhas), incluindo as tabelas padrão do Laravel.
   - Teste: `migrate:fresh` sem erro; `migrate:rollback` e `migrate` de novo sem erro.
-- [ ] 1.2 Models com relacionamentos, `$fillable` explícito e casts decimais nos valores monetários.
+- [x] 1.2 Models com relacionamentos, `$fillable` explícito e casts decimais nos valores monetários.
   - Teste: testes unitários dos relacionamentos e do cast decimal (sem ponto flutuante).
 - [ ] 1.3 Seeders: `distributors` (ENEL), `regulatory_parameters` (`overrun_tolerance`, `overrun_multiplier`, `reference_power_factor`, `idle_demand_discount_fallback`), `tariffs` de exemplo (valores fictícios de teste, com `includes_taxes` `true` e `false`), `quotation_base`, admin e dois clientes fictícios.
   - Teste: `migrate:fresh --seed` passa; seeder de usuários de teste **não roda** em `production`.

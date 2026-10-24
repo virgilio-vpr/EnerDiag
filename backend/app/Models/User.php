@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,6 +46,54 @@ class User extends Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'password_hash';
+    }
+
+    /**
+     * Customer profile relation.
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(CustomerProfile::class);
+    }
+
+    /**
+     * Consents relation.
+     */
+    public function consents(): HasMany
+    {
+        return $this->hasMany(Consent::class);
+    }
+
+    /**
+     * Simulations relation.
+     */
+    public function simulations(): HasMany
+    {
+        return $this->hasMany(Simulation::class);
+    }
+
+    /**
+     * Verification codes relation.
+     */
+    public function verificationCodes(): HasMany
+    {
+        return $this->hasMany(VerificationCode::class);
+    }
+
+    /**
+     * Tariff imports created by this user.
+     */
+    public function tariffImports(): HasMany
+    {
+        return $this->hasMany(TariffImport::class, 'imported_by');
+    }
+
+    /**
+     * Report revisions authored by this user.
+     */
+    public function reportRevisions(): HasMany
+    {
+        return $this->hasMany(ReportRevision::class);
     }
 
     /**
