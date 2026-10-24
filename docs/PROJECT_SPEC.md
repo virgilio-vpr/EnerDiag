@@ -78,7 +78,7 @@ Ref: DB, RN-7, API (padrões)
   - Teste: `migrate:fresh` sem erro; `migrate:rollback` e `migrate` de novo sem erro.
 - [x] 1.2 Models com relacionamentos, `$fillable` explícito e casts decimais nos valores monetários.
   - Teste: testes unitários dos relacionamentos e do cast decimal (sem ponto flutuante).
-- [ ] 1.3 Seeders: `distributors` (ENEL), `regulatory_parameters` (`overrun_tolerance`, `overrun_multiplier`, `reference_power_factor`, `idle_demand_discount_fallback`), `tariffs` de exemplo (valores fictícios de teste, com `includes_taxes` `true` e `false`), `quotation_base`, admin e dois clientes fictícios.
+- [x] 1.3 Seeders: `distributors` (ENEL), `regulatory_parameters` (`overrun_tolerance`, `overrun_multiplier`, `reference_power_factor`, `idle_demand_discount_fallback`), `tariffs` de exemplo (valores fictícios de teste, com `includes_taxes` `true` e `false`), `quotation_base`, admin e dois clientes fictícios.
   - Teste: `migrate:fresh --seed` passa; seeder de usuários de teste **não roda** em `production`.
 - [ ] 1.4 Base da API em `/api/v1`: formato único de erro (`message`, `code`, `errors`), handler de exceções, CORS restrito ao frontend, cabeçalhos de segurança, rate limiters nomeados.
   - Teste: feature tests de 401, 404 e 422 no formato padrão; origem não permitida bloqueada pelo CORS.
