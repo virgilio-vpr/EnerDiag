@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\ExampleController;
 use App\Http\Controllers\Api\V1\StatusController;
@@ -8,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/status', StatusController::class);
 Route::post('/example/validate', [ExampleController::class, 'validateExample']);
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:auth');
 
 Route::get('/user', CurrentUserController::class)->middleware('auth:sanctum');
 

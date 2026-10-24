@@ -88,7 +88,7 @@ Ref: DB, RN-7, API (padrões)
 ### Fase 2 — Autenticação e usuários
 Ref: RN-1, RN-2, RN-3, API (Auth, Me)
 
-- [ ] 2.1 `POST /auth/register`: valida dados e senha (≥ 10, letras e números, confirmação, bloqueio de senhas comuns ou vazadas), grava consentimento (`consents`: versão, IP, data), cria o cliente com e-mail não verificado e envia código numérico.
+- [x] 2.1 `POST /auth/register`: valida dados e senha (≥ 10, letras e números, confirmação, bloqueio de senhas comuns ou vazadas), grava consentimento (`consents`: versão, IP, data), cria o cliente com e-mail não verificado e envia código numérico.
   - Teste: sucesso; senha fraca; e-mail duplicado; sem aceite dos termos; e-mail com o código enviado (fake mail).
 - [ ] 2.2 `POST /auth/verify-email` e `POST /auth/resend-code`: código com hash, expiração e limite de tentativas.
   - Teste: código correto, errado, expirado, limite de tentativas excedido; reenvio com throttle.
