@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Invoices\Pdf\PdfTextParser;
+use App\Invoices\Pdf\SmalotPdfTextParser;
 use App\Invoices\Readers\EnelInvoiceReader;
 use App\Invoices\Readers\InvoiceReaderResolver;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(InvoiceReaderResolver::class, function (): InvoiceReaderResolver {
             return new InvoiceReaderResolver([new EnelInvoiceReader]);
         });
+        $this->app->bind(PdfTextParser::class, SmalotPdfTextParser::class);
     }
 
     /**
