@@ -106,7 +106,7 @@ Ref: RN-1, RN-2, RN-3, API (Auth, Me)
 ### Fase 3 — Motor de cálculo (módulo isolado, sem HTTP)
 Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
 
-- [ ] 3.1 Contrato de dados da extração: estrutura que o motor consome, alinhada a `invoices` e `invoice_items` (por item: quantidade, preço unitário com tributos, tarifa sem tributos, valor, PIS/COFINS, base e alíquota de ICMS e ICMS; a demanda ociosa pode ter quantidade e preço unitário nulos).
+- [x] 3.1 Contrato de dados da extração: estrutura que o motor consome, alinhada a `invoices` e `invoice_items` (por item: quantidade, preço unitário com tributos, tarifa sem tributos, valor, PIS/COFINS, base e alíquota de ICMS e ICMS; a demanda ociosa pode ter quantidade e preço unitário nulos).
   - Teste: campos obrigatórios validados; itens ausentes = 0; demanda ociosa sem quantidade e sem preço unitário é aceita; casas decimais conforme RC-0.
 - [ ] 3.2 Serviços de parâmetros e de tarifas (parâmetros nacionais por vigência; tarifas por vigência, distribuidora, modalidade e posto, com a indicação da base tributária). Valores em decimal.
   - Teste: tarifa vigente por data; parâmetro nacional resolvido por vigência; tarifas com `includes_taxes` `true` e `false` retornadas com a indicação; ausência de tarifa vigente sinaliza o aviso do relatório.
