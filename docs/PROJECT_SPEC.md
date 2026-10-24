@@ -309,7 +309,7 @@ Ref: RN-7, §9
 Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 140·T. Com `r` = 1: Dm 80 → 100·T.
 
 **RC-1a Proporção da demanda ociosa (`r`).** As linhas de demanda ociosa (“DEMANDA LEI ESTADUAL 16.886/18” na ENEL SP) podem vir sem quantidade e sem preço unitário, só com valor, PIS/COFINS e ICMS 0%. `r` é obtido, por mês e posto, na seguinte ordem:
-1. **Pela tributação (fonte principal):** `r` = 1 − alíquota de ICMS das linhas normais de demanda do mesmo mês, quando a linha ociosa traz base de ICMS e alíquota 0%. Confirmação: o PIS/COFINS% da linha ociosa deve ser ≈ PIS/COFINS% das linhas normais ÷ (1 − ICMS) (fixture ENEL: 4,49% ÷ 0,82 ≈ 5,48%); sem confirmação dentro da tolerância, avisar.
+1. **Pela tributação (fonte principal):** `r` = 1 − alíquota de ICMS das linhas normais de demanda do mesmo mês, quando a linha ociosa traz base de ICMS e alíquota 0%. Confirmação: o PIS/COFINS% da linha ociosa deve ser ≈ PIS/COFINS% das linhas normais ÷ (1 − ICMS) (fixture ENEL: 4,49% ÷ 0,82 ≈ 5,48%), com tolerância de 0,02 ponto percentual; sem confirmação dentro da tolerância, avisar.
 2. **Pelo preço unitário, se a linha o trouxer:** `r` = preço unitário com tributos da demanda ociosa ÷ preço unitário com tributos da demanda normal do mesmo posto.
 3. **Reserva:** `idle_demand_discount_fallback` (padrão 18%, `r` = 0,82), com aviso, quando nenhuma das duas formas revelar `r`.
 - Meses sem a linha ociosa usam o `r` do mesmo período tarifário (uma mudança de tarifa, como o reajuste anual, inicia novo período); sem mês revelador no período, usa-se o `r` do período mais próximo no tempo.

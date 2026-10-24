@@ -27,6 +27,8 @@ final class IdleDemandRatioService
 
     public const string MATCHING_WARNING = 'idle_demand_post_matching_unresolved';
 
+    public const string PIS_COFINS_TOLERANCE = '0.0002';
+
     public function __construct(private RegulatoryParameterService $parameterService) {}
 
     /**
@@ -195,7 +197,7 @@ final class IdleDemandRatioService
 
             $idlePercent = bcdiv($idleItem->pisCofinsAmount, $idleItem->amount, 8);
             $difference = $this->absolute(bcsub($idlePercent, $expectedIdlePercent, 8));
-            if (bccomp($difference, '0.0001', 8) > 0) {
+            if (bccomp($difference, self::PIS_COFINS_TOLERANCE, 8) > 0) {
                 return false;
             }
 

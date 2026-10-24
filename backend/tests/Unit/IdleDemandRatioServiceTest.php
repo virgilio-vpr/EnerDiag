@@ -95,6 +95,27 @@ class IdleDemandRatioServiceTest extends TestCase
         $this->assertContains(IdleDemandRatioService::PIS_COFINS_WARNING, $entry->warnings);
     }
 
+    public function test_pis_cofins_confirmation_uses_a_tolerance_of_two_hundredths_of_a_percentage_point(): void
+    {
+        $normal = $this->item('measured_demand', 'unique', '80.000', '10.00000', '1000.00', '44.90', '0.1800', '1000.00');
+        $withinTolerance = $this->item('idle_demand', 'not_applicable', null, null, '100.00', '5.46', '0.0000', '100.00');
+        $outsideTolerance = $this->item('idle_demand', 'not_applicable', null, null, '100.00', '5.45', '0.0000', '100.00');
+
+        $withinMonth = $this->month('2025-09', '2025-01-01', ['unique' => '100.000'], ['unique' => '80.000'], ['unique' => $normal], [$withinTolerance]);
+        $outsideMonth = $this->month('2025-10', '2025-01-01', ['unique' => '100.000'], ['unique' => '80.000'], ['unique' => $normal], [$outsideTolerance]);
+
+        $resolution = $this->service()->resolve([$withinMonth, $outsideMonth], false);
+
+        $this->assertNotContains(
+            IdleDemandRatioService::PIS_COFINS_WARNING,
+            $resolution->forMonthAndTimeSlot('2025-09', 'unique')->warnings,
+        );
+        $this->assertContains(
+            IdleDemandRatioService::PIS_COFINS_WARNING,
+            $resolution->forMonthAndTimeSlot('2025-10', 'unique')->warnings,
+        );
+    }
+
     public function test_each_tariff_period_uses_its_own_revealed_ratio_and_propagates_within_period(): void
     {
         $firstMonth = $this->taxedMonth('2025-01', '2025-01-01', '0.2000', '0.800000');
