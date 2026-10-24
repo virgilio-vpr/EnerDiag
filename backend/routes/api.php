@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Api\V1\Admin\RegulatoryParameterController as AdminRegulatoryParameterController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
 use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
@@ -36,6 +37,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/tariffs', [AdminTariffController::class, 'store']);
     Route::put('/tariffs/{id}', [AdminTariffController::class, 'update'])->whereNumber('id');
     Route::post('/tariffs/import', [AdminTariffImportController::class, 'store']);
+    Route::get('/parameters', [AdminRegulatoryParameterController::class, 'index']);
+    Route::post('/parameters', [AdminRegulatoryParameterController::class, 'store']);
     Route::put('/reports/{id}', [AdminReportController::class, 'update'])->whereNumber('id');
     Route::post('/reports/{id}/resend', [AdminReportController::class, 'resend'])->whereNumber('id');
 });

@@ -176,7 +176,7 @@ Ref: RN-1, DB, API (Admin)
   - Teste: cria tarifa com `includes_taxes` `true` e `false`; `includes_taxes` ausente rejeitado (422); vigência sobreposta rejeitada (422); versão histórica permanece inalterada após reajuste; cliente 403.
 - [x] 6.5 Importação de tarifas da ANEEL: `POST /admin/tariffs/import` recebe o CSV oficial (tarifas de aplicação, sem tributos) e grava em `tariffs` com `includes_taxes = false`, `source = aneel_import` e a referência da resolução; registra a importação em `tariff_imports`. Aceita só Grupo A, subgrupos A4 e AS, modalidades Azul e Verde e distribuidoras ativas; ignora o resto; reimportar o mesmo arquivo não duplica; a vigência anterior é encerrada, nunca sobrescrita. O formato do CSV deve ser confirmado no portal de dados abertos da ANEEL (§9).
   - Teste: importa um arquivo de exemplo (fixture); reimportação não duplica; linhas fora do escopo são ignoradas e contadas; CSV inválido → 422; vigência anterior encerrada sem alterar seus valores; cliente 403.
-- [ ] 6.6 Parâmetros: `GET /admin/parameters` e `POST /admin/parameters`; cada alteração cria nova versão com vigência, preservando os valores usados por relatórios existentes.
+- [x] 6.6 Parâmetros: `GET /admin/parameters` e `POST /admin/parameters`; cada alteração cria nova versão com vigência, preservando os valores usados por relatórios existentes.
   - Teste: admin cria nova versão de um parâmetro nacional (por exemplo a reserva da demanda ociosa); versão anterior permanece inalterada; cliente 403.
 - [ ] 6.7 `GET /admin/leads` (leads de distribuidora não atendida e pedidos de contato).
   - Teste: lista paginada; cliente 403.
