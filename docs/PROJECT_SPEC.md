@@ -126,7 +126,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: 12 meses; 6 meses (média × 12 com aviso); tarifa vencida usa o histórico com aviso.
 - [x] 3.10 Reconciliação com a fatura (RC-1b).
   - Teste: mês coerente com a fatura não gera aviso; mês divergente gera aviso e o custo atual daquele mês usa o valor faturado.
-- [ ] 3.11 Indicadores e séries dos gráficos (RC-6).
+- [x] 3.11 Indicadores e séries dos gráficos (RC-6).
   - Teste: valores esperados de economia mensal, anual e %; rótulo do percentual; divisão por zero protegida; séries por mês corretas.
 - [ ] 3.12 Serviço de recálculo a partir dos dados extraídos: gera nova versão do relatório (`algorithm_version`, tarifas vigentes no momento) sem reler PDFs.
   - Teste: recalcular após atualização de tarifa muda o resultado; a versão anterior e o histórico de revisões permanecem.
