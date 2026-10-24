@@ -118,7 +118,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: com Dc = 100 kW e `r` = 0,82: Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 140·T; limite exato Dm = 1,05·Dc; com `r` = 1, Dm 80 → 100·T.
 - [x] 3.6 Demanda ótima (RC-2).
   - Teste: série sintética com ótimo conhecido; Azul com ponta e fora de ponta separados; Verde com demanda única; empate escolhe a menor demanda; sem multa de ultrapassagem desnecessária.
-- [ ] 3.7 Reativos UFER e demanda reativa excedente (RC-3).
+- [x] 3.7 Reativos UFER e demanda reativa excedente (RC-3).
   - Teste: série com cobrança (economia = 100% do pago) e sem cobrança (resultado zero, “sem ocorrência no período”).
 - [ ] 3.8 Migração Azul ↔ Verde (RC-4).
   - Teste: um cenário em que a Verde vence, um em que a Azul vence e um sem ganho; tarifas da outra modalidade vindas da tabela ANEEL e convertidas por `k` (TUSD de demanda e TUSD de consumo ponta obrigatoriamente da tabela ANEEL; proibido reaproveitar a TUSD de consumo ponta da fatura Azul na Verde); `r` aplicada à tarifa de demanda da outra modalidade; sem tarifas necessárias da outra modalidade retorna “indisponível” com aviso.
