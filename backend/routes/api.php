@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
+use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\ExampleController;
@@ -30,6 +31,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/simulations', [AdminSimulationController::class, 'index']);
     Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
     Route::post('/simulations/{id}/recalculate', [AdminSimulationController::class, 'recalculate'])->whereNumber('id');
+    Route::get('/tariffs', [AdminTariffController::class, 'index']);
+    Route::post('/tariffs', [AdminTariffController::class, 'store']);
+    Route::put('/tariffs/{id}', [AdminTariffController::class, 'update'])->whereNumber('id');
     Route::put('/reports/{id}', [AdminReportController::class, 'update'])->whereNumber('id');
     Route::post('/reports/{id}/resend', [AdminReportController::class, 'resend'])->whereNumber('id');
 });
