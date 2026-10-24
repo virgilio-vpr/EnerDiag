@@ -92,7 +92,7 @@ Ref: RN-1, RN-2, RN-3, API (Auth, Me)
   - Teste: sucesso; senha fraca; e-mail duplicado; sem aceite dos termos; e-mail com o código enviado (fake mail).
 - [x] 2.2 `POST /auth/verify-email` e `POST /auth/resend-code`: código com hash, expiração e limite de tentativas.
   - Teste: código correto, errado, expirado, limite de tentativas excedido; reenvio com throttle.
-- [ ] 2.3 `POST /auth/login` e `/auth/logout` com Sanctum: token de 2 h fixas, login bloqueado sem e-mail verificado, logout revoga o token.
+- [x] 2.3 `POST /auth/login` e `/auth/logout` com Sanctum: token de 2 h fixas, login bloqueado sem e-mail verificado, logout revoga o token.
   - Teste: login ok; credenciais inválidas (401, sem revelar se o usuário existe); e-mail não verificado (403); token expira após 2 h (simular o tempo); token revogado no logout.
 - [ ] 2.4 `POST /auth/forgot-password` e `/auth/reset-password`: link de uso único com validade limitada e resposta neutra.
   - Teste: fluxo completo; token reutilizado; token expirado; e-mail inexistente com a mesma resposta.

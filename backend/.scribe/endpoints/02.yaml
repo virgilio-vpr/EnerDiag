@@ -117,7 +117,7 @@ endpoints:
         name: substation_same_address
         description: ''
         required: true
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -176,7 +176,7 @@ endpoints:
       distributor_id: 16
       transformer_power_kva: 22
       address_details: g
-      substation_same_address: false
+      substation_same_address: true
       substation_address: z
       terms_accepted: true
       password: EnergiaSegura2026
@@ -317,6 +317,122 @@ endpoints:
         content: '{"message":"Muitas requisições. Tente novamente mais tarde.","code":"TOO_MANY_REQUESTS","errors":null}'
         headers: []
         description: 'Limite de reenvios atingido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: Entrar
+      description: 'Autentica a conta confirmada e devolve um token Bearer válido por duas horas.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'E-mail da conta.'
+        required: true
+        example: ana@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Senha da conta.'
+        required: true
+        example: EnergiaSegura2026
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: ana@empresa.com.br
+      password: EnergiaSegura2026
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"token":"1|token-em-texto-plano","token_type":"Bearer","expires_at":"2026-10-24T18:00:00Z","user":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","role":"customer"}}'
+        headers: []
+        description: 'Autenticação concluída'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"E-mail ou senha inválidos.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Credenciais inválidas'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Confirme seu e-mail antes de entrar.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'E-mail ainda não confirmado'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: Sair
+      description: 'Revoga o token Bearer usado na requisição.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Sessão encerrada."}'
+        headers: []
+        description: 'Token revogado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
     responseFields: []
     auth: []
     controller: null

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Requests\Api\V1\ResendVerificationCodeRequest;
 use App\Http\Requests\Api\V1\VerifyEmailRequest;
+use App\Models\User;
 use App\Services\EmailVerificationService;
 use App\Services\RegisterCustomer;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
@@ -85,5 +89,54 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Se a conta existir e ainda não estiver confirmada, enviaremos um novo código.',
         ]);
+    }
+
+    /**
+     * Authenticate a verified account and issue a fixed two-hour Sanctum token.
+     */
+    #[Endpoint('Entrar', 'Autentica a conta confirmada e devolve um token Bearer válido por duas horas.')]
+    #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
+    #[BodyParam('password', 'string', 'Senha da conta.', required: true, example: 'EnergiaSegura2026')]
+    #[Response(status: 200, content: '{"token":"1|token-em-texto-plano","token_type":"Bearer","expires_at":"2026-10-24T18:00:00Z","user":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","role":"customer"}}', description: 'Autenticação concluída')]
+    #[Response(status: 401, content: '{"message":"E-mail ou senha inválidos.","code":"UNAUTHENTICATED","errors":null}', description: 'Credenciais inválidas')]
+    #[Response(status: 403, content: '{"message":"Confirme seu e-mail antes de entrar.","code":"FORBIDDEN","errors":null}', description: 'E-mail ainda não confirmado')]
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $user = User::query()->where('email', $request->validated('email'))->first();
+
+        if (! $user || ! Hash::check($request->validated('password'), $user->password_hash)) {
+            abort(401, 'E-mail ou senha inválidos.');
+        }
+
+        if (! $user->email_verified_at) {
+            abort(403, 'Confirme seu e-mail antes de entrar.');
+        }
+
+        $accessToken = $user->createToken('enerdiag-api', ['*'], now()->addHours(2));
+
+        return response()->json([
+            'token' => $accessToken->plainTextToken,
+            'token_type' => 'Bearer',
+            'expires_at' => $accessToken->accessToken->expires_at->toIso8601String(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
+    }
+
+    /**
+     * Revoke the current Sanctum token.
+     */
+    #[Endpoint('Sair', 'Revoga o token Bearer usado na requisição.')]
+    #[Response(status: 200, content: '{"message":"Sessão encerrada."}', description: 'Token revogado')]
+    #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json(['message' => 'Sessão encerrada.']);
     }
 }
