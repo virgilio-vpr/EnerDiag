@@ -122,7 +122,7 @@ Ref: RC, RN-5, DB (tariffs, regulatory_parameters, invoices, invoice_items)
   - Teste: série com cobrança (economia = 100% do pago) e sem cobrança (resultado zero, “sem ocorrência no período”).
 - [x] 3.8 Migração Azul ↔ Verde (RC-4).
   - Teste: um cenário em que a Verde vence, um em que a Azul vence e um sem ganho; tarifas da outra modalidade vindas da tabela ANEEL e convertidas por `k` (TUSD de demanda e TUSD de consumo ponta obrigatoriamente da tabela ANEEL; proibido reaproveitar a TUSD de consumo ponta da fatura Azul na Verde); `r` aplicada à tarifa de demanda da outra modalidade; sem tarifas necessárias da outra modalidade retorna “indisponível” com aviso.
-- [ ] 3.9 Valoração e projeção anual (RC-5).
+- [x] 3.9 Valoração e projeção anual (RC-5).
   - Teste: 12 meses; 6 meses (média × 12 com aviso); tarifa vencida usa o histórico com aviso.
 - [ ] 3.10 Reconciliação com a fatura (RC-1b).
   - Teste: mês coerente com a fatura não gera aviso; mês divergente gera aviso e o custo atual daquele mês usa o valor faturado.
