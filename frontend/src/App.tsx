@@ -3,6 +3,7 @@ import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import { useTheme } from './hooks/useTheme'
+import { ApiErrorHandler } from './components/ApiErrorHandler'
 import './App.css'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
 
   return (
     <>
+      <ApiErrorHandler />
       <button type="button" className="theme-toggle" onClick={toggleTheme}>
         Tema {theme === 'light' ? 'escuro' : 'claro'}
       </button>

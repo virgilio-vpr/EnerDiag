@@ -190,7 +190,7 @@ Ref: FE, RN-7
   - Teste: `npm run build` e `npm run test` passam.
 - [x] 7.2 Tema claro e escuro com botão, escuro confortável (nunca preto absoluto), preferência salva e contraste WCAG AA.
   - Teste: alternar o tema persiste a preferência; verificação de contraste das paletas.
-- [ ] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
+- [x] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
   - Teste: mock de 401 redireciona; mock de 422 e 429 exibe a mensagem correta.
 - [ ] 7.4 Rotas protegidas por perfil (cliente e admin).
   - Teste: sem login vai ao login; cliente em rota admin vê 403.
