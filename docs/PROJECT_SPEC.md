@@ -150,7 +150,7 @@ Ref: RN-3, RN-4, RN-5, RN-6
 ### Fase 5 — API de simulação e relatório (cliente)
 Ref: RN-3, RN-4, RC, DB, API (Cliente)
 
-- [ ] 5.1 `POST /simulations` (multipart + dados da empresa): valida a requisição e cria a simulação em fila (`queued`); validações de entrada respondem 422 antes de enfileirar.
+- [x] 5.1 `POST /simulations` (multipart + dados da empresa): valida a requisição e cria a simulação em fila (`queued`); validações de entrada respondem 422 antes de enfileirar.
   - Teste: sucesso; validações; distribuidora sem leitor → 422 com código `DISTRIBUTOR_UNSUPPORTED` e lead registrado; sem token → 401.
 - [ ] 5.2 Job de processamento: extrai, valida, grava `invoices` e `invoice_items`, calcula (com a reconciliação de RC-1b), gera `reports` e atualiza o status (`processing`, `completed` ou `failed`); descarta temporários.
   - Teste: job com fixtures completa; falha de leitura após enfileirar vira `failed` com erro associado ao arquivo; cliente consulta o erro em `/status`; retry é idempotente e não duplica dados; temporários apagados em sucesso, falha e timeout.
