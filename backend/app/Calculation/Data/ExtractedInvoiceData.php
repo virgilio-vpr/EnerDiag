@@ -8,6 +8,7 @@ final readonly class ExtractedInvoiceData
 {
     /**
      * @param  list<ExtractedInvoiceItemData>  $items
+     * @param  list<string>  $warnings
      */
     private function __construct(
         public string $referenceMonth,
@@ -16,6 +17,7 @@ final readonly class ExtractedInvoiceData
         public string $tariffModality,
         public string $totalPaid,
         public array $items,
+        public array $warnings,
     ) {}
 
     /**
@@ -36,6 +38,8 @@ final readonly class ExtractedInvoiceData
             'tariff_modality' => ['required', 'string', 'max:20'],
             'total_paid' => ['required', 'numeric'],
             'items' => ['present', 'array'],
+            'warnings' => ['sometimes', 'array'],
+            'warnings.*' => ['string'],
             'items.*.item_type' => ['required', 'string', 'max:50'],
             'items.*.tariff_component' => ['required', 'string', 'max:30'],
             'items.*.time_slot' => ['required', 'string', 'max:30'],
@@ -89,6 +93,10 @@ final readonly class ExtractedInvoiceData
                 }
 
                 foreach (['quantity', 'unit_price_taxed'] as $field) {
+                    if (($item['item_type'] ?? null) === 'contracted_demand' && $field === 'unit_price_taxed') {
+                        continue;
+                    }
+
                     if (! array_key_exists($field, $item) || $item[$field] === null) {
                         $validator->errors()->add("items.{$index}.{$field}", 'Este campo é obrigatório para itens que não sejam demanda ociosa.');
                     }
@@ -108,6 +116,7 @@ final readonly class ExtractedInvoiceData
                 static fn (array $item): ExtractedInvoiceItemData => ExtractedInvoiceItemData::fromArray($item),
                 $validated['items'],
             ),
+            warnings: $validated['warnings'] ?? [],
         );
     }
 
