@@ -14,6 +14,8 @@ Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middl
 Route::post('/auth/resend-code', [AuthController::class, 'resendCode'])->middleware('throttle:verification_codes');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
 
 Route::get('/user', CurrentUserController::class)->middleware('auth:sanctum');
 

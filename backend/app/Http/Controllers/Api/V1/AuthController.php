@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Requests\Api\V1\ResendVerificationCodeRequest;
+use App\Http\Requests\Api\V1\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\VerifyEmailRequest;
 use App\Models\User;
 use App\Services\EmailVerificationService;
@@ -13,6 +15,9 @@ use App\Services\RegisterCustomer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
@@ -138,5 +143,50 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Sessão encerrada.']);
+    }
+
+    /**
+     * Send a password reset link without disclosing whether the email exists.
+     */
+    #[Endpoint('Solicitar redefinição de senha', 'Envia um link de redefinição quando a conta existe.')]
+    #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
+    #[Response(status: 200, content: '{"message":"Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."}', description: 'Resposta neutra')]
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        Password::sendResetLink($request->validated());
+
+        return response()->json([
+            'message' => 'Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição.',
+        ]);
+    }
+
+    /**
+     * Reset the account password using a valid single-use token.
+     */
+    #[Endpoint('Redefinir senha', 'Redefine a senha usando o link de uso único recebido por e-mail.')]
+    #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
+    #[BodyParam('token', 'string', 'Token recebido no link de redefinição.', required: true, example: 'token-de-uso-unico')]
+    #[BodyParam('password', 'string', 'Nova senha com pelo menos 10 caracteres, letras e números.', required: true, example: 'NovaSenhaSegura2026')]
+    #[BodyParam('password_confirmation', 'string', 'Confirmação da nova senha.', required: true, example: 'NovaSenhaSegura2026')]
+    #[Response(status: 200, content: '{"message":"Senha redefinida com sucesso."}', description: 'Senha atualizada')]
+    #[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"token":["O link é inválido ou expirou."]}}', description: 'Link inválido, expirado ou já utilizado')]
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $status = Password::reset($request->validated(), function (User $user, string $password): void {
+            $user->forceFill([
+                'password_hash' => $password,
+                'remember_token' => Str::random(60),
+            ])->save();
+
+            $user->tokens()->delete();
+        });
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'token' => 'O link é inválido ou expirou.',
+            ]);
+        }
+
+        return response()->json(['message' => 'Senha redefinida com sucesso.']);
     }
 }

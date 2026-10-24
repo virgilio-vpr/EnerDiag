@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +47,14 @@ class User extends Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'password_hash';
+    }
+
+    /**
+     * Send the password reset link using the frontend route.
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**

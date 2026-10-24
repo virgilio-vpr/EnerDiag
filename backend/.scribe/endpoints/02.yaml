@@ -441,6 +441,146 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - POST
+    uri: api/v1/auth/forgot-password
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Solicitar redefinição de senha'
+      description: 'Envia um link de redefinição quando a conta existe.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'E-mail da conta.'
+        required: true
+        example: ana@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: ana@empresa.com.br
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."}'
+        headers: []
+        description: 'Resposta neutra'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/reset-password
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: 'Cadastro e acesso de clientes'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Redefinir senha'
+      description: 'Redefine a senha usando o link de uso único recebido por e-mail.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'E-mail da conta.'
+        required: true
+        example: ana@empresa.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      token:
+        custom: []
+        name: token
+        description: 'Token recebido no link de redefinição.'
+        required: true
+        example: token-de-uso-unico
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha com pelo menos 10 caracteres, letras e números.'
+        required: true
+        example: NovaSenhaSegura2026
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Confirmação da nova senha.'
+        required: true
+        example: NovaSenhaSegura2026
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: ana@empresa.com.br
+      token: token-de-uso-unico
+      password: NovaSenhaSegura2026
+      password_confirmation: NovaSenhaSegura2026
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Senha redefinida com sucesso."}'
+        headers: []
+        description: 'Senha atualizada'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"token":["O link é inválido ou expirou."]}}'
+        headers: []
+        description: 'Link inválido, expirado ou já utilizado'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - GET
     uri: api/v1/user
     metadata:

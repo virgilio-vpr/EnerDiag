@@ -94,7 +94,7 @@ Ref: RN-1, RN-2, RN-3, API (Auth, Me)
   - Teste: código correto, errado, expirado, limite de tentativas excedido; reenvio com throttle.
 - [x] 2.3 `POST /auth/login` e `/auth/logout` com Sanctum: token de 2 h fixas, login bloqueado sem e-mail verificado, logout revoga o token.
   - Teste: login ok; credenciais inválidas (401, sem revelar se o usuário existe); e-mail não verificado (403); token expira após 2 h (simular o tempo); token revogado no logout.
-- [ ] 2.4 `POST /auth/forgot-password` e `/auth/reset-password`: link de uso único com validade limitada e resposta neutra.
+- [x] 2.4 `POST /auth/forgot-password` e `/auth/reset-password`: link de uso único com validade limitada e resposta neutra.
   - Teste: fluxo completo; token reutilizado; token expirado; e-mail inexistente com a mesma resposta.
 - [ ] 2.5 Autorização por perfil (admin e cliente) com policies.
   - Teste: cliente em rota admin → 403; cliente acessando recurso de outro cliente → 403 ou 404.
