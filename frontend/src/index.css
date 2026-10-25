@@ -8,6 +8,7 @@
   --code-bg: #ffffff;
   --accent: #0f766e;
   --secondary: #4f46e5;
+  --tertiary: #b45309;
   --glow-primary: rgb(20 184 166 / 10%);
   --glow-secondary: rgb(99 102 241 / 9%);
   --toggle-track: #e4edf4;
@@ -21,8 +22,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -49,6 +50,7 @@
   --code-bg: #233247;
   --accent: #5eead4;
   --secondary: #a5b4fc;
+  --tertiary: #fbbf24;
   --glow-primary: rgb(45 212 191 / 8%);
   --glow-secondary: rgb(129 140 248 / 10%);
   --toggle-track: #172332;
@@ -68,6 +70,7 @@
 
 body {
   margin: 0;
+  font-family: var(--sans);
   background: var(--bg);
   color: var(--text);
   background-image:
@@ -77,10 +80,21 @@ body {
 }
 
 h1,
-h2 {
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--sans);
 }
 
 h1 {
