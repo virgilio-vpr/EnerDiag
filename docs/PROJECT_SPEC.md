@@ -237,7 +237,7 @@ Ref: ORC
 
 - [x] 10.1 **Etapa 1 (agora):** endpoints admin `GET/POST/PUT /admin/quotation-items` para a tabela `quotation_base` (hora de consultoria, diária do analisador, hora de projeto de banco de capacitores).
   - Teste: CRUD restrito ao admin; cliente 403.
-- [ ] 10.2 **Etapa 1 (agora):** área do admin no frontend (estrutura preparatória, sem regra ativa).
+- [x] 10.2 **Etapa 1 (agora):** área do admin no frontend (estrutura preparatória, sem regra ativa).
   - Teste: visível só ao admin; edita os valores da tabela.
 - [ ] 10.3 **Etapa 2 (não iniciar sem autorização):** orçamento em PDF A4, enviado ao cliente após liberação do admin.
   - Teste: definido quando a etapa 2 começar.
