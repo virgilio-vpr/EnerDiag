@@ -172,6 +172,8 @@ export function VerifyEmailPage({ email: initialEmail }: { email: string }) {
 export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [totpCode, setTotpCode] = useState('')
+  const [requiresTotp, setRequiresTotp] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [signedIn, setSignedIn] = useState(false)
@@ -186,7 +188,7 @@ export function LoginPage() {
     setSubmitting(true)
     try {
       const response = await apiRequest<{ token: string; user: { id: number; role: 'customer' | 'admin' } }>(
-        '/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, { notifyGlobalError: false },
+        '/auth/login', { method: 'POST', body: JSON.stringify({ email, password, ...(requiresTotp ? { totp_code: totpCode } : {}) }) }, { notifyGlobalError: false },
       )
       setAuthToken(response.token)
       setAuthenticatedUser(response.user)
@@ -197,6 +199,12 @@ export function LoginPage() {
       }
       setSignedIn(true)
     } catch (error) {
+      if (error instanceof ApiError && error.errors?.totp_code) {
+        setRequiresTotp(true)
+        setTotpCode('')
+        setErrorMessage(error.errors.totp_code[0])
+        return
+      }
       if (error instanceof ApiError && error.status === 403) {
         window.history.pushState({}, '', `/verify-email?email=${encodeURIComponent(email)}`)
         window.dispatchEvent(new PopStateEvent('popstate'))
@@ -220,6 +228,7 @@ export function LoginPage() {
       <form className="access-form" onSubmit={submit} noValidate>
         <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
         <label>Senha<input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        {requiresTotp && <label>Código do autenticador<input autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={totpCode} onChange={(event) => setTotpCode(event.target.value.replace(/[^0-9]/g, ''))} required /></label>}
         {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
         <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Entrando…' : 'Entrar'}</button>
       </form>

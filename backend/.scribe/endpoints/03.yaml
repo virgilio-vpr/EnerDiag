@@ -367,9 +367,21 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      totp_code:
+        custom: []
+        name: totp_code
+        description: 'Código do autenticador, obrigatório para admin com TOTP ativo.'
+        required: false
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
       email: ana@empresa.com.br
       password: EnergiaSegura2026
+      totp_code: '123456'
     fileParameters: []
     responses:
       -
@@ -390,6 +402,12 @@ endpoints:
         content: '{"message":"Confirme seu e-mail antes de entrar.","code":"FORBIDDEN","errors":null}'
         headers: []
         description: 'E-mail ainda não confirmado'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Informe o código do seu autenticador.","code":"VALIDATION_ERROR","errors":{"totp_code":["Informe o código do seu autenticador."]}}'
+        headers: []
+        description: 'Código TOTP ausente, inválido, expirado ou já utilizado'
     responseFields: []
     auth: []
     controller: null

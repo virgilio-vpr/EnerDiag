@@ -247,8 +247,9 @@ Ref: RN-7, §9
 
 - [x] 11.1 Checklist de segurança de RN-7 (SQL Injection, XSS e CSP, CORS, rate limiting, acesso a dados de terceiros, upload, logs, dependências).
   - Teste: feature tests cobrem entradas contra SQL Injection e acesso entre usuários; teste de saída confirma escape contra XSS; testes de configuração verificam CSP, CORS e rate limits; testes de upload cobrem tipo, tamanho e quantidade; teste de logs confirma ausência de dados pessoais; `composer audit` e `npm audit` sem vulnerabilidades críticas ou altas sem plano de correção.
-- [ ] 11.2 Reforço da conta admin (opcional, a decidir em §9): senha mais forte e segundo fator por TOTP.
+- [x] 11.2 Reforço da conta admin (adotado): senha mais forte e segundo fator por TOTP.
   - Teste: com o segundo fator ativo, o login do admin o exige; sem ele, o acesso é negado.
+  - Configuração e recuperação local: `php artisan admin:configure-security {email}`; senha com pelo menos 14 caracteres, maiúsculas, minúsculas, números e símbolos, não comprometida. Ativação exige código confirmado e revoga sessões anteriores; segredo criptografado; códigos com janela de 30 segundos e tolerância de um intervalo, sem reutilização. Redefinição de senha preserva TOTP.
 - [ ] 11.3 Importação automática das tarifas a partir do portal de dados abertos da ANEEL (opcional): rotina agendada que baixa o conjunto de dados, grava a importação como pendente de revisão e só ativa as tarifas após aprovação do admin.
   - Teste: com a fonte simulada, a rotina cria importação pendente; nada é ativado sem aprovação; falha de rede não altera as tarifas vigentes.
 - [ ] 11.4 Teste de ponta a ponta do fluxo completo (Playwright, opcional).
@@ -348,7 +349,7 @@ Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120
 
 Tabelas em inglês. Tarifas com 5 casas decimais; grandezas de demanda, consumo e energia reativa com 3 casas decimais; valores monetários com 2 casas decimais. Usar tipos decimais, nunca ponto flutuante.
 
-- `users` (id, name, email, phone, password_hash, role, email_verified_at, contact_requested_at)
+- `users` (id, name, email, phone, password_hash, role, email_verified_at, contact_requested_at, totp_secret criptografado e oculto, totp_last_used_step oculto)
 - `consents` (id, user_id, terms_version, accepted_at, ip_address)
 - `customer_profiles` (user_id, company_name, cnpj, distributor_id, transformer_power_kva, address_details, substation_same_address, substation_address)
 - `distributors` (id, name, state, parser_key, active)
@@ -409,5 +410,5 @@ Itens regulatórios conferidos em `docs/REN 1000.pdf` e dados da fatura ENEL con
 - [x] Benchmark: as planilhas Azul e Verde foram comparadas com os custos anuais de demanda e reativos; divergência máxima observada dentro de R$ 0,02 por causa do arredondamento monetário do RC-0.
 - [ ] Bibliotecas a escolher: leitura de PDF (`smalot/pdfparser` ou `pdftotext`), geração de PDF, documentação da API (compatibilidade com PHP 8.5 e Laravel 13).
 - [ ] Textos jurídicos (Política de Privacidade e Termos) e canal de contato comercial (WhatsApp ou e-mail).
-- [ ] Segundo fator (TOTP) para o admin: adotar ou não (tarefa 11.2).
+- [x] Segundo fator (TOTP) para o admin: adotado na tarefa 11.2; configuração por comando local, segredo criptografado, confirmação antes de ativar e bloqueio de reutilização dos códigos.
 - [ ] Dados da empresa fictícia do orçamento (etapa 2).

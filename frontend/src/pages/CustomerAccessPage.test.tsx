@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
-import { ForgotPasswordPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './CustomerAccessPage'
+import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './CustomerAccessPage'
 import { getAuthToken, setAuthToken } from '../services/api/client'
 
 function jsonResponse(status: number, payload: unknown) {
@@ -167,5 +167,34 @@ describe('login and password recovery', () => {
     fireEvent.change(screen.getByLabelText('Confirme a nova senha'), { target: { value: 'SenhaDiferente123' } })
     fireEvent.click(screen.getByRole('button', { name: 'Redefinir senha' }))
     expect(await screen.findByText('A confirmação da senha não corresponde.')).toBeInTheDocument()
+  })
+})
+
+
+describe('admin authenticator login', () => {
+  it('requires the authenticator code before storing a token', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(422, { message: 'Informe o código.', code: 'VALIDATION_ERROR', errors: { totp_code: ['Informe o código do seu autenticador.'] } }))
+      .mockResolvedValueOnce(jsonResponse(422, { message: 'Código recusado.', code: 'VALIDATION_ERROR', errors: { totp_code: ['Código inválido, expirado ou já utilizado.'] } }))
+      .mockResolvedValueOnce(jsonResponse(200, { token: 'admin-totp-token', user: { id: 1, role: 'admin' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<LoginPage />)
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'admin@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'StrongAdminPassword2026!' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    const codeInput = await screen.findByLabelText('Código do autenticador')
+    expect(getAuthToken()).toBeNull()
+    fireEvent.change(codeInput, { target: { value: '000000' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Código inválido, expirado ou já utilizado.')
+    expect(getAuthToken()).toBeNull()
+    expect(codeInput).toHaveValue('')
+
+    fireEvent.change(codeInput, { target: { value: '123456' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    await waitFor(() => expect(getAuthToken()).toBe('admin-totp-token'))
+    expect(window.location.pathname).toBe('/admin')
+    expect(JSON.parse(String(fetchMock.mock.calls[2][1].body))).toMatchObject({ totp_code: '123456' })
   })
 })
