@@ -1,0 +1,312 @@
+name: 'Administração: orçamento'
+description: 'Consulta e manutenção dos itens de custo usados na preparação de orçamentos'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/quotation-items
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamento'
+      groupDescription: 'Consulta e manutenção dos itens de custo usados na preparação de orçamentos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar itens de orçamento'
+      description: 'Retorna os custos base cadastrados, ordenados pelo nome.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"item_key":"consulting_hour","name":"Hora técnica de consultoria","unit":"hour","unit_price":"250.00"}]}'
+        headers: []
+        description: 'Itens de orçamento'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/quotation-items
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamento'
+      groupDescription: 'Consulta e manutenção dos itens de custo usados na preparação de orçamentos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cadastrar item de orçamento'
+      description: 'Cria um item de custo na tabela preparatória de orçamento.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      item_key:
+        custom: []
+        name: item_key
+        description: 'Identificador único do item.'
+        required: true
+        example: consulting_hour
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Nome exibido do item.'
+        required: true
+        example: 'Hora técnica de consultoria'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Descrição opcional.'
+        required: false
+        example: 'Consultoria especializada'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      unit:
+        custom: []
+        name: unit
+        description: 'Unidade de cobrança.'
+        required: true
+        example: hour
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      unit_price:
+        custom: []
+        name: unit_price
+        description: 'Preço unitário com duas casas decimais.'
+        required: true
+        example: '250.00'
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      item_key: consulting_hour
+      name: 'Hora técnica de consultoria'
+      description: 'Consultoria especializada'
+      unit: hour
+      unit_price: '250.00'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":1,"item_key":"consulting_hour","unit_price":"250.00"}}'
+        headers: []
+        description: 'Item criado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos ou chave duplicada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/quotation-items/{id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamento'
+      groupDescription: 'Consulta e manutenção dos itens de custo usados na preparação de orçamentos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar item de orçamento'
+      description: 'Atualiza um item de custo existente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the quotation item.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      item_key:
+        custom: []
+        name: item_key
+        description: 'Identificador único do item.'
+        required: true
+        example: consulting_hour
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Nome exibido do item.'
+        required: true
+        example: 'Hora técnica de consultoria'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Descrição opcional.'
+        required: false
+        example: 'Consultoria especializada'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      unit:
+        custom: []
+        name: unit
+        description: 'Unidade de cobrança.'
+        required: true
+        example: hour
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      unit_price:
+        custom: []
+        name: unit_price
+        description: 'Preço unitário com duas casas decimais.'
+        required: true
+        example: '275.00'
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      item_key: consulting_hour
+      name: 'Hora técnica de consultoria'
+      description: 'Consultoria especializada'
+      unit: hour
+      unit_price: '275.00'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"item_key":"consulting_hour","unit_price":"275.00"}}'
+        headers: []
+        description: 'Item atualizado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Item não encontrado'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos ou chave duplicada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

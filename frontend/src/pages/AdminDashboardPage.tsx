@@ -4,7 +4,8 @@ const adminSections = [
   { href: '/admin/reports', title: 'Relatórios', description: 'Revise textos, reenvie relatórios e solicite recálculos.' },
   { href: '/admin/tariffs', title: 'Tarifas e parâmetros', description: 'Gerencie tarifas, importações da ANEEL e parâmetros regulatórios.' },
   { href: '/admin/leads', title: 'Leads e contatos', description: 'Acompanhe interessados e pedidos de contato comercial.' },
-  { href: '/admin/quotation-items', title: 'Orçamento', description: 'Acesse a estrutura preparatória de itens de orçamento.' },
+  { href: '/admin/quotations', title: 'Orçamentos', description: 'Prepare propostas, revise o PDF e libere o envio ao cliente.' },
+  { href: '/admin/quotation-items', title: 'Itens de orçamento', description: 'Atualize os custos unitários usados nas propostas.' },
 ]
 
 export function AdminDashboardPage() {

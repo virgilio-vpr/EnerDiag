@@ -39,7 +39,7 @@ describe('admin report management', () => {
   })
 
   it('edits text, shows immutable results and history, resends and recalculates through the API', async () => {
-    let currentReport = reportData()
+    const currentReport = reportData()
     let recalcCount = 0
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)

@@ -1,0 +1,127 @@
+name: 'Administração: clientes'
+description: 'Consulta paginada de clientes e seus perfis'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/customers
+    metadata:
+      custom: []
+      groupName: 'Administração: clientes'
+      groupDescription: 'Consulta paginada de clientes e seus perfis'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar clientes'
+      description: 'Retorna clientes em páginas, com dados de contato e perfil.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","phone":"11999999999","role":"customer","email_verified_at":"2026-10-24T12:00:00Z","contact_requested_at":null,"profile":{"company_name":"Empresa Exemplo Ltda."}}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}'
+        headers: []
+        description: 'Clientes paginados'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Esta ação não é autorizada.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/customers/{id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: clientes'
+      groupDescription: 'Consulta paginada de clientes e seus perfis'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consultar cliente'
+      description: 'Retorna os dados de contato e perfil de um cliente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the customer.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","phone":"11999999999","role":"customer","profile":{"company_name":"Empresa Exemplo Ltda."}}}'
+        headers: []
+        description: 'Cliente encontrado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Cliente não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
