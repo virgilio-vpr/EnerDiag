@@ -1,14 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-
 import App from './App'
 
-describe('Vite React starter', () => {
-  it('renders the counter and increments it when clicked', () => {
+describe('application shell', () => {
+  it('renders the EnerDiag shell and theme control', () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Count is 0' }))
-
-    expect(screen.getByRole('button', { name: 'Count is 1' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'EnerDiag' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'EnerDiag' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tema escuro' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /instalação industrial com transformador/ })).toBeInTheDocument()
   })
 })

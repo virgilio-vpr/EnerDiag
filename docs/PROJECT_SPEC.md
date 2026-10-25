@@ -186,18 +186,19 @@ Ref: RN-1, DB, API (Admin)
 ### Fase 7 — Frontend: base
 Ref: FE, RN-7
 
-- [ ] 7.1 Estrutura de pastas (`features`, `components`, `pages`, `services/api`, `hooks`, `routes`, `types`) e configuração do Tailwind.
+- [x] 7.1 Estrutura de pastas (`features`, `components`, `pages`, `services/api`, `hooks`, `routes`, `types`) e configuração do Tailwind.
   - Teste: `npm run build` e `npm run test` passam.
-- [ ] 7.2 Tema claro e escuro com botão, escuro confortável (nunca preto absoluto), preferência salva e contraste WCAG AA.
+- [x] 7.2 Tema claro e escuro com botão, escuro confortável (nunca preto absoluto), preferência salva e contraste WCAG AA.
   - Teste: alternar o tema persiste a preferência; verificação de contraste das paletas.
-- [ ] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
+- [x] 7.3 Cliente HTTP com token em memória; erro 401 leva ao login; erros HTTP mapeados para as páginas de erro.
   - Teste: mock de 401 redireciona; mock de 422 e 429 exibe a mensagem correta.
-- [ ] 7.4 Rotas protegidas por perfil (cliente e admin).
+- [x] 7.4 Rotas protegidas por perfil (cliente e admin).
   - Teste: sem login vai ao login; cliente em rota admin vê 403.
-- [ ] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
+- [x] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
   - Teste: cada código renderiza a mensagem amigável; a 503 mostra a previsão.
-- [ ] 7.6 Layout responsivo base (desktop, tablet e mobile).
+- [x] 7.6 Layout responsivo base (desktop, tablet e mobile).
   - Teste: renderização nos três breakpoints; checagem manual no celular.
+  - Validação: testes focados em 375, 768 e 1280 px, suíte completa do frontend (21 testes) e build passaram; checagem manual no celular confirmada pelo usuário, incluindo ausência de cortes e rolagem horizontal e funcionamento da troca de tema.
 
 ### Fase 8 — Frontend: fluxo do cliente
 Ref: FE, RN-2, RN-4, RC-6
