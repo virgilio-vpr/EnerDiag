@@ -13,6 +13,10 @@ function App() {
       <ApiErrorHandler />
       <header className="app-header">
         <a className="brand" href="/">Ener<span>Diag</span></a>
+        <nav className="header-actions" aria-label="Acesso">
+          <a className="header-login" href="/login">Entrar</a>
+          <a className="button button--small" href="/register">Criar conta</a>
+        </nav>
         <button
           type="button"
           className="theme-toggle"
@@ -31,23 +35,61 @@ function App() {
           </svg>
         </button>
       </header>
-      <main id="center">
-        <div className="hero-copy">
-          <p className="hero-eyebrow">Inteligência para sua energia</p>
-          <h1>EnerDiag</h1>
-          <p className="hero-description">Simule o potencial de economia da sua empresa.</p>
-        </div>
-        <div className="hero-artwork">
-          <img
-            src={energyIllustration}
-            alt="Ilustração de uma instalação industrial com transformador, medidor de energia e gráficos de consumo."
-            width="1774"
-            height="887"
-            fetchPriority="high"
-          />
-        </div>
+      <main>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <p className="hero-eyebrow">Inteligência para sua energia</p>
+            <h1 id="hero-title">Sua energia pode trabalhar melhor pela sua empresa.</h1>
+            <p className="hero-description">Descubra oportunidades de economia na sua conta de energia com uma análise clara do consumo e da demanda da sua empresa.</p>
+            <a className="button" href="/register">Começar minha análise <span aria-hidden="true">→</span></a>
+            <p className="hero-note">Análise guiada para empresas do Grupo A atendidas pela ENEL.</p>
+          </div>
+          <div className="hero-artwork">
+            <img
+              src={energyIllustration}
+              alt="Ilustração de uma instalação industrial com transformador, medidor de energia e gráficos de consumo."
+              width="1774"
+              height="887"
+              fetchPriority="high"
+            />
+          </div>
+        </section>
+
+        <section className="landing-section process-section" aria-labelledby="process-title">
+          <p className="section-eyebrow">Simples do início ao resultado</p>
+          <h2 id="process-title">Como funciona</h2>
+          <div className="process-grid">
+            <article className="info-card"><span className="step-number">01</span><h3>Envie suas faturas</h3><p>Compartilhe de 6 a 12 contas recentes da sua empresa em PDF.</p></article>
+            <article className="info-card"><span className="step-number">02</span><h3>Deixe a análise com a gente</h3><p>Avaliamos demanda, consumo e oportunidades com base nos seus dados.</p></article>
+            <article className="info-card"><span className="step-number">03</span><h3>Veja seu potencial</h3><p>Receba um relatório claro com estimativas e caminhos para economizar.</p></article>
+          </div>
+        </section>
+
+        <section className="landing-section benefits-section" aria-labelledby="benefits-title">
+          <div className="benefits-copy">
+            <p className="section-eyebrow">Mais clareza para decidir</p>
+            <h2 id="benefits-title">Entenda onde estão as oportunidades.</h2>
+            <p>Uma visão organizada dos custos de energia ajuda sua empresa a avaliar os próximos passos com confiança.</p>
+          </div>
+          <ul className="benefits-list">
+            <li><span aria-hidden="true">✓</span><div><strong>Potencial de economia</strong><p>Estimativas mensais e anuais fáceis de entender.</p></div></li>
+            <li><span aria-hidden="true">✓</span><div><strong>Consumo e demanda em contexto</strong><p>Indicadores e gráficos para acompanhar os principais componentes.</p></div></li>
+            <li><span aria-hidden="true">✓</span><div><strong>Recomendações para sua realidade</strong><p>Informações para conversar com especialistas e planejar ações.</p></div></li>
+          </ul>
+        </section>
+
+        <section className="privacy-banner" aria-labelledby="privacy-title">
+          <div className="privacy-icon" aria-hidden="true">◈</div>
+          <div><h2 id="privacy-title">Seus dados tratados com cuidado</h2><p>Suas faturas são usadas para preparar a análise e não ficam disponíveis publicamente. Você controla sua conta e pode solicitar a exclusão dos seus dados.</p></div>
+        </section>
+
+        <section className="closing-cta" aria-labelledby="closing-title">
+          <p className="section-eyebrow">O próximo passo começa aqui</p>
+          <h2 id="closing-title">Faça sua energia render mais.</h2>
+          <a className="button" href="/register">Criar minha conta <span aria-hidden="true">→</span></a>
+        </section>
       </main>
-      <footer className="app-footer">Eficiência energética para sua empresa</footer>
+      <footer className="app-footer"><span>Eficiência energética para sua empresa</span><a href="/register">Começar análise</a></footer>
     </div>
   )
 }

@@ -203,7 +203,7 @@ Ref: FE, RN-7
 ### Fase 8 — Frontend: fluxo do cliente
 Ref: FE, RN-2, RN-4, RC-6
 
-- [ ] 8.1 Landing page (proposta de valor, como funciona, benefícios, segurança dos dados, chamada para o cadastro).
+- [x] 8.1 Landing page (proposta de valor, como funciona, benefícios, segurança dos dados, chamada para o cadastro).
   - Teste: seções renderizam; o botão leva ao cadastro; responsiva.
 - [ ] 8.2 Cadastro (nome, e-mail, telefone, senha e confirmação, indicador de força, informativo de segurança e aceite) e verificação por código com reenvio.
   - Teste: validações de formulário; envio sem aceite bloqueado; fluxo de código com erro e reenvio.

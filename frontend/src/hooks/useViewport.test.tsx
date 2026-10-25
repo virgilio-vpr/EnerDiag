@@ -19,6 +19,6 @@ describe('responsive layout', () => {
     render(<App />)
 
     expect(screen.getByTestId('app-shell')).toHaveAttribute('data-viewport', viewport)
-    expect(screen.getByRole('heading', { name: 'EnerDiag' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Sua energia pode trabalhar melhor/ })).toBeInTheDocument()
   })
 })

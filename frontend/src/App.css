@@ -15,6 +15,32 @@
   border-bottom: 1px solid var(--border);
 }
 
+.header-actions { display: flex; align-items: center; gap: 1.25rem; }
+.header-login, .app-footer a { color: var(--text-h); font-size: 0.9rem; font-weight: 650; text-decoration: none; }
+.header-login:hover, .app-footer a:hover { color: var(--accent); }
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3.2rem;
+  padding: 0.75rem 1.3rem;
+  color: #fff;
+  background: #0f766e;
+  border: 1px solid #0f766e;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 20px var(--glow-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.button:hover { background: #115e59; box-shadow: 0 12px 26px var(--glow-primary); transform: translateY(-1px); }
+.button:focus-visible, .header-login:focus-visible, .app-footer a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.button--small { min-height: 2.65rem; padding: 0.55rem 1rem; font-size: 0.875rem; }
+:root[data-theme="dark"] .button { color: #102b2a; background: #5eead4; border-color: #5eead4; }
+:root[data-theme="dark"] .button:hover { background: #99f6e4; }
+
 .app-footer {
   justify-content: center;
   border-top: 1px solid var(--border);
@@ -86,13 +112,12 @@
   .theme-toggle, .theme-toggle__thumb { transition: none; }
 }
 
-#center {
+.hero {
   display: grid;
-  flex: 1;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   align-items: center;
   gap: clamp(1.5rem, 4vw, 4rem);
-  padding-block: clamp(3rem, 9vw, 7rem);
+  padding-block: clamp(3.5rem, 8vw, 7rem);
 }
 
 .hero-copy { max-width: 28rem; }
@@ -108,11 +133,13 @@
 .hero-copy h1 {
   font-size: clamp(2.75rem, 6vw, 4.75rem);
   font-weight: 650;
-  line-height: 1.1;
-  margin-block: 1rem;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+  margin: 1rem 0 1.25rem;
 }
 
-.hero-description { line-height: 1.75; }
+.hero-description { max-width: 29rem; margin-bottom: 1.5rem; line-height: 1.75; }
+.hero-note { margin-top: 1rem; font-size: 0.8rem; }
 
 .hero-artwork {
   position: relative;
@@ -135,13 +162,48 @@
 }
 
 @media (max-width: 1024px) {
-  #center { grid-template-columns: minmax(0, 1fr); text-align: center; }
+  .hero { grid-template-columns: minmax(0, 1fr); text-align: center; }
   .hero-copy { margin-inline: auto; }
+  .hero-description { margin-inline: auto; }
   .hero-artwork { width: min(100%, 40rem); margin-inline: auto; }
 }
 
+.landing-section { padding-block: clamp(3.5rem, 7vw, 6rem); }
+.process-section { border-top: 1px solid var(--border); }
+.section-eyebrow { color: var(--accent); font-size: 0.75rem; font-weight: 750; letter-spacing: 0.12em; text-transform: uppercase; }
+.landing-section > h2, .benefits-copy h2, .closing-cta h2 { margin: 0.65rem 0 2rem; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -0.035em; }
+.process-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
+.info-card { min-height: 11rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--bg) 88%, var(--code-bg)); }
+.step-number { display: inline-block; margin-bottom: 1.25rem; color: var(--accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; }
+.info-card h3 { margin: 0 0 0.55rem; color: var(--text-h); font-size: 1.1rem; }
+.info-card p, .benefits-copy > p:last-child, .benefits-list p, .privacy-banner p { line-height: 1.65; }
+.benefits-section { display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: clamp(2rem, 7vw, 6rem); }
+.benefits-copy h2 { margin-bottom: 1rem; }
+.benefits-list { display: grid; gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+.benefits-list li { display: flex; gap: 1rem; align-items: flex-start; }
+.benefits-list li > span { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; color: var(--accent); background: var(--accent-bg); border-radius: 50%; font-weight: 800; }
+.benefits-list strong { color: var(--text-h); }
+.privacy-banner { display: flex; gap: 1.25rem; align-items: flex-start; padding: clamp(1.5rem, 4vw, 2.5rem); border: 1px solid var(--accent-border); border-radius: 1rem; background: var(--accent-bg); }
+.privacy-banner h2 { margin: 0 0 0.5rem; color: var(--text-h); font-size: 1.25rem; }
+.privacy-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; color: var(--accent); border: 1px solid var(--accent-border); border-radius: 0.75rem; font-size: 1.35rem; }
+.closing-cta { padding-block: clamp(4rem, 8vw, 6rem); text-align: center; }
+.closing-cta h2 { margin-bottom: 1.5rem; }
+
 @media (max-width: 640px) {
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
-  .app-header { align-items: flex-start; }
-  #center { padding: 2rem 0; }
+  .app-header { align-items: center; }
+  .header-actions { gap: 0.75rem; }
+  .header-login { font-size: 0.82rem; }
+  .button--small { min-height: 2.4rem; padding-inline: 0.75rem; }
+  .hero { padding: 3rem 0 2rem; }
+  .hero-copy h1 { font-size: clamp(2.4rem, 11vw, 3.6rem); }
+  .process-grid, .benefits-section { grid-template-columns: minmax(0, 1fr); }
+  .process-grid { gap: 0.75rem; }
+  .info-card { min-height: 0; padding: 1.25rem; }
+  .step-number { margin-bottom: 0.75rem; }
+  .benefits-section { gap: 1.5rem; }
+  .privacy-banner { gap: 0.9rem; }
+  .app-footer { flex-wrap: wrap; }
 }
+
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }
