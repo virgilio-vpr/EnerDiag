@@ -7,7 +7,7 @@ Versão 1.5 · 24/10/2026 · Fonte da verdade do projeto (o docx v1.1 está obso
 - Trabalhe **uma fase por vez**, na ordem. Tarefa pendente: `- [ ]`; concluída: `- [x]`.
 - Toda tarefa tem uma linha **Teste:** (o que verificar). Só marque `[x]` com esse teste passando.
 - `Ref:` lista as seções de referência a ler (RN, RC, DB, API, FE, ORC). Não leia o resto.
-- Etapa 2 (orçamento automático) está fora do escopo atual: ver Fase 10.
+- Etapa 2 do orçamento foi autorizada e concluída na tarefa 10.3.
 - Valores e artigos da REN 1000 conferidos na v1.5: ver §9 e o documento `docs/REN 1000.pdf`.
 - A validação 3.13 depende das planilhas de referência; o leitor ENEL da tarefa 4.3 tem a fixture real conferida em §9 (`docs/Enel Hesap Agos.pdf`, fatura de agosto de 2025).
 
@@ -239,8 +239,8 @@ Ref: ORC
   - Teste: CRUD restrito ao admin; cliente 403.
 - [x] 10.2 **Etapa 1 (agora):** área do admin no frontend (estrutura preparatória, sem regra ativa).
   - Teste: visível só ao admin; edita os valores da tabela.
-- [ ] 10.3 **Etapa 2 (não iniciar sem autorização):** orçamento em PDF A4, enviado ao cliente após liberação do admin.
-  - Teste: definido quando a etapa 2 começar.
+- [x] 10.3 **Etapa 2 (autorizada):** orçamento em PDF A4 com cabeçalho e rodapé e identificação fictícia da consultoria; itens com quantidades, custos unitários e totais; validade de 30 dias; registro do Engenheiro Eletricista, CREA-SP e ART; envio ao cliente por e-mail somente após revisão e liberação explícita do admin.
+  - Teste: criação restrita ao admin gera rascunho com preços congelados e cálculo decimal; prévia gera PDF A4 sem enviar e-mail; liberação sem responsável técnico, CREA-SP ou ART é rejeitada; liberação válida registra a data e validade de 30 dias e envia o PDF ao cliente uma única vez; cliente recebe 403 nas rotas admin; interface permite criar, revisar a prévia e liberar o envio.
 
 ### Fase 11 — Segurança, revisão final e operação
 Ref: RN-7, §9
@@ -392,7 +392,7 @@ Padrões: JSON; erro em formato único (`message`, `code`, `errors`); códigos H
 
 **Etapa 1 (agora).** Tabela `quotation_base` com valor da hora técnica de consultoria, diária do analisador de qualidade de energia (24h/7d) e hora de projeto de banco de capacitores, atualizada manualmente pelo admin (futuro: por planilha). Área do admin preparada, sem regra ativa. Reservar campo para orçamento com materiais (banco de capacitores e outros), a detalhar na etapa 2.
 
-**Etapa 2 (não iniciar sem autorização).** Orçamento em PDF A4 com cabeçalho e rodapé, dados fictícios da consultoria (CNPJ, endereço, e-mail, telefone). Itens com custo unitário e total, mais o total geral. Validade de 30 dias. Responsabilidade técnica de Engenheiro Eletricista registrado no CREA-SP, com emissão de ART. Enviado ao cliente por e-mail só após revisão e liberação do admin.
+**Etapa 2 (autorizada na tarefa 10.3).** Orçamento em PDF A4 com cabeçalho e rodapé, dados fictícios da consultoria (CNPJ, endereço, e-mail, telefone). Itens com custo unitário e total, mais o total geral. Validade de 30 dias. Responsabilidade técnica de Engenheiro Eletricista registrado no CREA-SP, com emissão de ART. Enviado ao cliente por e-mail só após revisão e liberação do admin.
 
 ## 9. A conferir (REN 1000 e planilhas)
 

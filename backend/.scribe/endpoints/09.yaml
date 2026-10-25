@@ -1,0 +1,503 @@
+name: 'Administração: tarifas'
+description: 'Consulta e versionamento de tarifas por vigência'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/tariffs
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Consulta e versionamento de tarifas por vigência'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar tarifas'
+      description: 'Retorna tarifas paginadas, incluindo sua base tributária e origem.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"distributor_id":1,"subgroup":"A4","tariff_modality":"blue","time_slot":"peak","component":"demand","rate":"37.80322","includes_taxes":true,"source":"manual","valid_from":"2026-01-01","valid_to":null}],"links":{},"meta":{}}'
+        headers: []
+        description: 'Tarifas paginadas'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/tariffs
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Consulta e versionamento de tarifas por vigência'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cadastrar tarifa'
+      description: 'Cria uma tarifa sem sobreposição de vigência.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      distributor_id:
+        custom: []
+        name: distributor_id
+        description: 'ID de uma distribuidora ativa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      subgroup:
+        custom: []
+        name: subgroup
+        description: 'Subgrupo tarifário.'
+        required: true
+        example: A4
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      tariff_modality:
+        custom: []
+        name: tariff_modality
+        description: 'Modalidade tarifária.'
+        required: true
+        example: blue
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      time_slot:
+        custom: []
+        name: time_slot
+        description: 'Posto tarifário.'
+        required: true
+        example: peak
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      component:
+        custom: []
+        name: component
+        description: 'Componente da tarifa.'
+        required: true
+        example: demand
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      rate:
+        custom: []
+        name: rate
+        description: 'Valor unitário com até cinco casas decimais.'
+        required: true
+        example: '37.80322'
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      includes_taxes:
+        custom: []
+        name: includes_taxes
+        description: 'Indica se o valor inclui tributos.'
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_from:
+        custom: []
+        name: valid_from
+        description: 'Início da vigência.'
+        required: true
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_to:
+        custom: []
+        name: valid_to
+        description: 'Fim opcional da vigência.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      source_reference:
+        custom: []
+        name: source_reference
+        description: 'Referência regulatória de origem.'
+        required: false
+        example: 'REH 1234/2026'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      distributor_id: 1
+      subgroup: A4
+      tariff_modality: blue
+      time_slot: peak
+      component: demand
+      rate: '37.80322'
+      includes_taxes: true
+      valid_from: '2026-01-01'
+      valid_to: architecto
+      source_reference: 'REH 1234/2026'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":1,"includes_taxes":false,"source":"manual"}}'
+        headers: []
+        description: 'Tarifa criada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos ou vigência sobreposta'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/tariffs/{id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Consulta e versionamento de tarifas por vigência'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar nova versão de tarifa'
+      description: 'Preserva os valores da versão existente e cria outra tarifa com nova vigência.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the tariff.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      distributor_id:
+        custom: []
+        name: distributor_id
+        description: 'ID de uma distribuidora ativa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      subgroup:
+        custom: []
+        name: subgroup
+        description: 'Subgrupo tarifário.'
+        required: true
+        example: A4
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      tariff_modality:
+        custom: []
+        name: tariff_modality
+        description: 'Modalidade tarifária.'
+        required: true
+        example: blue
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      time_slot:
+        custom: []
+        name: time_slot
+        description: 'Posto tarifário.'
+        required: true
+        example: peak
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      component:
+        custom: []
+        name: component
+        description: 'Componente da tarifa.'
+        required: true
+        example: demand
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      rate:
+        custom: []
+        name: rate
+        description: 'Valor unitário com até cinco casas decimais.'
+        required: true
+        example: '40.00000'
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      includes_taxes:
+        custom: []
+        name: includes_taxes
+        description: 'Indica se o valor inclui tributos.'
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_from:
+        custom: []
+        name: valid_from
+        description: 'Início da nova vigência.'
+        required: true
+        example: '2027-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_to:
+        custom: []
+        name: valid_to
+        description: 'Fim opcional da vigência.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      source_reference:
+        custom: []
+        name: source_reference
+        description: 'Referência regulatória de origem.'
+        required: false
+        example: 'REH 5678/2027'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      distributor_id: 1
+      subgroup: A4
+      tariff_modality: blue
+      time_slot: peak
+      component: demand
+      rate: '40.00000'
+      includes_taxes: true
+      valid_from: '2027-01-01'
+      valid_to: architecto
+      source_reference: 'REH 5678/2027'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":2,"includes_taxes":false,"source":"manual"}}'
+        headers: []
+        description: 'Nova versão criada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Tarifa não encontrada'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos ou vigência sobreposta'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/tariffs/import
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Importação do conjunto de tarifas de aplicação da ANEEL'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Importar tarifas da ANEEL'
+      description: 'Importa as tarifas de aplicação em CSV, sem tributos, para os subgrupos A4 e AS de distribuidoras ativas.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      file:
+        custom: []
+        name: file
+        description: 'CSV de tarifas de aplicação obtido no portal de dados abertos da ANEEL.'
+        required: true
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters: []
+    fileParameters:
+      file: null
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Importação concluída.","data":{"rows_accepted":3,"rows_ignored":1,"import_id":1}}'
+        headers: []
+        description: 'Resumo da importação'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Arquivo inválido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

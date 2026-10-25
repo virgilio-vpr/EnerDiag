@@ -10,7 +10,7 @@ class DocumentationTest extends TestCase
 {
     public function test_scribe_documentation_generates_without_error(): void
     {
-        $exitCode = Artisan::call('scribe:generate');
+        $exitCode = Artisan::call('scribe:generate', ['--force' => true]);
 
         $this->assertSame(0, $exitCode);
         $this->assertGeneratedDocumentationCoversEveryApiRoute();
@@ -50,6 +50,9 @@ class DocumentationTest extends TestCase
             '/api/v1/admin/leads' => ['get'],
             '/api/v1/admin/quotation-items' => ['get', 'post'],
             '/api/v1/admin/quotation-items/{id}' => ['put'],
+            '/api/v1/admin/quotations' => ['get', 'post'],
+            '/api/v1/admin/quotations/{id}/pdf' => ['get'],
+            '/api/v1/admin/quotations/{id}/release' => ['post'],
             '/api/v1/simulations' => ['get', 'post'],
             '/api/v1/simulations/{simulationId}/status' => ['get'],
             '/api/v1/simulations/{simulationId}/report' => ['get'],

@@ -1,0 +1,426 @@
+name: 'Administração: relatórios'
+description: 'Edição de textos e reenvio de relatórios'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/reports/{id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: relatórios'
+      groupDescription: 'Edição de textos e reenvio de relatórios'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Editar relatório'
+      description: 'Atualiza textos explicativos e recomendações, preservando os resultados calculados e registrando uma revisão.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the report.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      explanatory_texts:
+        custom: []
+        name: explanatory_texts
+        description: 'Textos explicativos do relatório.'
+        required: true
+        example:
+          - 'Ajuste recomendado da demanda.'
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      recommendations:
+        custom: []
+        name: recommendations
+        description: 'Recomendações do relatório.'
+        required: true
+        example:
+          - 'Avalie a adequação da demanda contratada.'
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      simulation_id:
+        custom: []
+        name: simulation_id
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      total_monthly_savings:
+        custom: []
+        name: total_monthly_savings
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      total_yearly_savings:
+        custom: []
+        name: total_yearly_savings
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      savings_percentage:
+        custom: []
+        name: savings_percentage
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      demand_savings_monthly:
+        custom: []
+        name: demand_savings_monthly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      demand_savings_yearly:
+        custom: []
+        name: demand_savings_yearly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      overrun_savings_monthly:
+        custom: []
+        name: overrun_savings_monthly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      overrun_savings_yearly:
+        custom: []
+        name: overrun_savings_yearly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      reactive_savings_monthly:
+        custom: []
+        name: reactive_savings_monthly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      reactive_savings_yearly:
+        custom: []
+        name: reactive_savings_yearly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      migration_savings_monthly:
+        custom: []
+        name: migration_savings_monthly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      migration_savings_yearly:
+        custom: []
+        name: migration_savings_yearly
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      recommended_modality:
+        custom: []
+        name: recommended_modality
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      optimal_demand_peak:
+        custom: []
+        name: optimal_demand_peak
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      optimal_demand_off_peak:
+        custom: []
+        name: optimal_demand_off_peak
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      optimal_demand_single:
+        custom: []
+        name: optimal_demand_single
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      chart_series:
+        custom: []
+        name: chart_series
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      warnings:
+        custom: []
+        name: warnings
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      r_values:
+        custom: []
+        name: r_values
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      k_values:
+        custom: []
+        name: k_values
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      algorithm_version:
+        custom: []
+        name: algorithm_version
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      tariff_version_ids:
+        custom: []
+        name: tariff_version_ids
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      regulatory_parameter_version_ids:
+        custom: []
+        name: regulatory_parameter_version_ids
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      explanatory_texts:
+        - 'Ajuste recomendado da demanda.'
+      recommendations:
+        - 'Avalie a adequação da demanda contratada.'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"total_monthly_savings":"100.00","explanatory_texts":["Texto revisado"],"recommendations":["Recomendação revisada"]}}'
+        headers: []
+        description: 'Relatório atualizado e revisão registrada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Campos inválidos ou tentativa de alterar resultados'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/reports/{id}/resend'
+    metadata:
+      custom: []
+      groupName: 'Administração: relatórios'
+      groupDescription: 'Edição de textos e reenvio de relatórios'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Reenviar relatório'
+      description: 'Envia manualmente por e-mail o resumo atual do relatório ao cliente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the report.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Relatório reenviado por e-mail."}'
+        headers: []
+        description: 'E-mail enviado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Relatório não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

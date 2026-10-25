@@ -1,0 +1,204 @@
+name: 'Administração: simulações'
+description: 'Consulta paginada de simulações e dados extraídos'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/simulations
+    metadata:
+      custom: []
+      groupName: 'Administração: simulações'
+      groupDescription: 'Consulta paginada de simulações e dados extraídos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar simulações'
+      description: 'Retorna simulações paginadas com identificação do cliente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"user_id":1,"status":"completed","months_count":12,"total_monthly_savings":"100.00","total_yearly_savings":"1200.00","expires_at":null,"customer":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br"}}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}'
+        headers: []
+        description: 'Simulações paginadas'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Esta ação não é autorizada.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/simulations/{id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: simulações'
+      groupDescription: 'Consulta paginada de simulações e dados extraídos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consultar simulação'
+      description: 'Retorna os dados extraídos das faturas e o relatório, sem documentos PDF.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the simulation.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"status":"completed","invoices":[],"report":null}}'
+        headers: []
+        description: 'Simulação encontrada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Simulação não encontrada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/simulations/{id}/recalculate'
+    metadata:
+      custom: []
+      groupName: 'Administração: simulações'
+      groupDescription: 'Consulta paginada de simulações e dados extraídos'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Recalcular relatório'
+      description: 'Recalcula os resultados a partir dos dados extraídos e registra uma nova versão.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the simulation.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"total_monthly_savings":"100.00","total_yearly_savings":"1200.00","algorithm_version":"2.0"}}'
+        headers: []
+        description: 'Relatório recalculado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Simulação não encontrada'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Simulações expiradas não podem ser recalculadas.","code":"SIMULATION_EXPIRED","errors":null}'
+        headers: []
+        description: 'Simulação expirada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

@@ -41,4 +41,28 @@ describe('application shell', () => {
     expect(await screen.findByRole('heading', { name: 'Orçamento' })).toBeInTheDocument()
     expect(await screen.findByText('Nenhum item de orçamento cadastrado.')).toBeInTheDocument()
   })
+
+  it('protects quotation creation for admins and loads customer and cost data', async () => {
+    window.history.replaceState({}, '', '/admin/quotations')
+    setAuthToken('customer-token')
+    setAuthenticatedUser({ id: 6, role: 'customer' })
+    const { rerender } = render(<App />)
+    expect(screen.getByRole('alert')).toHaveTextContent('Você não tem permissão')
+
+    setAuthToken('admin-token')
+    setAuthenticatedUser({ id: 7, role: 'admin' })
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      const payload = url.includes('/admin/customers')
+        ? { data: [] }
+        : url.includes('/admin/quotation-items')
+          ? { data: [] }
+          : { data: [], links: {}, meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } }
+      return new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }))
+    rerender(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Orçamentos' })).toBeInTheDocument()
+    expect(await screen.findByText('Nenhum orçamento criado.')).toBeInTheDocument()
+  })
 })

@@ -1,0 +1,163 @@
+name: 'Administração: parâmetros'
+description: 'Consulta e versionamento de parâmetros regulatórios nacionais'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/parameters
+    metadata:
+      custom: []
+      groupName: 'Administração: parâmetros'
+      groupDescription: 'Consulta e versionamento de parâmetros regulatórios nacionais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar parâmetros regulatórios'
+      description: 'Retorna os parâmetros e suas vigências em ordem decrescente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"key":"idle_demand_discount_fallback","value":"0.18000","state":null,"valid_from":"2021-01-01","valid_to":null}],"links":{},"meta":{}}'
+        headers: []
+        description: 'Parâmetros paginados'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/parameters
+    metadata:
+      custom: []
+      groupName: 'Administração: parâmetros'
+      groupDescription: 'Consulta e versionamento de parâmetros regulatórios nacionais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar versão de parâmetro regulatório'
+      description: 'Registra um novo valor nacional com vigência, preservando versões anteriores.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      key:
+        custom: []
+        name: key
+        description: 'Chave do parâmetro.'
+        required: true
+        example: idle_demand_discount_fallback
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      value:
+        custom: []
+        name: value
+        description: 'Novo valor decimal.'
+        required: true
+        example: '0.18000'
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_from:
+        custom: []
+        name: valid_from
+        description: 'Início da nova vigência.'
+        required: true
+        example: '2027-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      valid_to:
+        custom: []
+        name: valid_to
+        description: 'Fim opcional da vigência.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      key: idle_demand_discount_fallback
+      value: '0.18000'
+      valid_from: '2027-01-01'
+      valid_to: architecto
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":2,"key":"idle_demand_discount_fallback","value":"0.20000","state":null,"valid_from":"2027-01-01","valid_to":null}}'
+        headers: []
+        description: 'Nova versão criada'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados inválidos ou vigência sobreposta'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

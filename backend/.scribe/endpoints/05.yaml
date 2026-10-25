@@ -1,0 +1,351 @@
+name: 'Administração: orçamentos'
+description: 'Criação, revisão, liberação e envio de propostas comerciais'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/quotations
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamentos'
+      groupDescription: 'Criação, revisão, liberação e envio de propostas comerciais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar orçamentos'
+      description: 'Retorna os orçamentos em ordem decrescente de criação.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"quote_number":"ORC-2026-000001","status":"draft","customer_name":"Ana Souza","total":"250.00","items":[]}],"links":{},"meta":{}}'
+        headers: []
+        description: 'Orçamentos paginados'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/quotations
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamentos'
+      groupDescription: 'Criação, revisão, liberação e envio de propostas comerciais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar orçamento em rascunho'
+      description: 'Cria uma proposta para revisão do admin, congelando os nomes e preços unitários atuais dos itens selecionados.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'ID do cliente destinatário.'
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      items:
+        custom: []
+        name: items
+        description: 'Itens do orçamento com quantidade.'
+        required: true
+        example:
+          -
+            quotation_base_id: 1
+            quantity: '8.000'
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'items[].quotation_base_id':
+        custom: []
+        name: 'items[].quotation_base_id'
+        description: 'Must match an existing stored value.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'items[].quantity':
+        custom: []
+        name: 'items[].quantity'
+        description: ''
+        required: true
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 2
+      items:
+        -
+          quotation_base_id: 1
+          quantity: '8.000'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":1,"quote_number":"ORC-2026-000001","status":"draft","total":"2000.00"}}'
+        headers: []
+        description: 'Rascunho criado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Cliente, itens ou quantidades inválidas'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/quotations/{id}/pdf'
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamentos'
+      groupDescription: 'Criação, revisão, liberação e envio de propostas comerciais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Pré-visualizar PDF do orçamento'
+      description: 'Gera o PDF A4 do rascunho ou orçamento liberado, sem enviar e-mail.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the quotation.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '%PDF-1.4'
+        headers: []
+        description: 'Arquivo PDF A4'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Orçamento não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/quotations/{id}/release'
+    metadata:
+      custom: []
+      groupName: 'Administração: orçamentos'
+      groupDescription: 'Criação, revisão, liberação e envio de propostas comerciais'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revisar, liberar e enviar orçamento'
+      description: 'Registra o responsável técnico e a ART, libera a proposta e envia o PDF ao cliente por e-mail. O endpoint não envia rascunhos sem os dados técnicos obrigatórios.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the quotation.'
+        required: true
+        example: 564
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 564
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      technical_responsible_name:
+        custom: []
+        name: technical_responsible_name
+        description: 'Nome do Engenheiro Eletricista responsável.'
+        required: true
+        example: 'Nome do responsável técnico'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      crea_registration:
+        custom: []
+        name: crea_registration
+        description: 'Registro profissional no CREA-SP.'
+        required: true
+        example: 'CREA-SP 0000000000'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      art_number:
+        custom: []
+        name: art_number
+        description: 'Número da ART emitida para o serviço.'
+        required: true
+        example: 'ART 00000000000000000'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      technical_responsible_name: 'Nome do responsável técnico'
+      crea_registration: 'CREA-SP 0000000000'
+      art_number: 'ART 00000000000000000'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"status":"sent","sent_at":"2026-10-24T12:00:00Z"}}'
+        headers: []
+        description: 'Orçamento liberado e enviado'
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: 'Token ausente ou inválido'
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: 'Acesso restrito ao admin'
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: 'Orçamento não encontrado'
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: 'Dados técnicos ausentes ou orçamento já enviado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

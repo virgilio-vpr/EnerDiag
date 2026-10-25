@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\LeadController as AdminLeadController;
+use App\Http\Controllers\Api\V1\Admin\QuotationController as AdminQuotationController;
 use App\Http\Controllers\Api\V1\Admin\QuotationItemController as AdminQuotationItemController;
 use App\Http\Controllers\Api\V1\Admin\RegulatoryParameterController as AdminRegulatoryParameterController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
@@ -32,6 +33,10 @@ Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->m
 Route::post('/leads', LeadController::class)->middleware('throttle:leads');
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/quotations', [AdminQuotationController::class, 'index']);
+    Route::post('/quotations', [AdminQuotationController::class, 'store']);
+    Route::get('/quotations/{id}/pdf', [AdminQuotationController::class, 'pdf'])->whereNumber('id');
+    Route::post('/quotations/{id}/release', [AdminQuotationController::class, 'release'])->whereNumber('id');
     Route::get('/quotation-items', [AdminQuotationItemController::class, 'index']);
     Route::post('/quotation-items', [AdminQuotationItemController::class, 'store']);
     Route::put('/quotation-items/{id}', [AdminQuotationItemController::class, 'update'])->whereNumber('id');
