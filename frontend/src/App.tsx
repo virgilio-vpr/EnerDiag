@@ -26,8 +26,23 @@ function App() {
 
   useEffect(() => {
     function updatePath() { setPathname(window.location.pathname) }
+    function navigateInternalLink(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null
+      if (!(anchor instanceof HTMLAnchorElement) || anchor.hasAttribute('download') || (anchor.target && anchor.target !== '_self')) return
+      const url = new URL(anchor.href, window.location.href)
+      if (url.origin !== window.location.origin || url.pathname.startsWith('/api/')) return
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return
+      event.preventDefault()
+      window.history.pushState({}, '', url.pathname + url.search + url.hash)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
     window.addEventListener('popstate', updatePath)
-    return () => window.removeEventListener('popstate', updatePath)
+    document.addEventListener('click', navigateInternalLink)
+    return () => {
+      window.removeEventListener('popstate', updatePath)
+      document.removeEventListener('click', navigateInternalLink)
+    }
   }, [])
 
   const isLandingPage = pathname === '/'
