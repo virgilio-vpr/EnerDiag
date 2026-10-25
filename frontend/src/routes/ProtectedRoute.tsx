@@ -1,11 +1,8 @@
 import { useEffect } from 'react'
 
-export type UserRole = 'customer' | 'admin'
+import type { AuthenticatedUser } from '../services/api/client'
 
-export type AuthenticatedUser = {
-  id: number
-  role: UserRole
-}
+export type UserRole = AuthenticatedUser['role']
 
 type ProtectedRouteProps = {
   user: AuthenticatedUser | null

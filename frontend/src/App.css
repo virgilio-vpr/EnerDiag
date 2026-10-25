@@ -316,6 +316,16 @@
 .unsupported-notice { display: grid; gap: 0.8rem; max-width: 38rem; padding: 1.25rem; border: 1px solid var(--accent-border); border-radius: 0.85rem; background: var(--accent-bg); }
 .unsupported-notice p { line-height: 1.6; }
 .unsupported-notice .text-button { justify-self: start; margin: 0; }
+.admin-page { display: grid; gap: 0.75rem; padding-block: clamp(2.5rem, 7vw, 5rem); }
+.admin-page > h1 { margin: 0; font-size: clamp(2rem, 6vw, 2.75rem); letter-spacing: -0.04em; }
+.admin-page > .access-intro { margin-top: 0; }
+.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.admin-card { display: grid; align-content: start; gap: 0.65rem; min-width: 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); text-decoration: none; transition: border-color 160ms ease, transform 160ms ease; }
+.admin-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.admin-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.admin-card h2 { margin: 0; color: var(--text-h); font-size: 1.1rem; }
+.admin-card p { margin: 0; color: var(--text); font-size: 0.9rem; line-height: 1.55; }
+.admin-card span { margin-top: 0.25rem; color: var(--accent); font-weight: 700; }
 
 @media (max-width: 640px) {
   .report-heading { align-items: stretch; flex-direction: column; }
@@ -325,6 +335,7 @@
   .report-components dl > div { align-items: start; flex-direction: column; gap: 0.25rem; }
   .report-components dd { text-align: left; }
   .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-grid { grid-template-columns: minmax(0, 1fr); }
   .delete-confirmation > div { align-items: stretch; flex-direction: column; }
   .delete-confirmation .text-button { align-self: start; margin: 0; }
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }

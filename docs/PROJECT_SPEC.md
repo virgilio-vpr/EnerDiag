@@ -221,7 +221,7 @@ Ref: FE, RN-2, RN-4, RC-6
 ### Fase 9 — Frontend: área do admin
 Ref: FE, API (Admin)
 
-- [ ] 9.1 Acesso administrativo e painel.
+- [x] 9.1 Acesso administrativo e painel.
   - Teste: só o perfil admin entra; demais veem 403.
 - [ ] 9.2 Clientes e contatos; simulações e dados extraídos (nunca PDFs).
   - Teste: listas paginadas; detalhe exibe os dados extraídos.

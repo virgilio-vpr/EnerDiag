@@ -111,6 +111,22 @@ describe('login and password recovery', () => {
     expect(getAuthToken()).toBe('memory-only-token')
   })
 
+  it('routes an admin login to the protected administrative dashboard', async () => {
+    window.history.replaceState({}, '', '/login')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(200, {
+      token: 'admin-memory-token', user: { id: 9, name: 'Admin', email: 'admin@example.com', role: 'admin' },
+    })))
+    render(<App />)
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'admin@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'SenhaValida123' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    expect(await screen.findByRole('heading', { name: 'Painel administrativo' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/admin')
+    expect(screen.getByRole('link', { name: /Clientes e contatos/ })).toHaveAttribute('href', '/admin/customers')
+    expect(getAuthToken()).toBe('admin-memory-token')
+  })
+
   it('shows invalid credentials and routes unverified accounts to code verification', async () => {
     window.history.replaceState({}, '', '/login')
     const fetchMock = vi.fn()

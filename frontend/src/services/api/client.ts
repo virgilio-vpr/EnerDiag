@@ -4,6 +4,11 @@ export type ApiErrorPayload = {
   errors?: Record<string, string[]>
 }
 
+export type AuthenticatedUser = {
+  id: number
+  role: 'customer' | 'admin'
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
@@ -19,6 +24,7 @@ export class ApiError extends Error {
 }
 
 let authToken: string | null = null
+let authenticatedUser: AuthenticatedUser | null = null
 
 const errorMessages: Record<number, string> = {
   400: 'Não foi possível entender a solicitação.',
@@ -35,10 +41,19 @@ const errorMessages: Record<number, string> = {
 
 export function setAuthToken(token: string | null) {
   authToken = token
+  if (token === null) authenticatedUser = null
 }
 
 export function getAuthToken() {
   return authToken
+}
+
+export function setAuthenticatedUser(user: AuthenticatedUser | null) {
+  authenticatedUser = user
+}
+
+export function getAuthenticatedUser() {
+  return authenticatedUser
 }
 
 export async function apiRequest<T>(

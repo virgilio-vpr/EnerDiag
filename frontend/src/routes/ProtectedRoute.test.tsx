@@ -19,4 +19,10 @@ describe('ProtectedRoute', () => {
     expect(screen.getByRole('alert')).toHaveAttribute('data-error-status', '403')
     expect(screen.queryByRole('heading', { name: 'Painel' })).not.toBeInTheDocument()
   })
+
+  it('allows an admin to enter the admin route', () => {
+    render(<ProtectedRoute user={{ id: 2, role: 'admin' }} requiredRole="admin"><h1>Painel</h1></ProtectedRoute>)
+
+    expect(screen.getByRole('heading', { name: 'Painel' })).toBeInTheDocument()
+  })
 })

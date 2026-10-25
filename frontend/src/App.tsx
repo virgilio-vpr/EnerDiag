@@ -5,7 +5,9 @@ import { ApiErrorHandler } from './components/ApiErrorHandler'
 import { InvoiceUploadPage } from './pages/InvoiceUploadPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './pages/CustomerAccessPage'
-import { getAuthToken } from './services/api/client'
+import { getAuthToken, getAuthenticatedUser } from './services/api/client'
+import { ProtectedRoute } from './routes/ProtectedRoute'
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
 
@@ -53,7 +55,7 @@ function App() {
         </button>
       </header>
       <main>
-        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="hero-eyebrow">Inteligência para sua energia</p>
