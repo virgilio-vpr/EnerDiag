@@ -347,4 +347,5 @@
   .upload-page { padding-block: 2.5rem; }
 }
 
+.button, .text-button, .delete-button { font-family: var(--heading); }
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
