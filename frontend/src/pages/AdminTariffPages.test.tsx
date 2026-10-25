@@ -160,3 +160,37 @@ describe('admin tariff and regulatory parameter pages', () => {
     expect(JSON.parse(String(request?.[1]?.body))).toEqual({ key: 'idle_demand_discount_fallback', value: '0.20000', valid_from: '2027-01-01', valid_to: null })
   })
 })
+
+
+describe('automatic tariff import review', () => {
+  it('shows the snapshot and requires explicit confirmation before approval', async () => {
+    let approved = false
+    const pending = { id: 7, status: 'pending', source_reference: 'REH 1234/2026', source_url: 'https://dadosabertos.aneel.gov.br', imported_at: '2026-10-25' }
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/v1/distributors') return jsonResponse(200, distributorResponse)
+      if (url === '/api/v1/admin/tariffs?page=1') return emptyTariffs()
+      if (url === '/api/v1/admin/tariff-imports?page=1') return jsonResponse(200, { data: [pending], meta: { current_page: 1, last_page: 1 } })
+      if (url === '/api/v1/admin/tariff-imports/7') return jsonResponse(200, { data: { ...pending, pending_tariffs: [{ distributor_id: 1, subgroup: 'A4', tariff_modality: 'blue', time_slot: 'peak', component: 'demand', rate: '29.30000', valid_from: '2026-10-01', valid_to: null }] } })
+      if (url === '/api/v1/admin/tariff-imports/7/approve' && init?.method === 'POST') {
+        approved = true
+        return jsonResponse(200, { data: { ...pending, status: 'completed' } })
+      }
+      throw new Error(`Unexpected request ${url}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<AdminTariffsPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar importações pendentes' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Revisar importação #7' }))
+    expect(await screen.findByText('29.30000')).toBeInTheDocument()
+    const approveButton = screen.getByRole('button', { name: 'Aprovar e ativar tarifas' })
+    expect(approveButton).toBeDisabled()
+    expect(approved).toBe(false)
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Conferi os valores, as vigências e a origem das tarifas.' }))
+    fireEvent.click(approveButton)
+    expect(await screen.findByText('Importação aprovada. Tarifas ativadas.')).toBeInTheDocument()
+    expect(approved).toBe(true)
+    const approval = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/7/approve'))
+    expect(JSON.parse(String(approval?.[1]?.body))).toEqual({ confirmed: true })
+  })
+})

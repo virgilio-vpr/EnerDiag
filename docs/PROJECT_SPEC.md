@@ -250,8 +250,9 @@ Ref: RN-7, §9
 - [x] 11.2 Reforço da conta admin (adotado): senha mais forte e segundo fator por TOTP.
   - Teste: com o segundo fator ativo, o login do admin o exige; sem ele, o acesso é negado.
   - Configuração e recuperação local: `php artisan admin:configure-security {email}`; senha com pelo menos 14 caracteres, maiúsculas, minúsculas, números e símbolos, não comprometida. Ativação exige código confirmado e revoga sessões anteriores; segredo criptografado; códigos com janela de 30 segundos e tolerância de um intervalo, sem reutilização. Redefinição de senha preserva TOTP.
-- [ ] 11.3 Importação automática das tarifas a partir do portal de dados abertos da ANEEL (opcional): rotina agendada que baixa o conjunto de dados, grava a importação como pendente de revisão e só ativa as tarifas após aprovação do admin.
+- [x] 11.3 Importação automática das tarifas a partir do portal de dados abertos da ANEEL (adotada): rotina agendada que baixa o conjunto de dados, grava a importação como pendente de revisão e só ativa as tarifas após aprovação do admin.
   - Teste: com a fonte simulada, a rotina cria importação pendente; nada é ativado sem aprovação; falha de rede não altera as tarifas vigentes.
+  - Operação: `php artisan tariffs:fetch-aneel`, diariamente às 04h no fuso da aplicação; download temporário privado com limite de 256 MiB, recorte de tarifas normais vigentes ou futuras para A4/AS e Azul/Verde, valores sem tributos e conversão de MWh para kWh em decimal. Guarda fonte, hash do recorte e valores para revisão no painel de tarifas. Repetição do mesmo recorte não duplica importações; aprovação explícita registra admin/data e aplica todas as tarifas em transação, sem alterações parciais em caso de conflito.
 - [ ] 11.4 Teste de ponta a ponta do fluxo completo (Playwright, opcional).
   - Teste: cadastro → verificação → envio → relatório → PDF por e-mail.
 - [ ] 11.5 Conteinerização completa (API e frontend), HTTPS, diretório temporário privado compartilhado entre API e worker (volume), limites de upload no proxy, worker de fila com até três tentativas (backoff de 60/180 segundos, timeout de 300 segundos e `retry_after` maior que o timeout), agendador (expurgo, limpeza de temporários órfãos e, se adotada a 11.3, importação de tarifas) em produção; admin criado por comando próprio.
@@ -354,7 +355,7 @@ Tabelas em inglês. Tarifas com 5 casas decimais; grandezas de demanda, consumo 
 - `customer_profiles` (user_id, company_name, cnpj, distributor_id, transformer_power_kva, address_details, substation_same_address, substation_address)
 - `distributors` (id, name, state, parser_key, active)
 - `tariffs` (id, distributor_id, subgroup, tariff_modality, time_slot, component, rate, includes_taxes, source, source_reference, valid_from, valid_to); `component`: `demand`, `energy_te`, `energy_tusd`; `includes_taxes`: `true` para preço com tributos (como na fatura) e `false` para tarifas importadas da ANEEL (somente “tarifas de aplicação”, não a base econômica); `source`: `aneel_import` ou `manual`; `source_reference`: resolução homologatória de origem.
-- `tariff_imports` (id, source_reference, file_name, imported_by, imported_at, rows_accepted, rows_ignored, status)
+- `tariff_imports` (id, source_reference, file_name, imported_by, imported_at, rows_accepted, rows_ignored, status, source_url, source_hash único e opcional, pending_tariffs JSON, reviewed_by, reviewed_at); coletas automáticas ficam `pending` sem alterar `tariffs`; a aprovação explícita torna o registro `completed` e preserva o recorte revisado para auditoria.
 - `regulatory_parameters` (id, key, value, state nullable, valid_from, valid_to); na versão 1 só há parâmetros nacionais (`state = null`): `overrun_tolerance = 0.05`, `overrun_multiplier = 2`, `reference_power_factor = 0.92` e `idle_demand_discount_fallback = 0.18`. A coluna `state` fica reservada para evolução futura. Sem sobreposição de vigências para a mesma chave e escopo.
 - `simulations` (id, user_id, status, `processing_errors` JSON por arquivo, months_count, total_monthly_savings, total_yearly_savings, expires_at)
 - `invoices` (id, simulation_id, reference_month, consumer_unit, subgroup, tariff_modality, total_paid `DECIMAL(14,2)`); unicidade de `(simulation_id, reference_month)`; a unidade consumidora deve ser a mesma em todas as faturas da simulação.
@@ -375,7 +376,7 @@ Padrões: JSON; erro em formato único (`message`, `code`, `errors`); códigos H
 |---|---|
 | Auth (público) | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-code`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password` |
 | Cliente | `GET/PUT /me`, `DELETE /me`, `POST /me/contact-request`, `GET /simulations`, `POST /simulations`, `GET /simulations/{id}/status`, `/report`, `/pdf`, `POST /leads` |
-| Admin | `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}`, `POST /admin/simulations/{id}/recalculate`, `PUT /admin/reports/{id}`, `POST /admin/reports/{id}/resend`, `GET/POST/PUT /admin/tariffs`, `POST /admin/tariffs/import`, `GET/POST /admin/parameters`, `GET /admin/leads`, `GET/POST/PUT /admin/quotation-items` |
+| Admin | `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}`, `POST /admin/simulations/{id}/recalculate`, `PUT /admin/reports/{id}`, `POST /admin/reports/{id}/resend`, `GET/POST/PUT /admin/tariffs`, `POST /admin/tariffs/import`, `GET /admin/tariff-imports`, `/admin/tariff-imports/{id}`, `POST /admin/tariff-imports/{id}/approve`, `GET/POST /admin/parameters`, `GET /admin/leads`, `GET/POST/PUT /admin/quotation-items` |
 
 ## 7. Frontend (FE)
 

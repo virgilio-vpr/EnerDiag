@@ -87,6 +87,78 @@ function TariffFields({ form, setForm, distributors }: { form: TariffFormState; 
   </div>
 }
 
+type PendingImport = { id: number; source_reference: string | null; source_url: string; imported_at: string; status: string; pending_tariffs?: Array<Omit<Tariff, 'id' | 'distributor'>> }
+
+function PendingTariffImports({ onApproved, distributors }: { onApproved: () => Promise<void>; distributors: Distributor[] }) {
+  const [imports, setImports] = useState<PendingImport[]>([])
+  const [review, setReview] = useState<PendingImport | null>(null)
+  const [confirmed, setConfirmed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [page, setPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+
+  async function load(nextPage = 1) {
+    setBusy(true)
+    setError('')
+    try {
+      const response = await apiRequest<{ data: PendingImport[]; meta: { current_page: number; last_page: number } }>(`/admin/tariff-imports?page=${nextPage}`)
+      setImports(response.data)
+      setPage(response.meta.current_page)
+      setLastPage(response.meta.last_page)
+      if (response.data.length === 0) setNotice('Nenhuma importação pendente de revisão.')
+    } catch (reason) { setError(formError(reason, 'Não foi possível consultar as importações.')) }
+    finally { setBusy(false) }
+  }
+
+  async function openReview(id: number) {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    setConfirmed(false)
+    try {
+      const response = await apiRequest<{ data: PendingImport }>(`/admin/tariff-imports/${id}`)
+      setReview(response.data)
+    } catch (reason) { setError(formError(reason, 'Não foi possível abrir a revisão.')) }
+    finally { setBusy(false) }
+  }
+
+  async function approve() {
+    if (!review || !confirmed) return
+    setBusy(true)
+    setError('')
+    try {
+      await apiRequest(`/admin/tariff-imports/${review.id}/approve`, { method: 'POST', body: JSON.stringify({ confirmed: true }) })
+      setReview(null)
+      setConfirmed(false)
+      await onApproved()
+      setImports((current) => current.filter((item) => item.id !== review.id))
+      setNotice('Importação aprovada. Tarifas ativadas.')
+    } catch (reason) { setError(formError(reason, 'Não foi possível aprovar a importação.')) }
+    finally { setBusy(false) }
+  }
+
+  return <section className="admin-data-form" aria-labelledby="pending-imports-title">
+    <h2 id="pending-imports-title">Importações automáticas para revisão</h2>
+    <p>Os valores baixados da ANEEL só entram em vigor no sistema após sua revisão e aprovação.</p>
+    <button className="button button--secondary" type="button" disabled={busy} onClick={() => void load()}>Consultar importações pendentes</button>
+    {error && <p className="field-error" role="alert">{error}</p>}
+    {notice && <p className="form-success" role="status">{notice}</p>}
+    {imports.map((item) => <div key={item.id}><p>Importação #{item.id} · {item.source_reference}</p><button className="text-button" type="button" disabled={busy} onClick={() => void openReview(item.id)}>Revisar importação #{item.id}</button></div>)}
+    {lastPage > 1 && <nav aria-label="Páginas de importações pendentes"><button type="button" disabled={busy || page <= 1} onClick={() => void load(page - 1)}>Anterior</button><span>{page} de {lastPage}</span><button type="button" disabled={busy || page >= lastPage} onClick={() => void load(page + 1)}>Próxima</button></nav>}
+    {review && <div>
+      <h3>Revisão da importação #{review.id}</h3>
+      <p>{review.source_reference} · Valores sem tributos</p>
+      <a href={review.source_url} target="_blank" rel="noreferrer">Consultar fonte oficial</a>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Distribuidora</th><th>Subgrupo / modalidade</th><th>Posto / componente</th><th>Valor sem tributos</th><th>Vigência</th></tr></thead><tbody>
+        {review.pending_tariffs?.map((tariff, index) => <tr key={index}><td>{distributors.find((item) => item.id === tariff.distributor_id)?.name ?? `Distribuidora #${tariff.distributor_id}`}</td><td>{tariff.subgroup} · {tariff.tariff_modality === 'blue' ? 'Azul' : 'Verde'}</td><td>{({ peak: 'Ponta', off_peak: 'Fora de ponta', single: 'Única' } as Record<string, string>)[tariff.time_slot]} · {({ demand: 'Demanda', energy_te: 'Energia TE', energy_tusd: 'Energia TUSD' } as Record<string, string>)[tariff.component]}</td><td>{tariff.rate}</td><td>{tariff.valid_from} – {tariff.valid_to ?? 'sem término'}</td></tr>)}
+      </tbody></table></div>
+      {review.status === 'pending' && <><label><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />Conferi os valores, as vigências e a origem das tarifas.</label><button className="button" type="button" disabled={busy || !confirmed} onClick={() => void approve()}>Aprovar e ativar tarifas</button></>}
+    </div>}
+  </section>
+}
+
 export function AdminTariffsPage() {
   const [page, setPage] = useState(1)
   const [tariffs, setTariffs] = useState<{ data: Tariff[]; meta: PageMeta } | null>(null)
@@ -190,7 +262,7 @@ export function AdminTariffsPage() {
         <tbody>{tariffs.data.map((tariff) => <tr key={tariff.id}>
           <td>{tariff.distributor?.name ?? distributors.find((item) => item.id === tariff.distributor_id)?.name ?? `#${tariff.distributor_id}`}</td>
           <td>{tariff.subgroup} · {tariff.tariff_modality === 'blue' ? 'Azul' : 'Verde'}</td>
-          <td>{tariff.time_slot} · {tariff.component}</td><td>{tariff.rate}</td>
+          <td>{({ peak: 'Ponta', off_peak: 'Fora de ponta', single: 'Única' } as Record<string, string>)[tariff.time_slot]} · {({ demand: 'Demanda', energy_te: 'Energia TE', energy_tusd: 'Energia TUSD' } as Record<string, string>)[tariff.component]}</td><td>{tariff.rate}</td>
           <td>{tariff.includes_taxes ? 'Com tributos' : 'Sem tributos'}</td>
           <td>{tariff.source === 'aneel_import' ? 'ANEEL' : 'Manual'}{tariff.source_reference ? <span>{tariff.source_reference}</span> : null}</td>
           <td>{tariff.valid_from} – {tariff.valid_to ?? 'atual'}</td>
@@ -209,6 +281,8 @@ export function AdminTariffsPage() {
         {editing && <button className="button button--secondary" type="button" onClick={() => { setEditing(null); setForm(emptyTariff) }}>Cancelar</button>}
       </div>
     </form>
+
+    <PendingTariffImports onApproved={reloadTariffs} distributors={distributors} />
 
     <form className="admin-data-form" onSubmit={importCsv} noValidate>
       <h2>Importar CSV da ANEEL</h2>
