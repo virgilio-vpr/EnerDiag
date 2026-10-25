@@ -235,7 +235,7 @@ Ref: FE, API (Admin)
 ### Fase 10 — Orçamento
 Ref: ORC
 
-- [ ] 10.1 **Etapa 1 (agora):** endpoints admin `GET/POST/PUT /admin/quotation-items` para a tabela `quotation_base` (hora de consultoria, diária do analisador, hora de projeto de banco de capacitores).
+- [x] 10.1 **Etapa 1 (agora):** endpoints admin `GET/POST/PUT /admin/quotation-items` para a tabela `quotation_base` (hora de consultoria, diária do analisador, hora de projeto de banco de capacitores).
   - Teste: CRUD restrito ao admin; cliente 403.
 - [ ] 10.2 **Etapa 1 (agora):** área do admin no frontend (estrutura preparatória, sem regra ativa).
   - Teste: visível só ao admin; edita os valores da tabela.

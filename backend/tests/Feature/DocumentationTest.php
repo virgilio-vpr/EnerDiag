@@ -48,6 +48,8 @@ class DocumentationTest extends TestCase
             '/api/v1/admin/tariffs/import' => ['post'],
             '/api/v1/admin/parameters' => ['get', 'post'],
             '/api/v1/admin/leads' => ['get'],
+            '/api/v1/admin/quotation-items' => ['get', 'post'],
+            '/api/v1/admin/quotation-items/{id}' => ['put'],
             '/api/v1/simulations' => ['get', 'post'],
             '/api/v1/simulations/{simulationId}/status' => ['get'],
             '/api/v1/simulations/{simulationId}/report' => ['get'],

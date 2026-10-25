@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\LeadController as AdminLeadController;
+use App\Http\Controllers\Api\V1\Admin\QuotationItemController as AdminQuotationItemController;
 use App\Http\Controllers\Api\V1\Admin\RegulatoryParameterController as AdminRegulatoryParameterController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
@@ -31,6 +32,9 @@ Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->m
 Route::post('/leads', LeadController::class)->middleware('throttle:leads');
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/quotation-items', [AdminQuotationItemController::class, 'index']);
+    Route::post('/quotation-items', [AdminQuotationItemController::class, 'store']);
+    Route::put('/quotation-items/{id}', [AdminQuotationItemController::class, 'update'])->whereNumber('id');
     Route::get('/customers', [AdminCustomerController::class, 'index']);
     Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
     Route::get('/simulations', [AdminSimulationController::class, 'index']);
