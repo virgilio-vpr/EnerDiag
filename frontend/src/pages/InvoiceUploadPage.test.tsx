@@ -26,11 +26,16 @@ function invoice(name: string, pages = 1, type = 'application/pdf') {
   return new File(['%PDF-1.4\n' + pageMarkers], name, { type })
 }
 
-function setupFetch(submitResponse = jsonResponse(202, { data: { id: 12, status: 'queued' } })) {
+function setupFetch(
+  submitResponse = jsonResponse(202, { data: { id: 12, status: 'queued' } }),
+  statusResponses: Response[] = [],
+) {
   const fetchMock = vi.fn()
     .mockResolvedValueOnce(jsonResponse(200, { data: account }))
     .mockResolvedValueOnce(jsonResponse(200, { data: distributors }))
-    .mockResolvedValue(submitResponse)
+    .mockResolvedValueOnce(submitResponse)
+  statusResponses.forEach((response) => fetchMock.mockResolvedValueOnce(response))
+  fetchMock.mockResolvedValue(jsonResponse(500, { message: 'Erro inesperado.' }))
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }
@@ -102,6 +107,73 @@ describe('invoice upload', () => {
     expect(body.get('address_details')).toBe('Rua da Energia, 10, São Paulo/SP')
     expect(body.get('substation_same_address')).toBe('1')
     expect(body.getAll('invoices[]')).toHaveLength(6)
+  })
+
+  it.each([
+    ['queued', 'Aguardando início do processamento…'],
+    ['processing', 'Estamos lendo suas faturas e preparando a análise.'],
+    ['completed', 'A análise das suas faturas está concluída.'],
+  ] as const)('shows the %s simulation status returned by the API', async (status, message) => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch(
+      jsonResponse(202, { data: { id: 12, status: 'queued' } }),
+      [jsonResponse(200, { data: { id: 12, status, processing_errors: null } })],
+    )
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
+    })
+    await screen.findByText(/6 páginas/)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations/12/status')).toBe(true)
+  })
+
+  it('shows asynchronous file processing failures by file', async () => {
+    setAuthToken('customer-token')
+    setupFetch(undefined, [jsonResponse(200, { data: {
+      id: 12,
+      status: 'failed',
+      processing_errors: [{ file: 'invoice-2.pdf', code: 'INVOICE_READ_FAILED', errors: { message: 'Não foi possível ler este arquivo.' } }],
+    } })])
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
+    })
+    await screen.findByText(/6 páginas/)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+
+    expect(await screen.findByRole('heading', { name: 'A análise precisa de atenção' })).toBeInTheDocument()
+    expect(screen.getByText('invoice-2.pdf')).toBeInTheDocument()
+    expect(screen.getByText('Não foi possível ler este arquivo.')).toBeInTheDocument()
+  })
+
+  it('maps synchronous invoice validation errors to the matching file', async () => {
+    setAuthToken('customer-token')
+    setupFetch(jsonResponse(422, { message: 'Confira os dados informados.', errors: { 'invoices.1': ['O arquivo está ilegível.'] } }))
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
+    })
+    await screen.findByText(/6 páginas/)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+
+    expect(await screen.findByText('O arquivo está ilegível.', { selector: 'small' })).toBeInTheDocument()
+    expect(screen.getByText('Revise os erros associados às faturas indicadas.')).toBeInTheDocument()
+  })
+
+  it('shows the API message when the synchronous upload is too large', async () => {
+    setAuthToken('customer-token')
+    setupFetch(jsonResponse(413, { message: 'O conjunto enviado ultrapassa o limite.' }))
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
+    })
+    await screen.findByText(/6 páginas/)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('O conjunto enviado ultrapassa o limite.')
   })
 
   it('shows an unsupported distributor notice and registers the customer interest', async () => {

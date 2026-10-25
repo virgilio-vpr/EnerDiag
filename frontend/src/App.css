@@ -230,6 +230,12 @@
 .selected-files li span { float: right; color: var(--text); }
 .file-validation-error { display: block; clear: both; color: #b42318; font-size: 0.8rem; }
 :root[data-theme="dark"] .file-validation-error { color: #fda29b; }
+.processing-errors { display: grid; gap: 0.7rem; max-width: 42rem; margin-top: 1.5rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--code-bg); }
+.processing-errors h2 { margin: 0; font-size: 1.1rem; }
+.processing-errors ul { display: grid; gap: 0.75rem; margin: 0; padding-left: 1.2rem; }
+.processing-errors li { display: grid; gap: 0.2rem; }
+.processing-errors li span { color: var(--text); font-size: 0.9rem; }
+.processing-errors .button { justify-self: start; }
 .unsupported-notice { display: grid; gap: 0.8rem; max-width: 38rem; padding: 1.25rem; border: 1px solid var(--accent-border); border-radius: 0.85rem; background: var(--accent-bg); }
 .unsupported-notice p { line-height: 1.6; }
 .unsupported-notice .text-button { justify-self: start; margin: 0; }

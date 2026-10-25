@@ -211,7 +211,7 @@ Ref: FE, RN-2, RN-4, RC-6
   - Teste: login ok e inválido; fluxo de redefinição.
 - [x] 8.4 Envio das faturas: dados da empresa, subestação (mesmo endereço ou alternativo), instrução 12 ideal e 6 mínimo, upload múltiplo com erro por arquivo e limites de tamanho/páginas, distribuidora em lista, botão “Simular”.
   - Teste: bloqueia fora de 6 a 12 e arquivo que não seja PDF; distribuidora sem leitor mostra aviso e registra o lead.
-- [ ] 8.5 Acompanhamento do processamento por polling e tratamento de falhas assíncronas por arquivo.
+- [x] 8.5 Acompanhamento do processamento por polling e tratamento de falhas assíncronas por arquivo.
   - Teste: API mockada em `queued`, `processing`, `completed` e `failed`; erros de validação síncronos e de leitura assíncronos mostram mensagens por arquivo.
 - [ ] 8.6 Relatório online: indicadores, gráficos (demanda registrada × contratada × ótima, reativos, Azul × Verde), avisos (menos de 12 faturas, tarifa desatualizada, proporção de reserva da demanda ociosa, divergência com a fatura, “sem ganho”, migração indisponível por falta de tarifa da outra modalidade), percentual com o rótulo de D14, botão de PDF e botão de contato (WhatsApp ou e-mail) que chama `contact-request`.
   - Teste: renderiza com dados de exemplo; avisos aparecem nas condições certas; o botão de contato registra o pedido.

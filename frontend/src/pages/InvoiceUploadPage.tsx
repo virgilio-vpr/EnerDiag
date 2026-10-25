@@ -20,7 +20,11 @@ type Account = {
     substation_address?: string | null
   } | null
 }
-type QueuedSimulation = { data: { id: number; status: string } }
+type SimulationStatus = 'queued' | 'processing' | 'completed' | 'failed'
+type ProcessingFileError = { file: string; code: string; errors: Record<string, string | string[]> }
+type QueuedSimulation = { data: { id: number; status: SimulationStatus } }
+type SimulationStatusResponse = { data: { id: number; status: SimulationStatus; processing_errors: ProcessingFileError[] | null } }
+const STATUS_POLL_INTERVAL_MS = 2000
 
 function estimatePageCount(contents: string): number | null {
   const pageObjects = [...contents.matchAll(/\/Type\s*\/Page\b/g)].length
@@ -48,7 +52,8 @@ export function InvoiceUploadPage() {
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [queuedSimulation, setQueuedSimulation] = useState<{ id: number; status: string } | null>(null)
+  const [queuedSimulation, setQueuedSimulation] = useState<{ id: number; status: SimulationStatus } | null>(null)
+  const [processingErrors, setProcessingErrors] = useState<ProcessingFileError[]>([])
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -79,6 +84,35 @@ export function InvoiceUploadPage() {
     })
     return () => { mounted = false }
   }, [])
+
+  const simulationId = queuedSimulation?.id
+  useEffect(() => {
+    if (!simulationId) return
+    let active = true
+    let timer: number | undefined
+
+    async function pollStatus() {
+      try {
+        const response = await apiRequest<SimulationStatusResponse>(`/simulations/${simulationId}/status`, {}, { notifyGlobalError: false })
+        if (!active) return
+        setQueuedSimulation({ id: response.data.id, status: response.data.status })
+        setProcessingErrors(response.data.processing_errors ?? [])
+        if (response.data.status === 'queued' || response.data.status === 'processing') {
+          timer = window.setTimeout(pollStatus, STATUS_POLL_INTERVAL_MS)
+        }
+      } catch (error) {
+        if (!active) return
+        setErrorMessage(error instanceof Error ? error.message : 'Não foi possível consultar o andamento da análise.')
+        timer = window.setTimeout(pollStatus, STATUS_POLL_INTERVAL_MS)
+      }
+    }
+
+    void pollStatus()
+    return () => {
+      active = false
+      if (timer !== undefined) window.clearTimeout(timer)
+    }
+  }, [simulationId])
 
   const totalBytes = useMemo(() => files.reduce((total, file) => total + file.size, 0), [files])
   const selectedDistributor = distributors.find((distributor) => String(distributor.id) === distributorId)
@@ -206,7 +240,13 @@ export function InvoiceUploadPage() {
       setQueuedSimulation(response.data)
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
-        setValidationMessage(Object.values(error.errors).flat()[0] ?? error.message)
+        const invoiceErrors = Object.entries(error.errors).flatMap(([field, messages]) => {
+          const match = field.match(/^invoices\.(\d+)$/)
+          const file = match ? files[Number(match[1])] : undefined
+          return file ? [{ name: file.name, message: messages[0] ?? error.message }] : []
+        })
+        setFileValidationErrors(invoiceErrors)
+        setValidationMessage(invoiceErrors.length ? 'Revise os erros associados às faturas indicadas.' : Object.values(error.errors).flat()[0] ?? error.message)
       } else {
         setErrorMessage(error instanceof Error ? error.message : 'Não foi possível enviar as faturas.')
       }
@@ -216,7 +256,25 @@ export function InvoiceUploadPage() {
   }
 
   if (loading) return <section className="access-page" aria-live="polite"><p>Carregando seus dados…</p></section>
-  if (queuedSimulation) return <section className="access-page" aria-labelledby="queued-title"><p className="section-eyebrow">Envio concluído</p><h1 id="queued-title">Sua análise começou</h1><p className="form-success" role="status">As faturas foram enviadas e estão na fila de processamento.</p><p>Protocolo da simulação: {queuedSimulation.id}</p></section>
+  if (queuedSimulation) {
+    const statusMessage: Record<SimulationStatus, string> = {
+      queued: 'Suas faturas foram enviadas e estão na fila de processamento.',
+      processing: 'Estamos lendo suas faturas e preparando a análise.',
+      completed: 'A análise das suas faturas está concluída.',
+      failed: 'Não foi possível concluir a análise de todas as faturas.',
+    }
+    return <section className="access-page" aria-labelledby="queued-title">
+      <p className="section-eyebrow">{queuedSimulation.status === 'failed' ? 'Envio com falhas' : 'Acompanhamento da análise'}</p>
+      <h1 id="queued-title">{queuedSimulation.status === 'completed' ? 'Sua análise está pronta' : queuedSimulation.status === 'failed' ? 'A análise precisa de atenção' : 'Sua análise começou'}</h1>
+      <p className={queuedSimulation.status === 'failed' ? 'field-error' : 'form-success'} role={queuedSimulation.status === 'failed' ? 'alert' : 'status'}>{statusMessage[queuedSimulation.status]}</p>
+      <p>Protocolo da simulação: {queuedSimulation.id}</p>
+      {queuedSimulation.status === 'queued' || queuedSimulation.status === 'processing' ? <p className="password-hint" aria-live="polite">{queuedSimulation.status === 'queued' ? 'Aguardando início do processamento…' : 'Esta página será atualizada automaticamente.'}</p> : null}
+      {processingErrors.length > 0 && <div className="processing-errors"><h2>Faturas que precisam ser corrigidas</h2><ul>{processingErrors.map((fileError, index) => {
+        const details = Object.values(fileError.errors).flatMap((value) => Array.isArray(value) ? value : [value]).filter(Boolean)
+        return <li key={fileError.file + index}><strong>{fileError.file}</strong><span>{details.join(' ') || 'Não foi possível ler esta fatura.'}</span></li>
+      })}</ul><a className="button" href="/upload-faturas">Enviar novas faturas</a></div>}
+    </section>
+  }
 
   return (
     <section className="upload-page" aria-labelledby="upload-title">
