@@ -47,4 +47,36 @@ class AdminLeadIndexTest extends TestCase
 
         $this->withToken($customerToken)->getJson('/api/v1/admin/leads')->assertForbidden();
     }
+
+    public function test_admin_can_filter_leads_by_type_and_search_text(): void
+    {
+        Lead::query()->create([
+            'email' => 'solar@example.com',
+            'distributor_name' => 'Distribuidora Solar',
+            'reason' => 'Fora da área atendida',
+        ]);
+        Lead::query()->create([
+            'email' => 'other@example.com',
+            'distributor_name' => 'Distribuidora Norte',
+            'reason' => 'Sem atendimento',
+        ]);
+        User::factory()->create([
+            'name' => 'Ana Cliente',
+            'email' => 'ana@example.com',
+            'contact_requested_at' => now(),
+        ]);
+        $adminToken = User::factory()->create(['role' => 'admin'])->createToken('admin')->plainTextToken;
+
+        $this->withToken($adminToken)->getJson('/api/v1/admin/leads?type=unsupported_distributor&search=Solar')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.type', 'unsupported_distributor')
+            ->assertJsonPath('data.0.distributor_name', 'Distribuidora Solar');
+
+        $this->withToken($adminToken)->getJson('/api/v1/admin/leads?type=contact_request&search=ana@example.com')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.type', 'contact_request')
+            ->assertJsonPath('data.0.customer_name', 'Ana Cliente');
+    }
 }

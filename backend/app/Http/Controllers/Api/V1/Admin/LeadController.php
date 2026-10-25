@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Knuckles\Scribe\Attributes\Authenticated;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
+use Knuckles\Scribe\Attributes\QueryParam;
 use Knuckles\Scribe\Attributes\Response;
 
 #[Group('Administração: leads', 'Lista solicitações de distribuidoras não atendidas e pedidos de contato')]
@@ -16,6 +17,8 @@ class LeadController extends Controller
 {
     #[Authenticated]
     #[Endpoint('Listar leads e pedidos de contato', 'Retorna uma lista paginada com leads de distribuidoras e solicitações de contato de clientes.')]
+    #[QueryParam('type', 'string', 'Filtra pelo tipo de registro.', required: false, example: 'contact_request')]
+    #[QueryParam('search', 'string', 'Busca por e-mail, nome do cliente, distribuidora ou motivo.', required: false, example: 'empresa.com.br')]
     #[Response(status: 200, content: '{"data":[{"type":"unsupported_distributor","id":1,"email":"cliente@empresa.com.br","distributor_name":"Distribuidora X","reason":"Fora da área atendida","customer_name":null,"requested_at":"2026-10-24T12:00:00Z"}],"links":{},"meta":{"current_page":1,"per_page":15,"total":1}}', description: 'Leads paginados')]
     #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 403, content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}', description: 'Acesso restrito ao admin')]
@@ -30,8 +33,18 @@ class LeadController extends Controller
             ->whereNotNull('contact_requested_at')
             ->selectRaw("'contact_request' as type, id, email, NULL as distributor_name, NULL as reason, name as customer_name, contact_requested_at as requested_at");
 
+        $type = $request->query('type');
+        $search = trim((string) $request->query('search', ''));
+
         $leads = DB::query()
             ->fromSub($unsupportedDistributorLeads->unionAll($contactRequests), 'admin_leads')
+            ->when(in_array($type, ['unsupported_distributor', 'contact_request'], true), fn ($query) => $query->where('type', $type))
+            ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search): void {
+                $pattern = '%'.$search.'%';
+                foreach (['email', 'customer_name', 'distributor_name', 'reason'] as $column) {
+                    $query->orWhereRaw('LOWER('.$column.') LIKE LOWER(?)', [$pattern]);
+                }
+            }))
             ->orderByDesc('requested_at')
             ->orderByDesc('id')
             ->paginate($perPage);

@@ -229,7 +229,7 @@ Ref: FE, API (Admin)
   - Teste: edição cria versão sem alterar resultados; reenvio e recálculo chamam a API.
 - [x] 9.4 Tabela de tarifas (base tributária e origem), importação do CSV da ANEEL (com resumo de linhas aceitas e ignoradas) e parâmetros regulatórios.
   - Teste: criar e editar tarifa; importar arquivo de exemplo exibe o resumo; vigência sobreposta, base tributária ausente e CSV inválido exibem o erro da API.
-- [ ] 9.5 Leads e pedidos de contato.
+- [x] 9.5 Leads e pedidos de contato.
   - Teste: listagem e filtros básicos.
 
 ### Fase 10 — Orçamento

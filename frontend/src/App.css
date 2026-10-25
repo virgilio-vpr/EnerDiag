@@ -381,6 +381,10 @@
 .admin-inline-button { display: inline; margin: 0; padding: 0; text-align: left; }
 .admin-import-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.25rem; padding: 1rem; border: 1px solid var(--accent-border); border-radius: 0.75rem; background: var(--accent-bg); }
 .admin-import-summary strong { flex-basis: 100%; }
+.admin-lead-filters { display: grid; grid-template-columns: minmax(12rem, 0.7fr) minmax(16rem, 1.3fr) auto; align-items: end; gap: 0.9rem; margin-block: 1rem; }
+.admin-lead-filters label { display: grid; gap: 0.35rem; color: var(--text-h); font-size: 0.9rem; font-weight: 650; }
+.admin-lead-filters input, .admin-lead-filters select { width: 100%; min-height: 2.9rem; box-sizing: border-box; padding: 0.65rem 0.8rem; color: var(--text-h); background: var(--surface); border: 1px solid var(--border); border-radius: 0.55rem; font: inherit; font-weight: 400; }
+.admin-lead-filters input:focus-visible, .admin-lead-filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (max-width: 640px) {
   .report-heading { align-items: stretch; flex-direction: column; }
@@ -397,6 +401,7 @@
   .admin-form-grid { grid-template-columns: minmax(0, 1fr); }
   .admin-import-summary { align-items: flex-start; flex-direction: column; }
   .admin-import-summary strong { flex-basis: auto; }
+  .admin-lead-filters { grid-template-columns: minmax(0, 1fr); }
   .delete-confirmation > div { align-items: stretch; flex-direction: column; }
   .delete-confirmation .text-button { align-self: start; margin: 0; }
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
