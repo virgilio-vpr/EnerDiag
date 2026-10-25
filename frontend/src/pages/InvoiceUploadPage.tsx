@@ -268,6 +268,7 @@ export function InvoiceUploadPage() {
       <h1 id="queued-title">{queuedSimulation.status === 'completed' ? 'Sua análise está pronta' : queuedSimulation.status === 'failed' ? 'A análise precisa de atenção' : 'Sua análise começou'}</h1>
       <p className={queuedSimulation.status === 'failed' ? 'field-error' : 'form-success'} role={queuedSimulation.status === 'failed' ? 'alert' : 'status'}>{statusMessage[queuedSimulation.status]}</p>
       <p>Protocolo da simulação: {queuedSimulation.id}</p>
+      {queuedSimulation.status === 'completed' && <a className="button" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</a>}
       {queuedSimulation.status === 'queued' || queuedSimulation.status === 'processing' ? <p className="password-hint" aria-live="polite">{queuedSimulation.status === 'queued' ? 'Aguardando início do processamento…' : 'Esta página será atualizada automaticamente.'}</p> : null}
       {processingErrors.length > 0 && <div className="processing-errors"><h2>Faturas que precisam ser corrigidas</h2><ul>{processingErrors.map((fileError, index) => {
         const details = Object.values(fileError.errors).flatMap((value) => Array.isArray(value) ? value : [value]).filter(Boolean)

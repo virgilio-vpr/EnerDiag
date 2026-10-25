@@ -83,7 +83,7 @@ class SimulationController extends Controller
     #[Authenticated]
     #[Endpoint('Consultar relatório da simulação', 'Retorna os indicadores, séries e avisos do relatório concluído.')]
     #[UrlParam('simulationId', 'integer', 'Identificador da simulação.', example: 1)]
-    #[Response(status: 200, content: '{"data":{"id":1,"simulation_id":1,"total_monthly_savings":"1200.00","total_yearly_savings":"14400.00","chart_series":{},"warnings":[]}}', description: 'Relatório da simulação')]
+    #[Response(status: 200, content: '{"data":{"id":1,"simulation_id":1,"months_count":12,"total_monthly_savings":"1200.00","total_yearly_savings":"14400.00","chart_series":{},"warnings":[]}}', description: 'Relatório da simulação')]
     #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 404, content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}', description: 'Simulação não encontrada para este cliente')]
     #[Response(status: 409, content: '{"message":"O relatório ainda não está disponível.","code":"REPORT_NOT_READY","errors":null}', description: 'Simulação ainda não concluída')]
@@ -98,7 +98,7 @@ class SimulationController extends Controller
             ], 409);
         }
 
-        return response()->json(['data' => $simulation->report->only([
+        return response()->json(['data' => array_merge($simulation->report->only([
             'id',
             'simulation_id',
             'total_monthly_savings',
@@ -122,7 +122,7 @@ class SimulationController extends Controller
             'recommendations',
             'r_values',
             'k_values',
-        ])]);
+        ]), ['months_count' => $simulation->months_count])]);
     }
 
     #[Authenticated]

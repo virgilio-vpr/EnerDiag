@@ -100,6 +100,7 @@ class SimulationReadApiTest extends TestCase
         $this->withToken($token)->getJson('/api/v1/simulations/'.$simulation->id.'/report')
             ->assertOk()
             ->assertJsonPath('data.id', $report->id)
+            ->assertJsonPath('data.months_count', $simulation->months_count)
             ->assertJsonPath('data.total_monthly_savings', '54.42')
             ->assertJsonPath('data.chart_series.reactive.0.value', '54.42')
             ->assertJsonPath('data.warnings.0', 'demand_optimization_unavailable_pending_section_9_limits')
