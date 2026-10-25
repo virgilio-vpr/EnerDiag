@@ -1,12 +1,23 @@
+import { useEffect, useState } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
+import { RegistrationPage, VerifyEmailPage } from './pages/CustomerAccessPage'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
 
 function App() {
   const { theme, toggleTheme } = useTheme()
   const viewport = useViewport()
+  const [pathname, setPathname] = useState(window.location.pathname)
+
+  useEffect(() => {
+    function updatePath() { setPathname(window.location.pathname) }
+    window.addEventListener('popstate', updatePath)
+    return () => window.removeEventListener('popstate', updatePath)
+  }, [])
+
+  const isLandingPage = pathname === '/'
 
   return (
     <div className="app-shell" data-testid="app-shell" data-viewport={viewport}>
@@ -36,6 +47,7 @@ function App() {
         </button>
       </header>
       <main>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <section className="access-page"><h1>Entrar</h1><p>O acesso à sua conta estará disponível em breve.</p><a href="/register">Criar conta</a></section> : isLandingPage ? <>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="hero-eyebrow">Inteligência para sua energia</p>
@@ -88,8 +100,9 @@ function App() {
           <h2 id="closing-title">Faça sua energia render mais.</h2>
           <a className="button" href="/register">Criar minha conta <span aria-hidden="true">→</span></a>
         </section>
+        </> : <section className="access-page"><h1>Página não encontrada</h1><a href="/">Voltar ao início</a></section>}
       </main>
-      <footer className="app-footer"><span>Eficiência energética para sua empresa</span><a href="/register">Começar análise</a></footer>
+      <footer className="app-footer"><span>Eficiência energética para sua empresa</span><a href={isLandingPage ? '/register' : '/'}>{isLandingPage ? 'Começar análise' : 'Página inicial'}</a></footer>
     </div>
   )
 }

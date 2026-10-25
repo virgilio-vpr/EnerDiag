@@ -188,6 +188,29 @@
 .privacy-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; color: var(--accent); border: 1px solid var(--accent-border); border-radius: 0.75rem; font-size: 1.35rem; }
 .closing-cta { padding-block: clamp(4rem, 8vw, 6rem); text-align: center; }
 .closing-cta h2 { margin-bottom: 1.5rem; }
+.access-page { width: min(100%, 34rem); margin: 0 auto; padding-block: clamp(2.5rem, 7vw, 5rem); }
+.access-page h1 { margin: 0.65rem 0 0.5rem; font-size: clamp(2rem, 6vw, 2.75rem); letter-spacing: -0.04em; }
+.access-intro { margin-bottom: 1.75rem; line-height: 1.65; }
+.access-form { display: grid; gap: 0.9rem; }
+.access-form > label:not(.consent-control) { display: grid; gap: 0.35rem; color: var(--text-h); font-size: 0.9rem; font-weight: 650; }
+.access-form input:not([type="checkbox"]) { width: 100%; min-height: 2.9rem; box-sizing: border-box; padding: 0.65rem 0.8rem; color: var(--text-h); background: var(--code-bg); border: 1px solid var(--border); border-radius: 0.55rem; font: inherit; font-weight: 400; }
+.access-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.access-form input[aria-invalid="true"] { border-color: #b42318; }
+.optional-label, .password-hint { color: var(--text); font-size: 0.8rem; font-weight: 400; }
+.password-hint--valid { color: var(--accent); }
+.consent-control { display: flex; gap: 0.65rem; align-items: flex-start; margin-block: 0.35rem; color: var(--text); font-size: 0.88rem; line-height: 1.5; }
+.consent-control input { width: 1.1rem; height: 1.1rem; flex: 0 0 auto; margin-top: 0.15rem; accent-color: var(--accent); }
+.security-note { padding: 0.85rem 1rem; color: var(--text); background: var(--accent-bg); border-radius: 0.65rem; font-size: 0.82rem; line-height: 1.55; }
+.access-submit { width: 100%; margin-top: 0.4rem; }
+.field-error, .form-errors { color: #b42318; font-size: 0.84rem; line-height: 1.45; }
+:root[data-theme="dark"] .field-error, :root[data-theme="dark"] .form-errors { color: #fda29b; }
+.form-errors { margin: 0; padding-left: 1.2rem; }
+.form-success { color: var(--accent); font-weight: 600; }
+.access-switch { margin-top: 1.25rem; text-align: center; font-size: 0.88rem; }
+.access-switch a, .text-button { color: var(--accent); font-weight: 700; }
+.text-button { display: block; margin: 1rem auto 0; padding: 0.5rem; background: transparent; border: 0; font: inherit; cursor: pointer; }
+.text-button:disabled { cursor: wait; opacity: 0.7; }
+.access-page a:focus-visible, .text-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 @media (max-width: 640px) {
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
@@ -204,6 +227,7 @@
   .benefits-section { gap: 1.5rem; }
   .privacy-banner { gap: 0.9rem; }
   .app-footer { flex-wrap: wrap; }
+  .access-page { padding-block: 2.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }

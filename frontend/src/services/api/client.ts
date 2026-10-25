@@ -6,10 +6,14 @@ export type ApiErrorPayload = {
 
 export class ApiError extends Error {
   readonly status: number
+  readonly code?: string
+  readonly errors?: Record<string, string[]>
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string, errors?: Record<string, string[]>) {
     super(message)
     this.status = status
+    this.code = code
+    this.errors = errors
     this.name = 'ApiError'
   }
 }
@@ -37,7 +41,11 @@ export function getAuthToken() {
   return authToken
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  options: RequestInit = {},
+  config: { notifyGlobalError?: boolean } = {},
+): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Accept', 'application/json')
   if (options.body && !(options.body instanceof FormData)) {
@@ -51,8 +59,10 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const payload = await response.json().catch(() => ({})) as ApiErrorPayload
   if (!response.ok) {
     const message = payload.message || errorMessages[response.status] || errorMessages[500]
-    const error = new ApiError(response.status, message)
-    window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
+    const error = new ApiError(response.status, message, payload.code, payload.errors)
+    if (config.notifyGlobalError !== false) {
+      window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
+    }
     throw error
   }
 
