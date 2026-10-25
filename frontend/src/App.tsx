@@ -8,6 +8,7 @@ import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, Ver
 import { getAuthToken, getAuthenticatedUser } from './services/api/client'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { AdminCustomerDetailPage, AdminCustomersPage, AdminSimulationDetailPage, AdminSimulationsPage } from './pages/AdminDataPages'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
 
@@ -26,6 +27,8 @@ function App() {
 
   const isLandingPage = pathname === '/'
   const reportMatch = pathname.match(/^\/simulations\/(\d+)\/report$/)
+  const adminCustomerMatch = pathname.match(/^\/admin\/customers\/(\d+)$/)
+  const adminSimulationMatch = pathname.match(/^\/admin\/simulations\/(\d+)$/)
   const isAuthenticated = Boolean(getAuthToken())
 
   return (
@@ -55,7 +58,7 @@ function App() {
         </button>
       </header>
       <main>
-        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/admin/customers' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomersPage /></ProtectedRoute> : adminCustomerMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomerDetailPage customerId={adminCustomerMatch[1]} /></ProtectedRoute> : pathname === '/admin/simulations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationsPage /></ProtectedRoute> : adminSimulationMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationDetailPage simulationId={adminSimulationMatch[1]} /></ProtectedRoute> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="hero-eyebrow">Inteligência para sua energia</p>

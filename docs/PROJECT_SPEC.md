@@ -223,7 +223,7 @@ Ref: FE, API (Admin)
 
 - [x] 9.1 Acesso administrativo e painel.
   - Teste: só o perfil admin entra; demais veem 403.
-- [ ] 9.2 Clientes e contatos; simulações e dados extraídos (nunca PDFs).
+- [x] 9.2 Clientes e contatos; simulações e dados extraídos (nunca PDFs).
   - Teste: listas paginadas; detalhe exibe os dados extraídos.
 - [ ] 9.3 Relatórios: visualizar, editar textos explicativos/recomendações, reenviar, recalcular; histórico de versões; resultados calculados somente leitura.
   - Teste: edição cria versão sem alterar resultados; reenvio e recálculo chamam a API.

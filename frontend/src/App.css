@@ -326,6 +326,31 @@
 .admin-card h2 { margin: 0; color: var(--text-h); font-size: 1.1rem; }
 .admin-card p { margin: 0; color: var(--text); font-size: 0.9rem; line-height: 1.55; }
 .admin-card span { margin-top: 0.25rem; color: var(--accent); font-weight: 700; }
+.admin-back-link { justify-self: start; color: var(--accent); font-weight: 700; text-decoration: none; }
+.admin-back-link:focus-visible, .admin-table a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.admin-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); }
+.admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table th, .admin-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
+.admin-table th { color: var(--text); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.admin-table td { color: var(--text-h); font-size: 0.9rem; }
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table td > strong, .admin-table td > span { display: block; }
+.admin-table td > span { margin-top: 0.2rem; color: var(--text); font-size: 0.82rem; }
+.admin-table a { color: var(--accent); font-weight: 700; }
+.admin-pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+.admin-pagination > span { color: var(--text); font-size: 0.88rem; text-align: center; }
+.admin-pagination .button { min-height: 2.5rem; padding: 0.5rem 0.8rem; }
+.admin-pagination .button:disabled { cursor: not-allowed; opacity: 0.55; }
+.admin-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 1rem 0; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); overflow: hidden; }
+.admin-details > div { display: grid; gap: 0.35rem; min-width: 0; padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); }
+.admin-details dt { color: var(--text); font-size: 0.8rem; }
+.admin-details dd { margin: 0; color: var(--text-h); font-weight: 650; overflow-wrap: anywhere; }
+.admin-section-title { margin: 1rem 0 0.25rem; font-size: 1.3rem; }
+.admin-invoices { display: grid; gap: 1rem; }
+.admin-invoice { display: grid; gap: 0.75rem; min-width: 0; }
+.admin-invoice h3, .admin-invoice p { margin: 0; }
+.admin-invoice h3 { font-size: 1rem; }
+.admin-invoice p { color: var(--text); font-size: 0.9rem; }
 
 @media (max-width: 640px) {
   .report-heading { align-items: stretch; flex-direction: column; }
@@ -336,6 +361,9 @@
   .report-components dd { text-align: left; }
   .profile-grid { grid-template-columns: minmax(0, 1fr); }
   .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-details { grid-template-columns: minmax(0, 1fr); }
+  .admin-pagination { flex-wrap: wrap; justify-content: center; }
+  .admin-pagination > span { flex: 1 0 100%; order: -1; }
   .delete-confirmation > div { align-items: stretch; flex-direction: column; }
   .delete-confirmation .text-button { align-self: start; margin: 0; }
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
