@@ -1,6 +1,7 @@
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
+import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
 
 function App() {
@@ -31,8 +32,20 @@ function App() {
         </button>
       </header>
       <main id="center">
-        <h1>EnerDiag</h1>
-        <p>Simule o potencial de economia da sua empresa.</p>
+        <div className="hero-copy">
+          <p className="hero-eyebrow">Inteligência para sua energia</p>
+          <h1>EnerDiag</h1>
+          <p className="hero-description">Simule o potencial de economia da sua empresa.</p>
+        </div>
+        <div className="hero-artwork">
+          <img
+            src={energyIllustration}
+            alt="Ilustração de uma instalação industrial com transformador, medidor de energia e gráficos de consumo."
+            width="1774"
+            height="887"
+            fetchPriority="high"
+          />
+        </div>
       </main>
       <footer className="app-footer">Eficiência energética para sua empresa</footer>
     </div>

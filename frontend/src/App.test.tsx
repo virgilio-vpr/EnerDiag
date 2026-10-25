@@ -9,5 +9,6 @@ describe('application shell', () => {
     expect(screen.getByRole('link', { name: 'EnerDiag' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'EnerDiag' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Tema escuro' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /instalação industrial com transformador/ })).toBeInTheDocument()
   })
 })
