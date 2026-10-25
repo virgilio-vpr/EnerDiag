@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
 use App\Http\Controllers\Api\V1\Admin\TariffImportController as AdminTariffImportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\DistributorController;
 use App\Http\Controllers\Api\V1\ExampleController;
 use App\Http\Controllers\Api\V1\LeadController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/status', StatusController::class);
+Route::get('/distributors', [DistributorController::class, 'index']);
 Route::post('/example/validate', [ExampleController::class, 'validateExample']);
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:auth');
 Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:verification_codes');

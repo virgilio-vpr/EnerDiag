@@ -27,6 +27,7 @@ class DocumentationTest extends TestCase
         $postman = str_replace('\\/', '/', (string) file_get_contents($postmanPath));
         $expectedOperations = [
             '/api/v1/status' => ['get'],
+            '/api/v1/distributors' => ['get'],
             '/api/v1/auth/register' => ['post'],
             '/api/v1/auth/verify-email' => ['post'],
             '/api/v1/auth/resend-code' => ['post'],

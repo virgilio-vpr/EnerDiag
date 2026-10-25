@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
+import { InvoiceUploadPage } from './pages/InvoiceUploadPage'
 import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './pages/CustomerAccessPage'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
@@ -47,7 +48,7 @@ function App() {
         </button>
       </header>
       <main>
-        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : isLandingPage ? <>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : isLandingPage ? <>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="hero-eyebrow">Inteligência para sua energia</p>

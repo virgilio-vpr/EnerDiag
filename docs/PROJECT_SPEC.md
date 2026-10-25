@@ -209,7 +209,7 @@ Ref: FE, RN-2, RN-4, RC-6
   - Teste: validações de formulário; envio sem aceite bloqueado; fluxo de código com erro e reenvio.
 - [x] 8.3 Login e recuperação de senha (“Esqueci minha senha”, redefinição).
   - Teste: login ok e inválido; fluxo de redefinição.
-- [ ] 8.4 Envio das faturas: dados da empresa, subestação (mesmo endereço ou alternativo), instrução 12 ideal e 6 mínimo, upload múltiplo com erro por arquivo e limites de tamanho/páginas, distribuidora em lista, botão “Simular”.
+- [x] 8.4 Envio das faturas: dados da empresa, subestação (mesmo endereço ou alternativo), instrução 12 ideal e 6 mínimo, upload múltiplo com erro por arquivo e limites de tamanho/páginas, distribuidora em lista, botão “Simular”.
   - Teste: bloqueia fora de 6 a 12 e arquivo que não seja PDF; distribuidora sem leitor mostra aviso e registra o lead.
 - [ ] 8.5 Acompanhamento do processamento por polling e tratamento de falhas assíncronas por arquivo.
   - Teste: API mockada em `queued`, `processing`, `completed` e `failed`; erros de validação síncronos e de leitura assíncronos mostram mensagens por arquivo.
