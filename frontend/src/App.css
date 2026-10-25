@@ -261,6 +261,26 @@
 .report-chart h2 { min-height: 2.4rem; }
 .chart-container { width: 100%; height: 280px; color: var(--text); }
 .chart-empty { min-height: 6rem; margin: 0; color: var(--text); line-height: 1.6; }
+.profile-page { display: grid; gap: 1rem; max-width: 58rem; margin-inline: auto; padding-block: clamp(2.5rem, 7vw, 5rem); }
+.profile-page > h1 { margin: 0; font-size: clamp(2rem, 6vw, 2.75rem); letter-spacing: -0.04em; }
+.profile-page > .access-intro { margin-top: 0; }
+.profile-form { display: grid; gap: 1rem; }
+.profile-form fieldset { display: grid; gap: 1rem; min-width: 0; margin: 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); }
+.profile-form legend { padding-inline: 0.4rem; color: var(--text-h); font-weight: 750; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.1rem; }
+.profile-form label:not(.consent-control) { display: grid; gap: 0.35rem; color: var(--text-h); font-size: 0.9rem; font-weight: 650; }
+.profile-form input:not([type="checkbox"]), .profile-form select, .profile-form textarea { width: 100%; min-height: 2.9rem; box-sizing: border-box; padding: 0.65rem 0.8rem; color: var(--text-h); background: var(--surface); border: 1px solid var(--border); border-radius: 0.55rem; font: inherit; font-weight: 400; }
+.profile-form input[readonly] { color: var(--text); opacity: 0.8; }
+.profile-form input:focus-visible, .profile-form select:focus-visible, .profile-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.profile-wide { max-width: 42rem; }
+.delete-account { display: grid; gap: 0.65rem; margin-top: 1rem; padding: 1.25rem; border: 1px solid #b42318; border-radius: 0.85rem; }
+.delete-account h2, .delete-confirmation h3 { margin: 0; font-size: 1.15rem; }
+.delete-account > p, .delete-confirmation p { margin: 0; color: var(--text); line-height: 1.55; }
+.delete-button { justify-self: start; padding: 0.65rem 1rem; color: #fff; background: #b42318; border: 0; border-radius: 0.55rem; font: inherit; font-weight: 700; cursor: pointer; }
+.delete-button:disabled { cursor: wait; opacity: 0.7; }
+.delete-confirmation { display: grid; gap: 0.75rem; padding: 1rem; background: var(--accent-bg); border-radius: 0.65rem; }
+.delete-confirmation > div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+:root[data-theme="dark"] .delete-account { border-color: #f97066; }
 .unsupported-notice { display: grid; gap: 0.8rem; max-width: 38rem; padding: 1.25rem; border: 1px solid var(--accent-border); border-radius: 0.85rem; background: var(--accent-bg); }
 .unsupported-notice p { line-height: 1.6; }
 .unsupported-notice .text-button { justify-self: start; margin: 0; }
@@ -272,6 +292,9 @@
   .report-components dl { grid-template-columns: minmax(0, 1fr); }
   .report-components dl > div { align-items: start; flex-direction: column; gap: 0.25rem; }
   .report-components dd { text-align: left; }
+  .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .delete-confirmation > div { align-items: stretch; flex-direction: column; }
+  .delete-confirmation .text-button { align-self: start; margin: 0; }
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
   .app-header { align-items: center; }
   .header-actions { gap: 0.75rem; }

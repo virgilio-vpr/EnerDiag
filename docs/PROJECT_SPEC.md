@@ -215,7 +215,7 @@ Ref: FE, RN-2, RN-4, RC-6
   - Teste: API mockada em `queued`, `processing`, `completed` e `failed`; erros de validação síncronos e de leitura assíncronos mostram mensagens por arquivo.
 - [x] 8.6 Relatório online: indicadores, gráficos (demanda registrada × contratada × ótima, reativos, Azul × Verde), avisos (menos de 12 faturas, tarifa desatualizada, proporção de reserva da demanda ociosa, divergência com a fatura, “sem ganho”, migração indisponível por falta de tarifa da outra modalidade), percentual com o rótulo de D14, botão de PDF e botão de contato (WhatsApp ou e-mail) que chama `contact-request`.
   - Teste: renderiza com dados de exemplo; avisos aparecem nas condições certas; o botão de contato registra o pedido.
-- [ ] 8.7 Perfil e exclusão de dados (LGPD).
+- [x] 8.7 Perfil e exclusão de dados (LGPD).
   - Teste: atualiza o perfil; exclusão pede confirmação e desloga.
 
 ### Fase 9 — Frontend: área do admin
