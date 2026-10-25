@@ -4,7 +4,9 @@ namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Knuckles\Scribe\Attributes\Response;
 
+#[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"email":["Informe um e-mail válido."]}}', description: 'Formato de e-mail inválido')]
 class ForgotPasswordRequest extends FormRequest
 {
     /**

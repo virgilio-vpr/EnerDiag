@@ -197,6 +197,7 @@ export function AdminSimulationDetailPage({ simulationId }: { simulationId: stri
         <div><dt>Economia anual</dt><dd>{currency(simulation.report?.total_yearly_savings ?? simulation.total_yearly_savings)}</dd></div>
         <div><dt>Modalidade recomendada</dt><dd>{simulation.report?.recommended_modality ?? '—'}</dd></div>
       </dl>
+      {simulation.report && <a className="admin-back-link" href={`/admin/reports/${simulation.id}`}>Abrir e gerenciar relatório →</a>}
       <h2 className="admin-section-title">Faturas e itens extraídos</h2>
       {simulation.invoices.length === 0 ? <p>Esta simulação ainda não tem faturas extraídas.</p> : <div className="admin-invoices">
         {simulation.invoices.map((invoice) => <article className="admin-invoice" key={invoice.id}>

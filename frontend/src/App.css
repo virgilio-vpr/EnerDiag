@@ -351,6 +351,23 @@
 .admin-invoice h3, .admin-invoice p { margin: 0; }
 .admin-invoice h3 { font-size: 1rem; }
 .admin-invoice p { color: var(--text); font-size: 0.9rem; }
+.admin-report-results, .admin-report-form, .admin-report-actions, .admin-revision-history { display: grid; gap: 1rem; margin-top: 1.25rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); }
+.admin-report-results h2, .admin-report-form h2, .admin-revision-history h2 { margin: 0; font-size: 1.25rem; }
+.admin-report-form label { display: grid; gap: 0.4rem; color: var(--text-h); font-weight: 650; }
+.admin-report-form textarea { width: 100%; box-sizing: border-box; padding: 0.75rem; color: var(--text-h); background: var(--surface); border: 1px solid var(--border); border-radius: 0.55rem; font: inherit; font-weight: 400; line-height: 1.5; resize: vertical; }
+.admin-report-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.admin-report-form .button { justify-self: start; }
+.admin-report-actions { display: flex; flex-wrap: wrap; }
+.admin-report-warnings { padding: 1rem; border: 1px solid var(--accent-border); border-radius: 0.7rem; background: var(--accent-bg); }
+.admin-report-warnings h3 { margin: 0 0 0.65rem; }
+.admin-report-warnings ul { display: grid; gap: 0.4rem; margin: 0; padding-left: 1.2rem; }
+.admin-revision-history ol { display: grid; gap: 1rem; margin: 0; padding-left: 1.3rem; }
+.admin-revision-history article { display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: 0.7rem; background: var(--surface); }
+.admin-revision-history h3, .admin-revision-history h4, .admin-revision-history p { margin: 0; }
+.admin-revision-history h3 { font-size: 1rem; }
+.admin-revision-history h4 { margin-top: 0.5rem; font-size: 0.85rem; }
+.admin-revision-history p { color: var(--text); font-size: 0.85rem; }
+.admin-revision-history ul { display: grid; gap: 0.35rem; margin: 0; padding-left: 1.2rem; color: var(--text); line-height: 1.5; }
 
 @media (max-width: 640px) {
   .report-heading { align-items: stretch; flex-direction: column; }

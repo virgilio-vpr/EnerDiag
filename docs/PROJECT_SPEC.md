@@ -225,7 +225,7 @@ Ref: FE, API (Admin)
   - Teste: só o perfil admin entra; demais veem 403.
 - [x] 9.2 Clientes e contatos; simulações e dados extraídos (nunca PDFs).
   - Teste: listas paginadas; detalhe exibe os dados extraídos.
-- [ ] 9.3 Relatórios: visualizar, editar textos explicativos/recomendações, reenviar, recalcular; histórico de versões; resultados calculados somente leitura.
+- [x] 9.3 Relatórios: visualizar, editar textos explicativos/recomendações, reenviar, recalcular; histórico de versões; resultados calculados somente leitura.
   - Teste: edição cria versão sem alterar resultados; reenvio e recálculo chamam a API.
 - [ ] 9.4 Tabela de tarifas (base tributária e origem), importação do CSV da ANEEL (com resumo de linhas aceitas e ignoradas) e parâmetros regulatórios.
   - Teste: criar e editar tarifa; importar arquivo de exemplo exibe o resumo; vigência sobreposta, base tributária ausente e CSV inválido exibem o erro da API.

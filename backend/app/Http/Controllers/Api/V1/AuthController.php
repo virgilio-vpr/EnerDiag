@@ -151,7 +151,6 @@ class AuthController extends Controller
     #[Endpoint('Solicitar redefinição de senha', 'Envia um link de redefinição quando a conta existe.')]
     #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
     #[Response(status: 200, content: '{"message":"Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."}', description: 'Resposta neutra')]
-    #[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"email":["Informe um e-mail válido."]}}', description: 'Formato de e-mail inválido')]
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
         Password::sendResetLink($request->validated());

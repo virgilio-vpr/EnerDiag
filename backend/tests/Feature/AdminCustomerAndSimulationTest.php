@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Report;
+use App\Models\ReportRevision;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -70,7 +71,17 @@ class AdminCustomerAndSimulationTest extends TestCase
             'tariff_rate' => '0.40000',
             'amount' => '6.00',
         ]);
-        Report::query()->create(['simulation_id' => $simulation->id]);
+        $report = Report::query()->create([
+            'simulation_id' => $simulation->id,
+            'explanatory_texts' => ['Texto revisado'],
+            'recommendations' => ['Ação revisada'],
+        ]);
+        ReportRevision::query()->create([
+            'report_id' => $report->id,
+            'user_id' => $admin->id,
+            'explanatory_texts' => ['Versão anterior'],
+            'recommendations' => ['Ação anterior'],
+        ]);
         $customer->simulations()->create(['status' => 'queued']);
         $token = $admin->createToken('admin')->plainTextToken;
 
@@ -85,6 +96,9 @@ class AdminCustomerAndSimulationTest extends TestCase
             ->assertJsonPath('data.invoices.0.reference_month', '2026-09')
             ->assertJsonPath('data.invoices.0.items.0.quantity', '12.000')
             ->assertJsonPath('data.report.id', $simulation->report->id)
+            ->assertJsonPath('data.report.explanatory_texts.0', 'Texto revisado')
+            ->assertJsonPath('data.report.revisions.0.author', $admin->name)
+            ->assertJsonPath('data.report.revisions.0.explanatory_texts.0', 'Versão anterior')
             ->assertJsonMissingPath('data.pdf')
             ->assertJsonMissingPath('data.invoices.0.pdf_path');
 

@@ -50,7 +50,7 @@ class SimulationController extends Controller
     {
         $this->authorizeAdmin($request);
         $simulation = Simulation::query()
-            ->with(['user:id,name,email', 'invoices.items', 'report'])
+            ->with(['user:id,name,email', 'invoices.items', 'report.revisions.user:id,name'])
             ->findOrFail($id);
 
         return response()->json(['data' => $this->simulationData($simulation, true)]);
@@ -137,15 +137,26 @@ class SimulationController extends Controller
                     'pis_cofins_amount', 'icms_base', 'icms_rate', 'icms_amount', 'source_label',
                 ]))->all(),
             ])->all();
-            $data['report'] = $simulation->report?->only([
-                'id', 'total_monthly_savings', 'total_yearly_savings', 'savings_percentage',
-                'demand_savings_monthly', 'demand_savings_yearly', 'overrun_savings_monthly',
-                'overrun_savings_yearly', 'reactive_savings_monthly', 'reactive_savings_yearly',
-                'migration_savings_monthly', 'migration_savings_yearly', 'recommended_modality',
-                'optimal_demand_peak', 'optimal_demand_off_peak', 'optimal_demand_single',
-                'chart_series', 'warnings', 'explanatory_texts', 'recommendations', 'r_values',
-                'k_values', 'algorithm_version', 'tariff_version_ids', 'regulatory_parameter_version_ids',
-            ]);
+            $report = $simulation->report;
+            $data['report'] = $report ? [
+                ...$report->only([
+                    'id', 'total_monthly_savings', 'total_yearly_savings', 'savings_percentage',
+                    'demand_savings_monthly', 'demand_savings_yearly', 'overrun_savings_monthly',
+                    'overrun_savings_yearly', 'reactive_savings_monthly', 'reactive_savings_yearly',
+                    'migration_savings_monthly', 'migration_savings_yearly', 'recommended_modality',
+                    'optimal_demand_peak', 'optimal_demand_off_peak', 'optimal_demand_single',
+                    'chart_series', 'warnings', 'explanatory_texts', 'recommendations', 'r_values',
+                    'k_values', 'algorithm_version', 'tariff_version_ids', 'regulatory_parameter_version_ids',
+                ]),
+                'revisions' => $report->revisions->sortByDesc('created_at')->values()->map(fn ($revision): array => [
+                    'id' => $revision->id,
+                    'reason' => $revision->reason,
+                    'author' => $revision->user?->name,
+                    'created_at' => $revision->created_at?->toIso8601String(),
+                    'explanatory_texts' => $revision->explanatory_texts,
+                    'recommendations' => $revision->recommendations,
+                ])->all(),
+            ] : null;
         }
 
         return $data;
