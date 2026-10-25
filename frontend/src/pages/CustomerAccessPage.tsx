@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ApiError, apiRequest } from '../services/api/client'
+import { ApiError, apiRequest, setAuthToken } from '../services/api/client'
 
 type RegisterData = {
   name: string
@@ -164,6 +164,156 @@ export function VerifyEmailPage({ email: initialEmail }: { email: string }) {
         <button className="button access-submit" type="submit" disabled={busyAction !== null}>{busyAction === 'verify' ? 'Confirmando…' : 'Confirmar e-mail'}</button>
       </form>
       <button className="text-button" type="button" onClick={resend} disabled={busyAction !== null}>{busyAction === 'resend' ? 'Enviando…' : 'Reenviar código'}</button>
+      <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
+    </section>
+  )
+}
+
+export function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [signedIn, setSignedIn] = useState(false)
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setErrorMessage('')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password) {
+      setErrorMessage('Informe um e-mail válido e sua senha.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const response = await apiRequest<{ token: string; user: { role: 'customer' | 'admin' } }>(
+        '/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, { notifyGlobalError: false },
+      )
+      setAuthToken(response.token)
+      setSignedIn(true)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) {
+        window.history.pushState({}, '', `/verify-email?email=${encodeURIComponent(email)}`)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+        return
+      }
+      setErrorMessage(error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (signedIn) {
+    return <section className="access-page" aria-labelledby="login-success-title"><p className="section-eyebrow">Acesso confirmado</p><h1 id="login-success-title">Você entrou na sua conta</h1><p className="form-success" role="status">Sua sessão está ativa neste dispositivo.</p><a className="button access-submit" href="/upload-faturas">Continuar para minhas faturas</a></section>
+  }
+
+  return (
+    <section className="access-page" aria-labelledby="login-title">
+      <p className="section-eyebrow">Bem-vindo de volta</p>
+      <h1 id="login-title">Entre na sua conta</h1>
+      <p className="access-intro">Acesse suas análises e acompanhe suas oportunidades de economia.</p>
+      <form className="access-form" onSubmit={submit} noValidate>
+        <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+        <label>Senha<input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
+        <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Entrando…' : 'Entrar'}</button>
+      </form>
+      <p className="access-switch"><a href="/forgot-password">Esqueci minha senha</a></p>
+      <p className="access-switch">Ainda não tem uma conta? <a href="/register">Criar conta</a></p>
+    </section>
+  )
+}
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage('')
+    setErrorMessage('')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrorMessage('Informe um endereço de e-mail válido.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const response = await apiRequest<{ message: string }>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }, { notifyGlobalError: false })
+      setMessage(response.message)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação. Tente novamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="access-page" aria-labelledby="forgot-title">
+      <p className="section-eyebrow">Recuperação de acesso</p>
+      <h1 id="forgot-title">Esqueceu sua senha?</h1>
+      <p className="access-intro">Informe seu e-mail e enviaremos as instruções para redefinir sua senha, caso exista uma conta associada.</p>
+      <form className="access-form" onSubmit={submit} noValidate>
+        <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+        {message && <p className="form-success" role="status">{message}</p>}
+        {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
+        <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Enviando…' : 'Enviar instruções'}</button>
+      </form>
+      <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
+    </section>
+  )
+}
+
+export function ResetPasswordPage({ email: initialEmail, token }: { email: string; token: string }) {
+  const [email, setEmail] = useState(initialEmail)
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage('')
+    setErrorMessage('')
+    if (!token) {
+      setErrorMessage('O link está incompleto. Solicite uma nova redefinição de senha.')
+      return
+    }
+    if (password.length < 10 || !/[a-z]/i.test(password) || !/\d/.test(password)) {
+      setErrorMessage('Use pelo menos 10 caracteres, incluindo letras e números.')
+      return
+    }
+    if (password !== confirmation) {
+      setErrorMessage('A confirmação da senha não corresponde.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const response = await apiRequest<{ message: string }>('/auth/reset-password', {
+        method: 'POST', body: JSON.stringify({ email, token, password, password_confirmation: confirmation }),
+      }, { notifyGlobalError: false })
+      setMessage(`${response.message} Você já pode entrar com sua nova senha.`)
+    } catch (error) {
+      setErrorMessage(error instanceof ApiError ? error.errors?.token?.[0] ?? error.message : 'Não foi possível redefinir a senha. Tente novamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="access-page" aria-labelledby="reset-title">
+      <p className="section-eyebrow">Atualização segura</p>
+      <h1 id="reset-title">Defina uma nova senha</h1>
+      <form className="access-form" onSubmit={submit} noValidate>
+        <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+        <label>Nova senha<input autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        <p className="password-hint">Use pelo menos 10 caracteres, incluindo letras e números.</p>
+        <label>Confirme a nova senha<input autoComplete="new-password" type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required /></label>
+        {message && <p className="form-success" role="status">{message}</p>}
+        {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
+        <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Salvando…' : 'Redefinir senha'}</button>
+      </form>
       <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
     </section>
   )

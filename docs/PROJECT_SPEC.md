@@ -207,7 +207,7 @@ Ref: FE, RN-2, RN-4, RC-6
   - Teste: seções renderizam; o botão leva ao cadastro; responsiva.
 - [x] 8.2 Cadastro (nome, e-mail, telefone, senha e confirmação, indicador de força, informativo de segurança e aceite) e verificação por código com reenvio.
   - Teste: validações de formulário; envio sem aceite bloqueado; fluxo de código com erro e reenvio.
-- [ ] 8.3 Login e recuperação de senha (“Esqueci minha senha”, redefinição).
+- [x] 8.3 Login e recuperação de senha (“Esqueci minha senha”, redefinição).
   - Teste: login ok e inválido; fluxo de redefinição.
 - [ ] 8.4 Envio das faturas: dados da empresa, subestação (mesmo endereço ou alternativo), instrução 12 ideal e 6 mínimo, upload múltiplo com erro por arquivo e limites de tamanho/páginas, distribuidora em lista, botão “Simular”.
   - Teste: bloqueia fora de 6 a 12 e arquivo que não seja PDF; distribuidora sem leitor mostra aviso e registra o lead.
