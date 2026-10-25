@@ -59,9 +59,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/simulations', [SimulationController::class, 'index']);
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
-    Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status']);
-    Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report']);
-    Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf']);
+    Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status'])->whereNumber('simulationId');
+    Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report'])->whereNumber('simulationId');
+    Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf'])->whereNumber('simulationId');
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);

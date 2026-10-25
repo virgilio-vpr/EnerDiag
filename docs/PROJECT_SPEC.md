@@ -245,7 +245,7 @@ Ref: ORC
 ### Fase 11 — Segurança, revisão final e operação
 Ref: RN-7, §9
 
-- [ ] 11.1 Checklist de segurança de RN-7 (SQL Injection, XSS e CSP, CORS, rate limiting, acesso a dados de terceiros, upload, logs, dependências).
+- [x] 11.1 Checklist de segurança de RN-7 (SQL Injection, XSS e CSP, CORS, rate limiting, acesso a dados de terceiros, upload, logs, dependências).
   - Teste: feature tests cobrem entradas contra SQL Injection e acesso entre usuários; teste de saída confirma escape contra XSS; testes de configuração verificam CSP, CORS e rate limits; testes de upload cobrem tipo, tamanho e quantidade; teste de logs confirma ausência de dados pessoais; `composer audit` e `npm audit` sem vulnerabilidades críticas ou altas sem plano de correção.
 - [ ] 11.2 Reforço da conta admin (opcional, a decidir em §9): senha mais forte e segundo fator por TOTP.
   - Teste: com o segundo fator ativo, o login do admin o exige; sem ele, o acesso é negado.

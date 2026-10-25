@@ -73,6 +73,17 @@ describe('simulation report', () => {
     expect(screen.getByText('Confira as condições antes de alterar a demanda contratada.')).toBeInTheDocument()
   })
 
+  it('escapes untrusted recommendations instead of creating executable markup', async () => {
+    const payload = '<img src=x onerror="alert(document.cookie)">'
+    setAuthToken('customer-token')
+    setupFetch({}, { ...report, recommendations: [payload] })
+    const { container } = render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByText(payload)).toBeInTheDocument()
+    expect(container.querySelector('img[src="x"]')).toBeNull()
+    expect(container.querySelector('[onerror]')).toBeNull()
+  })
+
   it('downloads the PDF from the simulation endpoint', async () => {
     setAuthToken('customer-token')
     const fetchMock = setupFetch({ '/api/v1/simulations/12/pdf': new Response('%PDF-1.4', { status: 200, headers: { 'Content-Type': 'application/pdf' } }) })
