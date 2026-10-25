@@ -15,7 +15,10 @@
   border-bottom: 1px solid var(--border);
 }
 
-.header-actions { display: flex; align-items: center; gap: 1.25rem; }
+.app-header { justify-content: flex-start; }
+.header-actions { order: 2; display: flex; align-items: center; gap: 1.25rem; margin-left: 1.25rem; }
+.app-header > .brand { order: 0; }
+.app-header > .theme-toggle { order: 1; margin-left: auto; }
 .header-login, .app-footer a { color: var(--text-h); font-size: 0.9rem; font-weight: 650; text-decoration: none; }
 .header-login:hover, .app-footer a:hover { color: var(--accent); }
 .button {
@@ -203,18 +206,18 @@
 .privacy-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; color: var(--accent); border: 1px solid var(--accent-border); border-radius: 0.75rem; font-size: 1.35rem; }
 .closing-cta { padding-block: clamp(4rem, 8vw, 6rem); text-align: center; }
 .closing-cta h2 { margin-bottom: 1.5rem; }
-.contact-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); align-items: center; gap: clamp(2rem, 6vw, 5rem); width: min(100%, 64rem); margin-inline: auto; border-top: 1px solid var(--border); text-align: left; }
+.contact-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem); align-items: center; gap: clamp(2rem, 6vw, 5rem); width: 100%; margin-inline: 0; border-top: 1px solid var(--border); text-align: left; }
 .contact-copy { max-width: 38rem; }
 .contact-copy h2 { margin: 0.65rem 0 0.75rem; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -0.035em; }
 .contact-copy > p:not(.section-eyebrow) { line-height: 1.6; }
 .contact-demo-note { margin-top: 0.8rem; color: var(--text); font-size: 0.8rem; }
-.contact-options { display: grid; grid-template-columns: minmax(0, 18rem); justify-content: center; gap: 0.75rem; width: 100%; justify-self: end; }
-.contact-card { display: flex; align-items: center; gap: 0.55rem; width: min(100%, 18rem); min-width: 0; box-sizing: border-box; padding: 0.45rem 0.65rem; color: var(--text-h); border: 1px solid var(--border); border-radius: 0.65rem; background: var(--code-bg); text-decoration: none; transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
+.contact-options { display: grid; grid-template-columns: minmax(0, 21.6rem); justify-content: center; gap: 0.75rem; width: 100%; justify-self: end; }
+.contact-card { display: flex; align-items: center; gap: 0.66rem; width: min(100%, 21.6rem); min-width: 0; box-sizing: border-box; padding: 0.7994rem 0.78rem; color: var(--text-h); border: 1px solid var(--border); border-radius: 0.65rem; background: var(--code-bg); text-decoration: none; transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
 .contact-card:hover { border-color: var(--accent); box-shadow: 0 6px 16px var(--glow-primary); transform: translateY(-1px); }
 .contact-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .contact-card span { color: var(--text); font-size: 0.72rem; }
 .contact-card__label { display: inline-flex; align-items: center; gap: 0.4rem; }
-.contact-card__icon { width: 0.9rem; height: 0.9rem; flex: 0 0 auto; color: var(--text); opacity: 0.72; }
+.contact-card__icon { width: 1.5552rem; height: 1.5552rem; flex: 0 0 auto; color: var(--text); opacity: 0.72; }
 .contact-card--email .contact-card__icon { color: #536dbe; opacity: 0.95; }
 .contact-card--phone .contact-card__icon { color: #0f766e; opacity: 0.95; }
 .contact-card--whatsapp .contact-card__icon { color: #25a85a; opacity: 0.95; }

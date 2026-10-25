@@ -41,7 +41,7 @@ function App() {
       <header className="app-header">
         <a className="brand" href="/">Ener<span>Diag</span></a>
         <nav className="header-actions" aria-label="Acesso">
-          {isAuthenticated ? <a className="header-login" href="/perfil">Meu perfil</a> : <><a className="header-login" href="/login">Entrar</a><a className="button button--small" href="/register">Criar conta</a></>}
+          {isAuthenticated ? <a className="header-login" href="/perfil">Meu perfil</a> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}
         </nav>
         <button
           type="button"
