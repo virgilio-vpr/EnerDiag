@@ -196,8 +196,9 @@ Ref: FE, RN-7
   - Teste: sem login vai ao login; cliente em rota admin vê 403.
 - [x] 7.5 Páginas de erro (400, 401, 403, 404, 413, 415, 422, 429, 500) e de manutenção (503) com previsão de retorno.
   - Teste: cada código renderiza a mensagem amigável; a 503 mostra a previsão.
-- [ ] 7.6 Layout responsivo base (desktop, tablet e mobile).
+- [x] 7.6 Layout responsivo base (desktop, tablet e mobile).
   - Teste: renderização nos três breakpoints; checagem manual no celular.
+  - Validação: testes focados em 375, 768 e 1280 px, suíte completa do frontend (21 testes) e build passaram; checagem manual no celular confirmada pelo usuário, incluindo ausência de cortes e rolagem horizontal e funcionamento da troca de tema.
 
 ### Fase 8 — Frontend: fluxo do cliente
 Ref: FE, RN-2, RN-4, RC-6
