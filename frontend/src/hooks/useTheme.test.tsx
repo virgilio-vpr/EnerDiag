@@ -1,6 +1,11 @@
+/// <reference types="node" />
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import App from '../App'
+
+const themeStyles = readFileSync('src/index.css', 'utf8')
 
 function contrastRatio(foreground: string, background: string) {
   function luminance(color: string) {
@@ -15,18 +20,38 @@ function contrastRatio(foreground: string, background: string) {
 describe('theme', () => {
   it('toggles and saves the selected theme', async () => {
     localStorage.clear()
-    render(<App />)
+    const { unmount } = render(<App />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Tema escuro' }))
 
     await waitFor(() => expect(localStorage.getItem('enerdiag-theme')).toBe('dark'))
     expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(screen.getByRole('button', { name: 'Tema claro' })).toHaveAttribute('aria-pressed', 'true')
+
+    unmount()
+    render(<App />)
+    expect(screen.getByRole('button', { name: 'Tema claro' })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tema claro' }))
+    await waitFor(() => expect(localStorage.getItem('enerdiag-theme')).toBe('light'))
+    expect(screen.getByRole('button', { name: 'Tema escuro' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('uses text and accent colors that meet WCAG AA on both surfaces', () => {
-    expect(contrastRatio('#172033', '#f8fafc')).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio('#6d28d9', '#f8fafc')).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio('#f8fafc', '#202833')).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio('#c4b5fd', '#202833')).toBeGreaterThanOrEqual(4.5)
+    for (const theme of ['light', 'dark']) {
+      const palette = themeStyles.split(`:root[data-theme="${theme}"] {`)[1]!.split('}')[0]!
+      function color(token: string) {
+        return palette.match(new RegExp(`--${token}: (#[\\da-f]+);`))![1]!
+      }
+
+      for (const token of ['text', 'text-h', 'accent', 'secondary']) {
+        for (const surface of ['bg', 'code-bg']) {
+          expect(contrastRatio(color(token), color(surface))).toBeGreaterThanOrEqual(4.5)
+        }
+      }
+
+      expect(contrastRatio(color('toggle-icon'), color('toggle-track'))).toBeGreaterThanOrEqual(3)
+      expect(contrastRatio(color(theme === 'light' ? 'toggle-sun' : 'toggle-moon'), color('toggle-active'))).toBeGreaterThanOrEqual(3)
+    }
   })
 })
