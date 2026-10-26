@@ -53,11 +53,16 @@
 
 .brand {
   display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   flex-shrink: 0;
   text-decoration: none;
 }
 
-.brand img { display: block; width: 264px; height: 88px; object-fit: contain; }
+.brand img { display: block; width: 264px; max-width: none; height: 88px; object-fit: contain; }
+.brand-icon { display: block; width: 88px; height: 88px; overflow: hidden; flex-shrink: 0; }
+.brand-name { color: var(--text-h); font-family: var(--heading); font-size: 42px; font-weight: 650; letter-spacing: -0.055em; line-height: 1.08; }
+.brand-name > span { color: var(--accent); }
 .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 1rem; }
 
 .theme-toggle {
@@ -414,6 +419,8 @@
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
   .app-header { align-items: center; }
   .brand img { width: 192px; height: 64px; }
+  .brand-icon { width: 64px; height: 64px; }
+  .brand-name { font-size: 30px; }
   .app-header { flex-wrap: wrap; }
   .header-actions { flex-basis: 100%; justify-content: flex-end; }
   .header-actions { gap: 0.5rem; margin-left: 0; }
