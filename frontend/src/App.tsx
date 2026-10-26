@@ -56,7 +56,9 @@ function App() {
     <div className="app-shell" data-testid="app-shell" data-viewport={viewport}>
       <ApiErrorHandler />
       <header className="app-header">
-        <a className="brand" href="/">Ener<span>Diag</span></a>
+        <a className="brand" href="/">
+          <img src="/enerdiag-logo.png" alt="EnerDiag" width="88" height="88" />
+        </a>
         <nav className="header-actions" aria-label="Acesso">
           {isAuthenticated ? <a className="header-login" href="/perfil">Meu perfil</a> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}
         </nav>
