@@ -57,7 +57,7 @@ function App() {
       <ApiErrorHandler />
       <header className="app-header">
         <a className="brand" href="/">
-          <img src="/enerdiag-logo.png" alt="EnerDiag" width="88" height="88" />
+          <img src={theme === 'dark' ? '/enerdiag-logo-horizontal-dark.png' : '/enerdiag-logo-horizontal.png'} alt="EnerDiag" width="264" height="88" />
         </a>
         <nav className="header-actions" aria-label="Acesso">
           {isAuthenticated ? <a className="header-login" href="/perfil">Meu perfil</a> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}

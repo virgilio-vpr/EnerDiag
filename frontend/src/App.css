@@ -57,7 +57,7 @@
   text-decoration: none;
 }
 
-.brand img { display: block; width: 88px; height: 88px; border-radius: 1rem; }
+.brand img { display: block; width: 264px; height: 88px; object-fit: contain; }
 .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 1rem; }
 
 .theme-toggle {
@@ -413,7 +413,9 @@
   .delete-confirmation .text-button { align-self: start; margin: 0; }
   .app-shell { width: 100%; padding-inline: 1rem; box-sizing: border-box; }
   .app-header { align-items: center; }
-  .brand img { width: 64px; height: 64px; border-radius: 0.75rem; }
+  .brand img { width: 192px; height: 64px; }
+  .app-header { flex-wrap: wrap; }
+  .header-actions { flex-basis: 100%; justify-content: flex-end; }
   .header-actions { gap: 0.5rem; margin-left: 0; }
   .app-header { gap: 0.5rem; }
   .header-login { font-size: 0.82rem; }
