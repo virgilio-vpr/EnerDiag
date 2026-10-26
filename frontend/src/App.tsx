@@ -117,7 +117,19 @@ function App() {
               <h3>Deixe a análise com a gente</h3><p>Avaliamos demanda, consumo e oportunidades com base nos seus dados.</p>
             </article>
             <article className="info-card">
-              <div className="process-card-top"><span className="step-number step-number--tertiary">03</span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><path d="M32 9h42l15 15v42a5 5 0 0 1-5 5H32a5 5 0 0 1-5-5V14a5 5 0 0 1 5-5Z" className="process-visual__paper" /><path d="M74 10v14h14M38 29h23M38 36h15" className="process-visual__line" /><path d="M39 58V51M50 58V44M61 58V49M72 58V40" className="process-visual__bar" /><path d="m39 47 11-8 11 4 12-12" className="process-visual__accent" /><path d="M68 31h5v5" className="process-visual__accent" /></svg></div>
+              <div className="process-card-top">
+                <span className="step-number step-number--tertiary">03</span>
+                <svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true">
+                  <rect x="10" y="10" width="100" height="60" rx="9" className="process-visual__paper" />
+                  <circle cx="38" cy="40" r="16" className="process-visual__report-ring" />
+                  <circle cx="38" cy="40" r="16" pathLength="100" strokeDasharray="48 52" transform="rotate(-90 38 40)" className="process-visual__report-segment" />
+                  <circle cx="38" cy="40" r="16" pathLength="100" strokeDasharray="24 76" strokeDashoffset="-48" transform="rotate(-90 38 40)" className="process-visual__report-segment process-visual__report-segment--tertiary" />
+                  <circle cx="68" cy="27" r="2.5" className="process-visual__dot" />
+                  <circle cx="68" cy="40" r="2.5" className="process-visual__dot" />
+                  <circle cx="68" cy="53" r="2.5" className="process-visual__report-dot" />
+                  <path d="M77 27h21M77 40h15M77 53h19" className="process-visual__line" />
+                </svg>
+              </div>
               <h3>Veja seu potencial</h3><p>Receba um relatório claro com estimativas e caminhos para economizar.</p>
             </article>
           </div>

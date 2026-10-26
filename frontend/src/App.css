@@ -195,6 +195,10 @@
 .process-visual__bar { stroke: var(--accent-border); stroke-width: 5; stroke-linecap: round; }
 .process-visual__accent { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .process-visual__dot { fill: var(--accent); }
+.process-visual__report-ring { stroke: var(--border); stroke-width: 8; }
+.process-visual__report-segment { stroke: var(--accent); stroke-width: 8; }
+.process-visual__report-segment--tertiary { stroke: var(--tertiary); }
+.process-visual__report-dot { fill: var(--tertiary); }
 .process-visual--tertiary .process-visual__bar { stroke: color-mix(in srgb, var(--tertiary) 42%, transparent); }
 .process-visual--tertiary .process-visual__accent { stroke: var(--tertiary); }
 .info-card h3 { margin: 0 0 0.55rem; color: var(--text-h); font-size: 1.1rem; }
