@@ -1,19 +1,19 @@
-name: Simulações
-description: 'Envio e processamento de faturas de energia'
+name: 'Envio de faturas'
+description: 'Upload sequencial privado antes de iniciar uma simulação'
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/simulations
+      - POST
+    uri: api/v1/invoice-upload-batches
     metadata:
       custom: []
-      groupName: Simulações
-      groupDescription: 'Envio e processamento de faturas de energia'
+      groupName: 'Envio de faturas'
+      groupDescription: 'Upload sequencial privado antes de iniciar uma simulação'
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar simulações'
-      description: 'Retorna as simulações do cliente autenticado, com paginação.'
+      title: 'Iniciar envio'
+      description: 'Registra os dados da empresa para receber as faturas uma por vez. Expira em uma hora.'
       authenticated: true
       deprecated: false
     headers:
@@ -24,60 +24,13 @@ endpoints:
     cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":[{"id":1,"status":"completed","months_count":12,"total_monthly_savings":"1200.00","total_yearly_savings":"14400.00"}],"meta":{"current_page":1,"per_page":15,"total":1}}'
-        headers: []
-        description: 'Simulações do cliente'
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
-        headers: []
-        description: 'Token ausente ou inválido'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/v1/simulations
-    metadata:
-      custom: []
-      groupName: Simulações
-      groupDescription: 'Envio e processamento de faturas de energia'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Criar simulação'
-      description: 'Valida os dados da empresa e as faturas PDF e registra uma simulação na fila.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: multipart/form-data
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
     bodyParameters:
       company_name:
         custom: []
         name: company_name
-        description: 'Nome da empresa.'
+        description: 'Must not be greater than 255 characters.'
         required: true
-        example: 'Empresa Exemplo Ltda.'
+        example: b
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -97,24 +50,24 @@ endpoints:
       distributor_id:
         custom: []
         name: distributor_id
-        description: 'Identificador da distribuidora atendida.'
-        required: true
-        example: 1
+        description: 'This field is required when <code>distributor_name</code> is not present. Must match an existing stored value.'
+        required: false
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
       distributor_name:
         custom: []
         name: distributor_name
-        description: 'Nome de uma distribuidora ainda não atendida.'
-        required: true
-        example: 'Distribuidora Exemplo'
+        description: 'This field is required when <code>distributor_id</code> is not present. Must not be greater than 255 characters.'
+        required: false
+        example: 'n'
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
       transformer_power_kva:
         custom: []
@@ -130,9 +83,9 @@ endpoints:
       address_details:
         custom: []
         name: address_details
-        description: 'Endereço da empresa.'
+        description: 'Must not be greater than 5000 characters.'
         required: true
-        example: 'Rua Exemplo, 100, São Paulo/SP'
+        example: z
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -141,7 +94,7 @@ endpoints:
       substation_same_address:
         custom: []
         name: substation_same_address
-        description: 'Indica se o endereço da subestação é o mesmo da fatura.'
+        description: ''
         required: true
         example: true
         type: boolean
@@ -160,22 +113,77 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      invoices:
+    cleanBodyParameters:
+      company_name: b
+      cnpj: ngzmiyvdljnikhwa
+      distributor_id: 16
+      distributor_name: 'n'
+      transformer_power_kva: 7
+      address_details: z
+      substation_same_address: true
+      substation_address: m
+    fileParameters: []
+    responses:
+      -
         custom: []
-        name: invoices
-        description: 'Must be a file.'
+        status: 201
+        content: '{"data":{"id":"019c0000-0000-7000-8000-000000000001"}}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Dados inválidos.","code":"VALIDATION_ERROR","errors":{}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/invoice-upload-batches/{batch_id}/files'
+    metadata:
+      custom: []
+      groupName: 'Envio de faturas'
+      groupDescription: 'Upload sequencial privado antes de iniciar uma simulação'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enviar uma fatura'
+      description: 'Valida assinatura, tamanho e páginas e recebe um único PDF. client_id permite repetir a requisição sem duplicar a fatura.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters:
+      batch_id:
+        custom: []
+        name: batch_id
+        description: 'The ID of the batch.'
         required: true
-        example:
-          - null
-        type: 'file[]'
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      'invoices[]':
+    cleanUrlParameters:
+      batch_id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      invoice:
         custom: []
-        name: 'invoices[]'
-        description: 'Faturas PDF (de 6 a 12 arquivos).'
+        name: invoice
+        description: 'Must be a file.'
         required: true
         example: null
         type: file
@@ -183,38 +191,93 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      client_id:
+        custom: []
+        name: client_id
+        description: 'Must be a valid UUID.'
+        required: true
+        example: 6ff8f7f6-1eb3-3525-be4a-3932c805afed
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      company_name: 'Empresa Exemplo Ltda.'
-      cnpj: ngzmiyvdljnikhwa
-      distributor_id: 1
-      distributor_name: 'Distribuidora Exemplo'
-      transformer_power_kva: 7
-      address_details: 'Rua Exemplo, 100, São Paulo/SP'
-      substation_same_address: true
-      substation_address: m
+      client_id: 6ff8f7f6-1eb3-3525-be4a-3932c805afed
     fileParameters:
-      invoices:
-        - null
-      'invoices[]': null
+      invoice: null
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":"019c0000-0000-7000-8000-000000000002","name":"fatura.pdf"}}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/invoice-upload-batches/{batch_id}/complete'
+    metadata:
+      custom: []
+      groupName: 'Envio de faturas'
+      groupDescription: 'Upload sequencial privado antes de iniciar uma simulação'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Concluir envio'
+      description: 'Inicia a simulação somente após validar o conjunto completo; repetir retorna a mesma simulação.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      batch_id:
+        custom: []
+        name: batch_id
+        description: 'The ID of the batch.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      batch_id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
     responses:
       -
         custom: []
         status: 202
-        content: '{"data":{"id":1,"status":"queued","created_at":"2026-10-24T12:00:00Z"}}'
+        content: '{"data":{"id":1,"status":"queued"}}'
         headers: []
-        description: 'Simulação registrada'
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
-        headers: []
-        description: 'Token ausente ou inválido'
+        description: ''
       -
         custom: []
         status: 422
-        content: '{"message":"A distribuidora selecionada ainda não possui leitor disponível.","code":"DISTRIBUTOR_UNSUPPORTED","errors":null}'
+        content: '{"message":"Envio inválido.","code":"VALIDATION_ERROR","errors":{}}'
         headers: []
-        description: 'Distribuidora sem leitor'
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -226,16 +289,16 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: 'api/v1/simulations/{simulationId}/status'
+      - DELETE
+    uri: 'api/v1/invoice-upload-batches/{batch_id}'
     metadata:
       custom: []
-      groupName: Simulações
-      groupDescription: 'Envio e processamento de faturas de energia'
+      groupName: 'Envio de faturas'
+      groupDescription: 'Upload sequencial privado antes de iniciar uma simulação'
       subgroup: ''
       subgroupDescription: ''
-      title: 'Consultar status da simulação'
-      description: 'Retorna o estado atual e erros por arquivo, quando houver.'
+      title: 'Descartar envio'
+      description: 'Remove os PDFs temporários de um envio do próprio usuário.'
       authenticated: true
       deprecated: false
     headers:
@@ -243,19 +306,19 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      simulationId:
+      batch_id:
         custom: []
-        name: simulationId
-        description: 'Identificador da simulação.'
+        name: batch_id
+        description: 'The ID of the batch.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      simulationId: 1
+      batch_id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -265,163 +328,15 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"data":{"id":1,"status":"failed","processing_errors":[{"file":"01-conta.pdf","code":"INVOICE_READ_FAILED","errors":{"message":"Não foi possível ler este arquivo."}}]}}'
+        content: '{"message":"Envio descartado."}'
         headers: []
-        description: 'Status da simulação'
+        description: ''
       -
         custom: []
-        status: 401
-        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
         headers: []
-        description: 'Token ausente ou inválido'
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
-        headers: []
-        description: 'Simulação não encontrada para este cliente'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/simulations/{simulationId}/report'
-    metadata:
-      custom: []
-      groupName: Simulações
-      groupDescription: 'Envio e processamento de faturas de energia'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Consultar relatório da simulação'
-      description: 'Retorna os indicadores, séries e avisos do relatório concluído.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      simulationId:
-        custom: []
-        name: simulationId
-        description: 'Identificador da simulação.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      simulationId: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":{"id":1,"simulation_id":1,"months_count":12,"total_monthly_savings":"1200.00","total_yearly_savings":"14400.00","chart_series":{},"warnings":[]}}'
-        headers: []
-        description: 'Relatório da simulação'
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
-        headers: []
-        description: 'Token ausente ou inválido'
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
-        headers: []
-        description: 'Simulação não encontrada para este cliente'
-      -
-        custom: []
-        status: 409
-        content: '{"message":"O relatório ainda não está disponível.","code":"REPORT_NOT_READY","errors":null}'
-        headers: []
-        description: 'Simulação ainda não concluída'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/simulations/{simulationId}/pdf'
-    metadata:
-      custom: []
-      groupName: Simulações
-      groupDescription: 'Envio e processamento de faturas de energia'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Baixar relatório em PDF'
-      description: 'Retorna o relatório concluído em PDF para o cliente proprietário.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      simulationId:
-        custom: []
-        name: simulationId
-        description: 'Identificador da simulação.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      simulationId: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: PDF
-        headers: []
-        description: 'Relatório PDF'
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Não autenticado."}'
-        headers: []
-        description: 'Token ausente ou inválido'
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Recurso não encontrado."}'
-        headers: []
-        description: 'Simulação não encontrada para este cliente'
-      -
-        custom: []
-        status: 409
-        content: '{"message":"O relatório ainda não está disponível."}'
-        headers: []
-        description: 'Simulação ainda não concluída'
+        description: ''
     responseFields: []
     auth:
       - headers

@@ -75,28 +75,65 @@ class ProcessSimulation implements ShouldQueue
             throw new \RuntimeException('Nenhum arquivo temporário foi encontrado para a simulação.');
         }
 
+        $previousFiles = $simulation->processing_progress['files'] ?? [];
+        $originalNames = array_column($previousFiles, 'file', 'path');
+        $progress = array_map(fn (string $path): array => [
+            'file' => $originalNames[basename($path)] ?? basename($path),
+            'path' => basename($path),
+            'status' => 'pending',
+        ], $paths);
         $invoices = [];
         $fileNames = [];
-        foreach ($paths as $path) {
+        $readErrors = [];
+        $firstFailure = null;
+        foreach ($paths as $index => $path) {
             $this->activeStage = 'reading';
-            $this->activeFile = basename($path);
-            $contents = $disk->get($path);
-            $invoices[] = $reader->read($textExtractor->extract($contents));
-            $fileNames[] = basename($path);
+            $this->activeFile = $progress[$index]['file'];
+            $fileNames[] = $this->activeFile;
+            $progress[$index]['status'] = 'reading';
+            $simulation->update(['processing_progress' => ['stage' => 'reading', 'files' => $progress]]);
+            try {
+                $contents = $disk->get($path);
+                $invoices[] = $reader->read($textExtractor->extract($contents));
+                $progress[$index]['status'] = 'read';
+            } catch (Throwable $exception) {
+                $firstFailure ??= $exception;
+                $progress[$index]['status'] = 'failed';
+                $readErrors[] = [
+                    'file' => $this->activeFile, 'code' => 'INVOICE_READ_FAILED',
+                    'errors' => ['message' => 'Não foi possível ler este arquivo. Envie outra cópia da fatura.'],
+                ];
+            }
+            $simulation->update(['processing_progress' => ['stage' => 'reading', 'files' => $progress]]);
+        }
+        if ($firstFailure !== null) {
+            $simulation->update([
+                'processing_errors' => $readErrors,
+                'processing_progress' => ['stage' => 'retrying', 'files' => $progress],
+            ]);
+            throw $firstFailure;
         }
 
         try {
             $this->activeStage = 'validating';
+            $simulation->update(['processing_progress' => ['stage' => 'validating', 'files' => $progress]]);
             $validator->validate($invoices);
         } catch (ValidationException $exception) {
             $failureRecorder->recordValidationErrors($simulation, $fileNames, $exception->errors());
+            foreach (array_keys($exception->errors()) as $field) {
+                if (preg_match('/^invoices\\.(\\d+)\\./', $field, $match) === 1 && isset($progress[(int) $match[1]])) {
+                    $progress[(int) $match[1]]['status'] = 'failed';
+                }
+            }
+            $simulation->update(['processing_progress' => ['stage' => 'failed', 'files' => $progress]]);
             $disk->deleteDirectory($directory);
 
             return;
         }
 
         $this->activeStage = 'persisting';
-        DB::transaction(function () use ($simulation, $invoices, $calculationEngine): void {
+        $simulation->update(['processing_progress' => ['stage' => 'calculating', 'files' => $progress]]);
+        DB::transaction(function () use ($simulation, $invoices, $calculationEngine, $progress): void {
             $locked = Simulation::query()->lockForUpdate()->findOrFail($simulation->id);
             $locked->invoices()->delete();
             $locked->report()->delete();
@@ -148,6 +185,7 @@ class ProcessSimulation implements ShouldQueue
             $locked->report()->create($attributes);
             $locked->forceFill([
                 'status' => 'completed',
+                'processing_progress' => ['stage' => 'completed', 'files' => $progress],
                 'processing_errors' => null,
                 'months_count' => count($invoices),
                 'total_monthly_savings' => $attributes['total_monthly_savings'] ?? '0.00',
@@ -167,14 +205,37 @@ class ProcessSimulation implements ShouldQueue
     {
         $simulation = Simulation::query()->find($this->simulationId);
         if ($simulation !== null) {
-            $readFailure = $this->activeStage === 'reading';
-            app(InvoiceProcessingFailureRecorder::class)->record($simulation, [[
-                'file' => $readFailure ? ($this->activeFile ?? 'fatura') : 'simulação',
-                'code' => $readFailure ? 'INVOICE_READ_FAILED' : 'SIMULATION_PROCESSING_FAILED',
-                'errors' => ['message' => $readFailure
-                    ? 'Não foi possível ler este arquivo. Envie outra cópia da fatura.'
-                    : 'Não foi possível concluir o processamento. Tente enviar novamente.'],
-            ]]);
+            $progress = $simulation->processing_progress;
+            $stage = $progress['stage'] ?? $this->activeStage;
+            $readFailure = in_array($stage, ['reading', 'retrying'], true);
+            $errors = $readFailure ? ($simulation->processing_errors ?? []) : [];
+            if ($errors === []) {
+                $active = null;
+                foreach ($progress['files'] ?? [] as $entry) {
+                    if ($entry['status'] === 'reading') {
+                        $active = $entry['file'];
+                        break;
+                    }
+                }
+                $errors = [[
+                    'file' => $readFailure ? ($active ?? $this->activeFile ?? 'Fatura não identificada') : 'simulação',
+                    'code' => $readFailure ? 'INVOICE_READ_FAILED' : 'SIMULATION_PROCESSING_FAILED',
+                    'errors' => ['message' => $readFailure
+                        ? 'Não foi possível ler este arquivo. Envie outra cópia da fatura.'
+                        : 'Não foi possível concluir o processamento. Tente enviar novamente.'],
+                ]];
+            }
+            app(InvoiceProcessingFailureRecorder::class)->record($simulation, $errors);
+            if ($progress !== null) {
+                foreach ($progress['files'] as &$entry) {
+                    if ($entry['status'] === 'reading') {
+                        $entry['status'] = 'failed';
+                    }
+                }
+                unset($entry);
+                $progress['stage'] = 'failed';
+                $simulation->update(['processing_progress' => $progress]);
+            }
         }
 
         Storage::disk(TemporaryPdfTextExtractor::DISK)->deleteDirectory('simulation-'.$this->simulationId);

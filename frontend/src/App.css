@@ -457,3 +457,16 @@
 
 .button, .text-button, .delete-button { font-family: var(--heading); }
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
+
+.upload-fields { display: grid; gap: 1rem; min-width: 0; padding: 0; margin: 0; border: 0; }
+.invoice-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.invoice-picker .button { justify-self: start; }
+.selected-files .invoice-file-list { display: grid; gap: 0.75rem; max-height: 26rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.selected-files .invoice-file { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.75rem 0; border-top: 1px solid var(--border); }
+.invoice-file > div { display: grid; gap: 0.3rem; min-width: 0; flex: 1; }
+.invoice-file strong, .processing-errors strong { overflow-wrap: anywhere; }
+.selected-files .invoice-file span { float: none; display: block; font-size: 0.85rem; }
+.invoice-file .file-validation-error { flex-basis: 100%; }
+.invoice-progress-page { max-width: 52rem; }
+.invoice-progress-page > h1 { height: auto; line-height: 1.15; overflow-wrap: anywhere; margin-bottom: 1rem; }
+.invoice-progress-page .selected-files { margin-block: 1.25rem; }

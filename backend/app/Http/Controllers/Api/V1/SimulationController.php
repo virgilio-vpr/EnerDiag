@@ -77,6 +77,10 @@ class SimulationController extends Controller
             'id' => $simulation->id,
             'status' => $simulation->status,
             'processing_errors' => $simulation->status === 'failed' ? $simulation->processing_errors : null,
+            'processing_progress' => $simulation->processing_progress === null ? null : [
+                'stage' => $simulation->processing_progress['stage'],
+                'files' => array_map(fn (array $file): array => ['file' => $file['file'], 'status' => $file['status']], $simulation->processing_progress['files']),
+            ],
         ]]);
     }
 

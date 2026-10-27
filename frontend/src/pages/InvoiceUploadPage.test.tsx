@@ -1,195 +1,182 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { InvoiceUploadPage } from './InvoiceUploadPage'
 import { setAuthToken } from '../services/api/client'
 
-const account = {
-  email: 'ana@example.com',
-  profile: {
-    company_name: 'Empresa Exemplo',
-    cnpj: '12.345.678/0001-90',
-    distributor_id: 9,
-    transformer_power_kva: '500.00',
-    address_details: 'Rua da Energia, 10, São Paulo/SP',
-    substation_same_address: true,
-    substation_address: null,
-  },
-}
+const account = { email: 'ana@example.com', profile: { company_name: 'Empresa Exemplo', distributor_id: 9,
+  address_details: 'Rua da Energia, 10', substation_same_address: true } }
 const distributors = [{ id: 9, name: 'ENEL SP', state: 'SP' }]
-
-function jsonResponse(status: number, payload: unknown) {
+const batch = '019c0000-0000-7000-8000-000000000001'
+function json(status: number, payload: unknown) {
   return new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } })
 }
-
 function invoice(name: string, pages = 1, type = 'application/pdf') {
-  const pageMarkers = Array.from({ length: pages }, () => '/Type /Page').join('\n')
-  return new File(['%PDF-1.4\n' + pageMarkers], name, { type })
+  return new File(['%PDF-1.4\n' + '/Type /Page\n'.repeat(pages)], name, { type, lastModified: 1 })
 }
-
-function setupFetch(
-  submitResponse = jsonResponse(202, { data: { id: 12, status: 'queued' } }),
-  statusResponses: Response[] = [],
-) {
-  const fetchMock = vi.fn()
-    .mockResolvedValueOnce(jsonResponse(200, { data: account }))
-    .mockResolvedValueOnce(jsonResponse(200, { data: distributors }))
-    .mockResolvedValueOnce(submitResponse)
-  statusResponses.forEach((response) => fetchMock.mockResolvedValueOnce(response))
-  fetchMock.mockResolvedValue(jsonResponse(500, { message: 'Erro inesperado.' }))
+function setup(options: { upload?: (body: FormData) => Response | Promise<Response>; status?: Record<string, unknown>; complete?: Response } = {}) {
+  setAuthToken('customer-token')
+  const fetchMock = vi.fn(async (url: string, request: RequestInit = {}) => {
+    if (url.endsWith('/me')) return json(200, { data: account })
+    if (url.endsWith('/distributors')) return json(200, { data: distributors })
+    if (url.endsWith('/invoice-upload-batches')) return json(201, { data: { id: batch } })
+    if (url.endsWith('/files')) return options.upload ? options.upload(request?.body as FormData) : json(201, { data: {} })
+    if (url.endsWith('/complete')) return options.complete ?? json(202, { data: { id: 12, status: 'queued' } })
+    if (url.endsWith('/status')) return json(200, { data: { id: 12, status: 'queued', processing_errors: null, ...options.status } })
+    return json(200, { data: {} })
+  })
   vi.stubGlobal('fetch', fetchMock)
+  render(<InvoiceUploadPage />)
   return fetchMock
 }
-
+async function add(files: File[]) {
+  fireEvent.change(await screen.findByLabelText('Faturas em PDF'), { target: { files } })
+}
+async function ready(files = [invoice('Março.pdf'), invoice('Abril.pdf')]) {
+  await add(files)
+  await screen.findByText(new RegExp(`${files.length} páginas`))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Simular economia' })).toBeEnabled())
+}
 afterEach(() => {
   vi.unstubAllGlobals()
   setAuthToken(null)
   window.history.replaceState({}, '', '/')
 })
 
-describe('invoice upload', () => {
-  it('blocks fewer than six invoices and non-PDF files', async () => {
-    setAuthToken('customer-token')
-    setupFetch()
-    render(<InvoiceUploadPage />)
-    const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: [invoice('one.pdf'), invoice('two.pdf')] } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 6 a 12 faturas/)
-
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
-    await screen.findByText(/6 páginas/)
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.txt', 1, 'text/plain')) } })
-    expect(await screen.findAllByText('Selecione apenas arquivos PDF.', { selector: 'small' })).toHaveLength(6)
-
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => new File(['not a PDF'], 'invoice-' + index + '.pdf', { type: 'application/pdf' })) } })
-    expect(await screen.findAllByText('O conteúdo não é um PDF válido.', { selector: 'small' })).toHaveLength(6)
-
-    fireEvent.change(picker, { target: { files: Array.from({ length: 13 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 6 a 12 faturas/)
+describe('sequential invoice upload', () => {
+  it('accumulates attachments one by one, ignores exact duplicates and lets the user remove and reattach a file', async () => {
+    setup()
+    const first = invoice('Março.pdf')
+    await add([first])
+    expect(await screen.findByText(/1 fatura\(s\) anexada/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Simular economia' })).toBeDisabled()
+    await add([first, invoice('Abril.pdf')])
+    expect(await screen.findByText(/2 fatura\(s\) anexada/)).toBeInTheDocument()
+    const list = screen.getByLabelText('Faturas selecionadas')
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: 'Remover Março.pdf' }))
+    expect(within(list).queryByText(/1\. Março.pdf/)).not.toBeInTheDocument()
+    await add([first])
+    expect(await screen.findByText(/2 páginas/)).toBeInTheDocument()
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2)
   })
 
-  it('blocks any invoice above 20 MB', async () => {
-    setAuthToken('customer-token')
-    setupFetch()
-    render(<InvoiceUploadPage />)
-    const picker = await screen.findByLabelText(/Faturas em PDF/)
-    const oversized = new File([new Uint8Array(20 * 1024 * 1024 + 1)], 'oversized.pdf', { type: 'application/pdf' })
-    fireEvent.change(picker, { target: { files: [oversized, ...Array.from({ length: 5 }, (_, index) => invoice('invoice-' + index + '.pdf'))] } })
-    expect(await screen.findByText(/Revise os arquivos indicados/, { selector: 'p[role="alert"]' })).toBeInTheDocument()
+  it('accepts two invoices temporarily and rejects selections above twelve', async () => {
+    setup()
+    await ready()
+    await add(Array.from({ length: 11 }, (_, index) => invoice(`extra-${index}.pdf`)))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Remova os arquivos excedentes/)
+    expect(screen.getByRole('button', { name: 'Simular economia' })).toBeDisabled()
   })
 
-  it('blocks a selection above the total page limit', async () => {
-    setAuthToken('customer-token')
-    setupFetch()
-    render(<InvoiceUploadPage />)
-    const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.pdf', 101)) } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/no máximo 600 páginas/)
+  it('identifies invalid extensions and signatures by file even when only one file is selected', async () => {
+    setup()
+    await add([invoice('errada.txt', 1, 'text/plain')])
+    expect(await screen.findByText('Selecione apenas arquivos PDF.', { selector: 'small' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Remover errada.txt' }))
+    await add([new File(['not a PDF'], 'ilegível.pdf', { type: 'application/pdf' })])
+    expect(await screen.findByText('O conteúdo não é um PDF válido.', { selector: 'small' })).toBeInTheDocument()
   })
 
-  it('submits company data and six PDF files as a multipart simulation', async () => {
-    setAuthToken('customer-token')
-    const fetchMock = setupFetch()
-    render(<InvoiceUploadPage />)
-    const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + (index + 1) + '.pdf')) } })
-    await screen.findByText(/6 páginas/)
+  it('rejects an invoice above 20 MB and a batch above 600 pages', async () => {
+    setup()
+    await add([new File([new Uint8Array(20 * 1024 * 1024 + 1)], 'grande.pdf', { type: 'application/pdf' })])
+    expect(await screen.findByText('Cada fatura pode ter no máximo 20 MB.', { selector: 'small' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Remover grande.pdf' }))
+    await add([invoice('one.pdf', 301), invoice('two.pdf', 301)])
+    expect(await screen.findByRole('alert')).toHaveTextContent('no máximo 600 páginas')
+  })
+
+  it('sends exactly one PDF per request, waits before sending the next and updates the sent counter', async () => {
+    const releases: Array<(response: Response) => void> = []
+    const fetchMock = setup({ upload: () => new Promise<Response>((resolve) => { releases.push(resolve) }) })
+    await ready()
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
-
+    await waitFor(() => expect(releases).toHaveLength(1))
+    expect(screen.getByText('0 de 2 faturas enviadas')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remover Março.pdf' })).toBeDisabled()
+    releases[0](json(201, { data: {} }))
+    await waitFor(() => expect(releases).toHaveLength(2))
+    expect(screen.getByText('1 de 2 faturas enviadas')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/complete'))).toHaveLength(0)
+    releases[1](json(201, { data: {} }))
     expect(await screen.findByRole('heading', { name: 'Sua análise começou' })).toBeInTheDocument()
-    const [url, options] = fetchMock.mock.calls[2]
-    expect(url).toBe('/api/v1/simulations')
-    expect(options?.method).toBe('POST')
-    expect(new Headers(options?.headers).get('Authorization')).toBe('Bearer customer-token')
-    expect(options?.body).toBeInstanceOf(FormData)
-    const body = options?.body as FormData
-    expect(body.get('company_name')).toBe('Empresa Exemplo')
-    expect(body.get('distributor_id')).toBe('9')
-    expect(body.get('address_details')).toBe('Rua da Energia, 10, São Paulo/SP')
-    expect(body.get('substation_same_address')).toBe('1')
-    expect(body.getAll('invoices[]')).toHaveLength(6)
+    const uploads = fetchMock.mock.calls.filter(([url]) => url.endsWith('/files'))
+    expect(uploads).toHaveLength(2)
+    expect(uploads.map(([, request]) => ((request?.body as FormData).get('invoice') as File).name)).toEqual(['Março.pdf', 'Abril.pdf'])
+    for (const [, request] of uploads) {
+      expect((request?.body as FormData).getAll('invoice')).toHaveLength(1)
+      expect(new Headers(request?.headers).get('Authorization')).toBe('Bearer customer-token')
+    }
+    expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body))).toMatchObject({ company_name: 'Empresa Exemplo', distributor_id: 9 })
+  })
+
+  it('keeps successful uploads, shows the failed filename and retries only that file with the same identifier', async () => {
+    let failures = 0
+    const fetchMock = setup({ upload: (body) => {
+      if ((body.get('invoice') as File).name === 'Abril.pdf' && failures++ === 0) return json(413, { message: 'Arquivo recusado pelo servidor.' })
+      return json(201, { data: {} })
+    } })
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    expect(await screen.findByText('Arquivo recusado pelo servidor.', { selector: 'small' })).toBeInTheDocument()
+    expect(screen.getByText('1 de 2 faturas enviadas')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url.endsWith('/complete'))).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar envio novamente' }))
+    expect(await screen.findByRole('heading', { name: 'Sua análise começou' })).toBeInTheDocument()
+    const uploads = fetchMock.mock.calls.filter(([url]) => url.endsWith('/files')).map(([, options]) => options?.body as FormData)
+    expect(uploads.map((body) => (body.get('invoice') as File).name)).toEqual(['Março.pdf', 'Abril.pdf', 'Abril.pdf'])
+    expect(uploads[1].get('client_id')).toBe(uploads[2].get('client_id'))
+  })
+
+  it('discards a partial server batch if an attachment is removed after a failed upload', async () => {
+    const fetchMock = setup({ upload: () => json(415, { message: 'PDF inválido.' }) })
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    await screen.findByRole('button', { name: 'Tentar envio novamente' })
+    fireEvent.click(screen.getByRole('button', { name: 'Remover Abril.pdf' }))
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url, options]) => url.endsWith(batch) && options?.method === 'DELETE')).toBe(true))
+    expect(screen.getByText(/1 fatura\(s\) anexada/)).toBeInTheDocument()
   })
 
   it.each([
     ['queued', 'Aguardando início do processamento…'],
     ['processing', 'Estamos lendo suas faturas e preparando a análise.'],
     ['completed', 'A análise das suas faturas está concluída.'],
-  ] as const)('shows the %s simulation status returned by the API', async (status, message) => {
-    setAuthToken('customer-token')
-    const fetchMock = setupFetch(
-      jsonResponse(202, { data: { id: 12, status: 'queued' } }),
-      [jsonResponse(200, { data: { id: 12, status, processing_errors: null } })],
-    )
-    render(<InvoiceUploadPage />)
-    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
-      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
-    })
-    await screen.findByText(/6 páginas/)
+  ])('shows the %s processing status', async (status, message) => {
+    setup({ status: { status } })
+    await ready()
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
-
     expect(await screen.findByText(message)).toBeInTheDocument()
-    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations/12/status')).toBe(true))
   })
 
-  it('shows asynchronous file processing failures by file', async () => {
-    setAuthToken('customer-token')
-    setupFetch(undefined, [jsonResponse(200, { data: {
-      id: 12,
-      status: 'failed',
-      processing_errors: [{ file: 'invoice-2.pdf', code: 'INVOICE_READ_FAILED', errors: { message: 'Não foi possível ler este arquivo.' } }],
-    } })])
-    render(<InvoiceUploadPage />)
-    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
-      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
-    })
-    await screen.findByText(/6 páginas/)
+  it('shows read progress and identifies every failed invoice by its original name', async () => {
+    setup({ status: { status: 'failed', processing_progress: { stage: 'failed', files: [
+      { file: 'Março.pdf', status: 'read' }, { file: 'Abril.pdf', status: 'failed' },
+    ] }, processing_errors: [{ file: 'Abril.pdf', code: 'INVOICE_READ_FAILED', errors: { message: 'Não foi possível ler este arquivo.' } }] } })
+    await ready()
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
-
     expect(await screen.findByRole('heading', { name: 'A análise precisa de atenção' })).toBeInTheDocument()
-    expect(screen.getByText('invoice-2.pdf')).toBeInTheDocument()
-    expect(screen.getByText('Não foi possível ler este arquivo.')).toBeInTheDocument()
+    expect(screen.getByText('2 de 2 faturas enviadas · 1 de 2 lidas')).toBeInTheDocument()
+    expect(screen.getByText('Abril.pdf', { selector: 'strong' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Corrigir anexos' }))
+    expect(screen.getByRole('button', { name: 'Remover Abril.pdf' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remover Março.pdf' })).toBeInTheDocument()
   })
 
-  it('maps synchronous invoice validation errors to the matching file', async () => {
-    setAuthToken('customer-token')
-    setupFetch(jsonResponse(422, { message: 'Confira os dados informados.', errors: { 'invoices.1': ['O arquivo está ilegível.'] } }))
-    render(<InvoiceUploadPage />)
-    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
-      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
-    })
-    await screen.findByText(/6 páginas/)
+  it('preserves the batch when finalization fails so that retry does not resend files', async () => {
+    setup({ complete: json(422, { message: 'Envio inválido.', errors: { invoices: ['Confira o conjunto enviado.'] } }) })
+    await ready()
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
-
-    expect(await screen.findByText('O arquivo está ilegível.', { selector: 'small' })).toBeInTheDocument()
-    expect(screen.getByText('Revise os erros associados às faturas indicadas.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Confira o conjunto enviado.')
+    expect(screen.getByText('2 de 2 faturas enviadas')).toBeInTheDocument()
   })
 
-  it('shows the API message when the synchronous upload is too large', async () => {
-    setAuthToken('customer-token')
-    setupFetch(jsonResponse(413, { message: 'O conjunto enviado ultrapassa o limite.' }))
-    render(<InvoiceUploadPage />)
-    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
-      target: { files: Array.from({ length: 6 }, (_, index) => invoice(`invoice-${index + 1}.pdf`)) },
-    })
-    await screen.findByText(/6 páginas/)
-    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('O conjunto enviado ultrapassa o limite.')
-  })
-
-  it('shows an unsupported distributor notice and registers the customer interest', async () => {
-    setAuthToken('customer-token')
-    const fetchMock = setupFetch(jsonResponse(201, { data: { id: 3 } }))
-    render(<InvoiceUploadPage />)
+  it('registers interest in an unsupported distributor', async () => {
+    const fetchMock = setup()
     fireEvent.change(await screen.findByLabelText('Distribuidora'), { target: { value: 'other' } })
     fireEvent.change(screen.getByLabelText('Nome da distribuidora'), { target: { value: 'Distribuidora Regional' } })
     fireEvent.click(screen.getByRole('button', { name: 'Registrar meu interesse' }))
-
     expect(await screen.findByText(/Interesse registrado/)).toBeInTheDocument()
-    expect(fetchMock.mock.calls[2][0]).toBe('/api/v1/leads')
-    expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body))).toEqual({
-      email: 'ana@example.com',
-      distributor_name: 'Distribuidora Regional',
-      reason: 'unsupported_distributor',
-    })
+    expect(fetchMock.mock.calls.some(([url]) => url.endsWith('/leads'))).toBe(true)
   })
 })

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\DistributorController;
 use App\Http\Controllers\Api\V1\ExampleController;
+use App\Http\Controllers\Api\V1\InvoiceUploadBatchController;
 use App\Http\Controllers\Api\V1\LeadController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\SimulationController;
@@ -61,6 +62,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/invoice-upload-batches', [InvoiceUploadBatchController::class, 'store'])->middleware('throttle:uploads');
+    Route::post('/invoice-upload-batches/{batch}/files', [InvoiceUploadBatchController::class, 'upload'])->whereUuid('batch')->middleware('throttle:invoice_files');
+    Route::post('/invoice-upload-batches/{batch}/complete', [InvoiceUploadBatchController::class, 'complete'])->whereUuid('batch')->middleware('throttle:uploads');
+    Route::delete('/invoice-upload-batches/{batch}', [InvoiceUploadBatchController::class, 'destroy'])->whereUuid('batch');
     Route::get('/simulations', [SimulationController::class, 'index']);
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
     Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status'])->whereNumber('simulationId');

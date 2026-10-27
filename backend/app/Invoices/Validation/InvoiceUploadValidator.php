@@ -29,10 +29,21 @@ final class InvoiceUploadValidator
      */
     public function validate(array $files): void
     {
+        $this->validateFiles($files, self::MIN_FILES);
+    }
+
+    public function validateSingle(UploadedFile $file): int
+    {
+        return $this->validateFiles([$file], 1);
+    }
+
+    /** @param list<UploadedFile> $files */
+    private function validateFiles(array $files, int $minimum): int
+    {
         $fileCount = count($files);
-        if ($fileCount < self::MIN_FILES || $fileCount > self::MAX_FILES) {
+        if ($fileCount < $minimum || $fileCount > self::MAX_FILES) {
             throw ValidationException::withMessages([
-                'invoices' => 'Envie de '.self::MIN_FILES.' a '.self::MAX_FILES.' faturas em PDF.',
+                'invoices' => 'Envie de '.$minimum.' a '.self::MAX_FILES.' faturas em PDF.',
             ]);
         }
 
@@ -81,6 +92,8 @@ final class InvoiceUploadValidator
                 throw new HttpException(413, 'O conjunto de faturas deve ter no máximo 600 páginas.');
             }
         }
+
+        return $totalPages;
     }
 
     private function hasPdfSignature(UploadedFile $file): bool

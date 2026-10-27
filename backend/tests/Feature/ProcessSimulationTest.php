@@ -152,6 +152,47 @@ class ProcessSimulationTest extends TestCase
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
     }
 
+    public function test_all_read_failures_keep_original_names_after_the_queue_recreates_the_job(): void
+    {
+        [$simulation] = $this->simulationWithFiles();
+        $disk = Storage::disk('invoice_temp');
+        $disk->put('simulation-'.$simulation->id.'/invoice-2.pdf', '%PDF-1.4 second');
+        $disk->put('simulation-'.$simulation->id.'/invoice-3.pdf', '%PDF-1.4 third');
+        $files = [];
+        foreach (['Março original.pdf', 'Abril.pdf', 'Maio.pdf'] as $index => $name) {
+            $files[] = ['file' => $name, 'path' => 'invoice-'.($index + 1).'.pdf', 'status' => 'pending'];
+        }
+        $simulation->update(['processing_progress' => ['stage' => 'queued', 'files' => $files]]);
+        $fixture = file_get_contents(base_path('tests/Fixtures/enel-reference-blue.txt'));
+        $calls = 0;
+        $this->mock(PdfTextParser::class)->shouldReceive('extract')->times(3)->andReturnUsing(function () use (&$calls, $fixture): string {
+            $calls++;
+            if ($calls !== 2) {
+                throw new RuntimeException('Parser internals must stay private');
+            }
+
+            return $fixture;
+        });
+        try {
+            (new ProcessSimulation($simulation->id))->handle(
+                app(InvoiceReaderResolver::class), app(TemporaryPdfTextExtractor::class),
+                app(InvoiceExtractionValidator::class), app(InvoiceProcessingFailureRecorder::class), app(ReportCalculationEngine::class),
+            );
+            $this->fail('Read errors should trigger a queue retry.');
+        } catch (RuntimeException) {
+            $this->assertCount(3, $disk->files('simulation-'.$simulation->id));
+        }
+        $progress = $simulation->fresh()->processing_progress;
+        $this->assertSame(['failed', 'read', 'failed'], array_column($progress['files'], 'status'));
+        $this->assertSame('retrying', $progress['stage']);
+        (new ProcessSimulation($simulation->id))->failed(new RuntimeException('Last attempt failed'));
+        $simulation->refresh();
+        $this->assertSame('failed', $simulation->status);
+        $this->assertSame(['Março original.pdf', 'Maio.pdf'], array_column($simulation->processing_errors, 'file'));
+        $this->assertDatabaseCount('reports', 0);
+        $this->assertSame([], $disk->allFiles());
+    }
+
     private function simulationWithFiles(): array
     {
         $user = User::factory()->create();

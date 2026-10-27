@@ -74,14 +74,18 @@ class SubmitSimulation
                 ]);
                 $directory = 'simulation-'.$simulation->id;
 
+                $progress = [];
                 foreach ($files as $index => $file) {
                     $originalName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
                     $storedName = sprintf('%02d-%s-%s.pdf', $index + 1, Str::uuid(), $originalName !== '' ? $originalName : 'invoice');
+                    $progress[] = ['file' => $file->getClientOriginalName(), 'path' => $storedName, 'status' => 'pending'];
                     $storedPath = $file->storeAs($directory, $storedName, 'invoice_temp');
                     if ($storedPath === false) {
                         throw new \RuntimeException('Não foi possível armazenar uma fatura temporariamente.');
                     }
                 }
+
+                $simulation->update(['processing_progress' => ['stage' => 'queued', 'files' => $progress]]);
 
                 ProcessSimulation::dispatch($simulation->id)->afterCommit();
 

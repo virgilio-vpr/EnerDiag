@@ -21,6 +21,7 @@ class Simulation extends Model
         'user_id',
         'status',
         'processing_errors',
+        'processing_progress',
         'months_count',
         'total_monthly_savings',
         'total_yearly_savings',
@@ -61,6 +62,7 @@ class Simulation extends Model
         return [
             'months_count' => 'integer',
             'processing_errors' => 'array',
+            'processing_progress' => 'array',
             'total_monthly_savings' => 'decimal:2',
             'total_yearly_savings' => 'decimal:2',
             'expires_at' => 'datetime',

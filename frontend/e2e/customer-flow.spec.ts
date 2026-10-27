@@ -46,9 +46,11 @@ test('customer registers, verifies email, uploads invoices and receives the repo
 
   await page.getByRole('combobox', { name: 'Distribuidora', exact: true }).selectOption({ label: 'ENEL SP' })
   await page.getByLabel('Endereço da unidade consumidora').fill('Rua Sintética, 100, São Paulo/SP')
-  await page.getByLabel('Faturas em PDF').setInputFiles(invoiceFixtures())
+  for (const fixture of invoiceFixtures()) {
+    await page.getByLabel('Faturas em PDF').setInputFiles(fixture)
+  }
   await expect(page.getByText(/6 páginas/)).toBeVisible()
-  const submitted = page.waitForResponse((response) => response.url().endsWith('/api/v1/simulations') && response.request().method() === 'POST')
+  const submitted = page.waitForResponse((response) => response.url().endsWith('/complete') && response.request().method() === 'POST')
   await page.getByRole('button', { name: 'Simular economia' }).click()
   expect((await submitted).status()).toBe(202)
   await expect(page.getByRole('heading', { name: 'Sua análise está pronta' })).toBeVisible({ timeout: 60_000 })
