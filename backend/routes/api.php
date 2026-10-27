@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationController;
 use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
 use App\Http\Controllers\Api\V1\Admin\TariffImportController as AdminTariffImportController;
+use App\Http\Controllers\Api\V1\Admin\TariffImportReviewController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\DistributorController;
@@ -49,6 +50,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/tariffs', [AdminTariffController::class, 'store']);
     Route::put('/tariffs/{id}', [AdminTariffController::class, 'update'])->whereNumber('id');
     Route::post('/tariffs/import', [AdminTariffImportController::class, 'store']);
+    Route::get('/tariff-imports', [TariffImportReviewController::class, 'index']);
+    Route::get('/tariff-imports/{tariffImport}', [TariffImportReviewController::class, 'show'])->whereNumber('tariffImport');
+    Route::post('/tariff-imports/{tariffImport}/approve', [TariffImportReviewController::class, 'approve'])->whereNumber('tariffImport');
     Route::get('/parameters', [AdminRegulatoryParameterController::class, 'index']);
     Route::post('/parameters', [AdminRegulatoryParameterController::class, 'store']);
     Route::get('/leads', [AdminLeadController::class, 'index']);
@@ -59,9 +63,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/simulations', [SimulationController::class, 'index']);
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
-    Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status']);
-    Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report']);
-    Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf']);
+    Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status'])->whereNumber('simulationId');
+    Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report'])->whereNumber('simulationId');
+    Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf'])->whereNumber('simulationId');
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);

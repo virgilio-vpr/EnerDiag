@@ -16,3 +16,4 @@ Artisan::command('invoices:clean-temporary-files', function (OrphanedInvoicePdfC
 
 Schedule::command('invoices:clean-temporary-files')->daily();
 Schedule::command(PurgeExpiredSimulations::class)->daily();
+Schedule::command('tariffs:fetch-aneel')->dailyAt('04:00')->withoutOverlapping(10);

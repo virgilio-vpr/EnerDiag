@@ -245,14 +245,17 @@ Ref: ORC
 ### Fase 11 — Segurança, revisão final e operação
 Ref: RN-7, §9
 
-- [ ] 11.1 Checklist de segurança de RN-7 (SQL Injection, XSS e CSP, CORS, rate limiting, acesso a dados de terceiros, upload, logs, dependências).
+- [x] 11.1 Checklist de segurança de RN-7 (SQL Injection, XSS e CSP, CORS, rate limiting, acesso a dados de terceiros, upload, logs, dependências).
   - Teste: feature tests cobrem entradas contra SQL Injection e acesso entre usuários; teste de saída confirma escape contra XSS; testes de configuração verificam CSP, CORS e rate limits; testes de upload cobrem tipo, tamanho e quantidade; teste de logs confirma ausência de dados pessoais; `composer audit` e `npm audit` sem vulnerabilidades críticas ou altas sem plano de correção.
-- [ ] 11.2 Reforço da conta admin (opcional, a decidir em §9): senha mais forte e segundo fator por TOTP.
+- [x] 11.2 Reforço da conta admin (adotado): senha mais forte e segundo fator por TOTP.
   - Teste: com o segundo fator ativo, o login do admin o exige; sem ele, o acesso é negado.
-- [ ] 11.3 Importação automática das tarifas a partir do portal de dados abertos da ANEEL (opcional): rotina agendada que baixa o conjunto de dados, grava a importação como pendente de revisão e só ativa as tarifas após aprovação do admin.
+  - Configuração e recuperação local: `php artisan admin:configure-security {email}`; senha com pelo menos 14 caracteres, maiúsculas, minúsculas, números e símbolos, não comprometida. Ativação exige código confirmado e revoga sessões anteriores; segredo criptografado; códigos com janela de 30 segundos e tolerância de um intervalo, sem reutilização. Redefinição de senha preserva TOTP.
+- [x] 11.3 Importação automática das tarifas a partir do portal de dados abertos da ANEEL (adotada): rotina agendada que baixa o conjunto de dados, grava a importação como pendente de revisão e só ativa as tarifas após aprovação do admin.
   - Teste: com a fonte simulada, a rotina cria importação pendente; nada é ativado sem aprovação; falha de rede não altera as tarifas vigentes.
-- [ ] 11.4 Teste de ponta a ponta do fluxo completo (Playwright, opcional).
+  - Operação: `php artisan tariffs:fetch-aneel`, diariamente às 04h no fuso da aplicação; download temporário privado com limite de 256 MiB, recorte de tarifas normais vigentes ou futuras para A4/AS e Azul/Verde, valores sem tributos e conversão de MWh para kWh em decimal. Guarda fonte, hash do recorte e valores para revisão no painel de tarifas. Repetição do mesmo recorte não duplica importações; aprovação explícita registra admin/data e aplica todas as tarifas em transação, sem alterações parciais em caso de conflito.
+- [x] 11.4 Teste de ponta a ponta do fluxo completo (Playwright, adotado).
   - Teste: cadastro → verificação → envio → relatório → PDF por e-mail.
+  - Executar `cd frontend && npm run test:e2e` após instalar Chromium com `npx playwright install --with-deps chromium` (Node 24+). O navegador usa o build de produção, API/worker reais, seis PDFs sintéticos e captura SMTP local; confere os indicadores, o download e a igualdade do PDF recebido por e-mail. SQLite, cache, arquivos e mensagens ficam isolados em temporários, sem carregar o `.env` do projeto. A navegação interna preserva o token em memória; recarregar manualmente continua exigindo login (D7).
 - [ ] 11.5 Conteinerização completa (API e frontend), HTTPS, diretório temporário privado compartilhado entre API e worker (volume), limites de upload no proxy, worker de fila com até três tentativas (backoff de 60/180 segundos, timeout de 300 segundos e `retry_after` maior que o timeout), agendador (expurgo, limpeza de temporários órfãos e, se adotada a 11.3, importação de tarifas) em produção; admin criado por comando próprio.
   - Teste: `docker compose` de produção sobe tudo; o worker lê o PDF enviado pela API e processa; worker recupera jobs conforme configuração; agendador executa expurgo e limpeza; seeder de teste não roda em produção.
 - [ ] 11.6 README de implantação e documentação final.
@@ -348,12 +351,12 @@ Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120
 
 Tabelas em inglês. Tarifas com 5 casas decimais; grandezas de demanda, consumo e energia reativa com 3 casas decimais; valores monetários com 2 casas decimais. Usar tipos decimais, nunca ponto flutuante.
 
-- `users` (id, name, email, phone, password_hash, role, email_verified_at, contact_requested_at)
+- `users` (id, name, email, phone, password_hash, role, email_verified_at, contact_requested_at, totp_secret criptografado e oculto, totp_last_used_step oculto)
 - `consents` (id, user_id, terms_version, accepted_at, ip_address)
 - `customer_profiles` (user_id, company_name, cnpj, distributor_id, transformer_power_kva, address_details, substation_same_address, substation_address)
 - `distributors` (id, name, state, parser_key, active)
 - `tariffs` (id, distributor_id, subgroup, tariff_modality, time_slot, component, rate, includes_taxes, source, source_reference, valid_from, valid_to); `component`: `demand`, `energy_te`, `energy_tusd`; `includes_taxes`: `true` para preço com tributos (como na fatura) e `false` para tarifas importadas da ANEEL (somente “tarifas de aplicação”, não a base econômica); `source`: `aneel_import` ou `manual`; `source_reference`: resolução homologatória de origem.
-- `tariff_imports` (id, source_reference, file_name, imported_by, imported_at, rows_accepted, rows_ignored, status)
+- `tariff_imports` (id, source_reference, file_name, imported_by, imported_at, rows_accepted, rows_ignored, status, source_url, source_hash único e opcional, pending_tariffs JSON, reviewed_by, reviewed_at); coletas automáticas ficam `pending` sem alterar `tariffs`; a aprovação explícita torna o registro `completed` e preserva o recorte revisado para auditoria.
 - `regulatory_parameters` (id, key, value, state nullable, valid_from, valid_to); na versão 1 só há parâmetros nacionais (`state = null`): `overrun_tolerance = 0.05`, `overrun_multiplier = 2`, `reference_power_factor = 0.92` e `idle_demand_discount_fallback = 0.18`. A coluna `state` fica reservada para evolução futura. Sem sobreposição de vigências para a mesma chave e escopo.
 - `simulations` (id, user_id, status, `processing_errors` JSON por arquivo, months_count, total_monthly_savings, total_yearly_savings, expires_at)
 - `invoices` (id, simulation_id, reference_month, consumer_unit, subgroup, tariff_modality, total_paid `DECIMAL(14,2)`); unicidade de `(simulation_id, reference_month)`; a unidade consumidora deve ser a mesma em todas as faturas da simulação.
@@ -374,7 +377,7 @@ Padrões: JSON; erro em formato único (`message`, `code`, `errors`); códigos H
 |---|---|
 | Auth (público) | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-code`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password` |
 | Cliente | `GET/PUT /me`, `DELETE /me`, `POST /me/contact-request`, `GET /simulations`, `POST /simulations`, `GET /simulations/{id}/status`, `/report`, `/pdf`, `POST /leads` |
-| Admin | `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}`, `POST /admin/simulations/{id}/recalculate`, `PUT /admin/reports/{id}`, `POST /admin/reports/{id}/resend`, `GET/POST/PUT /admin/tariffs`, `POST /admin/tariffs/import`, `GET/POST /admin/parameters`, `GET /admin/leads`, `GET/POST/PUT /admin/quotation-items` |
+| Admin | `GET /admin/customers`, `/customers/{id}`, `/simulations`, `/simulations/{id}`, `POST /admin/simulations/{id}/recalculate`, `PUT /admin/reports/{id}`, `POST /admin/reports/{id}/resend`, `GET/POST/PUT /admin/tariffs`, `POST /admin/tariffs/import`, `GET /admin/tariff-imports`, `/admin/tariff-imports/{id}`, `POST /admin/tariff-imports/{id}/approve`, `GET/POST /admin/parameters`, `GET /admin/leads`, `GET/POST/PUT /admin/quotation-items` |
 
 ## 7. Frontend (FE)
 
@@ -409,5 +412,5 @@ Itens regulatórios conferidos em `docs/REN 1000.pdf` e dados da fatura ENEL con
 - [x] Benchmark: as planilhas Azul e Verde foram comparadas com os custos anuais de demanda e reativos; divergência máxima observada dentro de R$ 0,02 por causa do arredondamento monetário do RC-0.
 - [ ] Bibliotecas a escolher: leitura de PDF (`smalot/pdfparser` ou `pdftotext`), geração de PDF, documentação da API (compatibilidade com PHP 8.5 e Laravel 13).
 - [ ] Textos jurídicos (Política de Privacidade e Termos) e canal de contato comercial (WhatsApp ou e-mail).
-- [ ] Segundo fator (TOTP) para o admin: adotar ou não (tarefa 11.2).
+- [x] Segundo fator (TOTP) para o admin: adotado na tarefa 11.2; configuração por comando local, segredo criptografado, confirmação antes de ativar e bloqueio de reutilização dos códigos.
 - [ ] Dados da empresa fictícia do orçamento (etapa 2).

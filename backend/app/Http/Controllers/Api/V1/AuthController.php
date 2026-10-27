@@ -12,6 +12,7 @@ use App\Http\Requests\Api\V1\VerifyEmailRequest;
 use App\Models\User;
 use App\Services\EmailVerificationService;
 use App\Services\RegisterCustomer;
+use App\Services\TotpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -102,10 +103,12 @@ class AuthController extends Controller
     #[Endpoint('Entrar', 'Autentica a conta confirmada e devolve um token Bearer válido por duas horas.')]
     #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
     #[BodyParam('password', 'string', 'Senha da conta.', required: true, example: 'EnergiaSegura2026')]
+    #[BodyParam('totp_code', 'string', 'Código do autenticador, obrigatório para admin com TOTP ativo.', required: false, example: '123456')]
+    #[Response(status: 422, content: '{"message":"Informe o código do seu autenticador.","code":"VALIDATION_ERROR","errors":{"totp_code":["Informe o código do seu autenticador."]}}', description: 'Código TOTP ausente, inválido, expirado ou já utilizado')]
     #[Response(status: 200, content: '{"token":"1|token-em-texto-plano","token_type":"Bearer","expires_at":"2026-10-24T18:00:00Z","user":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","role":"customer"}}', description: 'Autenticação concluída')]
     #[Response(status: 401, content: '{"message":"E-mail ou senha inválidos.","code":"UNAUTHENTICATED","errors":null}', description: 'Credenciais inválidas')]
     #[Response(status: 403, content: '{"message":"Confirme seu e-mail antes de entrar.","code":"FORBIDDEN","errors":null}', description: 'E-mail ainda não confirmado')]
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request, TotpService $totp): JsonResponse
     {
         $user = User::query()->where('email', $request->validated('email'))->first();
 
@@ -115,6 +118,16 @@ class AuthController extends Controller
 
         if (! $user->email_verified_at) {
             abort(403, 'Confirme seu e-mail antes de entrar.');
+        }
+
+        if ($user->role === 'admin' && $user->totp_secret !== null) {
+            if (! $request->filled('totp_code')) {
+                throw ValidationException::withMessages(['totp_code' => ['Informe o código do seu autenticador.']]);
+            }
+
+            if (! $totp->consume($user, $request->validated('totp_code'))) {
+                throw ValidationException::withMessages(['totp_code' => ['Código inválido, expirado ou já utilizado.']]);
+            }
         }
 
         $accessToken = $user->createToken('enerdiag-api', ['*'], now()->addHours(2));

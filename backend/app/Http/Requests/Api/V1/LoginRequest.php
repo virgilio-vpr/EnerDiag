@@ -25,6 +25,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email', 'max:254'],
             'password' => ['required', 'string'],
+            'totp_code' => ['nullable', 'string', 'regex:/\A[0-9]{6}\z/'],
         ];
     }
 }

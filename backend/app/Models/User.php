@@ -39,6 +39,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password_hash',
         'remember_token',
+        'totp_secret',
+        'totp_last_used_step',
     ];
 
     /**
@@ -116,6 +118,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'contact_requested_at' => 'datetime',
             'password_hash' => 'hashed',
+            'totp_secret' => 'encrypted',
+            'totp_last_used_step' => 'integer',
         ];
     }
 }

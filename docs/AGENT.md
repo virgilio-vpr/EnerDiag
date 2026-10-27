@@ -28,6 +28,7 @@ O "como testar" de cada tarefa está na linha `Teste:` do spec. Regras gerais:
 - Reset destrutivo do banco (em `backend/`; apaga todas as tabelas e dados): `php artisan migrate:fresh --seed`. Só executar com autorização explícita e após confirmar que não há dados a preservar.
 - Front: `cd frontend && npm run dev -- --host 0.0.0.0`
 - Testes do front (em `frontend/`): `npm run test` (um arquivo: `npx vitest run caminho`); lint: `npm run lint`; build: `npm run build`
+- Teste de ponta a ponta (em `frontend/`, Node 24+): instalar Chromium e bibliotecas do sistema uma vez com `npx playwright install --with-deps chromium`; executar `npm run test:e2e`. Usa build de produção, API/worker reais, SQLite e arquivos em `/tmp/enerdiag-e2e-*` e SMTP local, sem usar o `.env` ou o banco restaurado. Portas locais reservadas: 18761–18764; os processos e temporários são removidos ao terminar.
 - Auditoria: `cd backend && composer audit`; `cd frontend && npm audit`
 
 ## Regras fixas

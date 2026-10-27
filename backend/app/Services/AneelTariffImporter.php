@@ -6,6 +6,7 @@ use App\Models\Distributor;
 use App\Models\Tariff;
 use App\Models\TariffImport;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,86 @@ use SplFileObject;
 
 final class AneelTariffImporter
 {
+    /** @var Collection<int, Distributor>|null */
+    private $distributors = null;
+
+    /** Read current and future application tariffs without changing the active table.
+     * @return array{tariffs: list<array<string, mixed>>, rows_ignored: int}
+     */
+    public function preview(string $path): array
+    {
+        $csv = new SplFileObject($path);
+        $csv->setCsvControl($this->delimiter($path));
+        $header = $csv->fgetcsv();
+        $header = is_array($header) ? array_map(fn ($column): string => trim((string) $column, " \t\n\r\0\x0B\xEF\xBB\xBF"), $header) : [];
+        if (array_diff(self::REQUIRED_COLUMNS, $header) !== []) {
+            throw ValidationException::withMessages(['file' => 'O CSV não corresponde ao conjunto oficial de tarifas da ANEEL.']);
+        }
+        $tariffs = [];
+        $ignored = 0;
+        while (! $csv->eof()) {
+            $row = $csv->fgetcsv();
+            if (! is_array($row) || $row === [null]) {
+                continue;
+            }
+            if (count($row) !== count($header)) {
+                throw ValidationException::withMessages(['file' => 'O CSV contém uma linha incompleta.']);
+            }
+            $record = array_combine($header, array_map(fn ($value): string => trim((string) $value), $row));
+            $mapped = $this->mapRow($record);
+            if ($mapped === null) {
+                $ignored++;
+
+                continue;
+            }
+            foreach ($mapped['tariffs'] as $attributes) {
+                if ($attributes['valid_to'] !== null && $attributes['valid_to'] < now()->toDateString()) {
+                    $ignored++;
+
+                    continue;
+                }
+                $tariffs[json_encode($attributes, JSON_THROW_ON_ERROR)] = $attributes;
+                if (count($tariffs) > 10000) {
+                    throw ValidationException::withMessages(['file' => 'O conjunto excede o limite de tarifas para revisão.']);
+                }
+            }
+        }
+        if ($tariffs === []) {
+            throw ValidationException::withMessages(['file' => 'Nenhuma tarifa vigente ou futura foi encontrada no escopo.']);
+        }
+        ksort($tariffs);
+
+        return ['tariffs' => array_values($tariffs), 'rows_ignored' => $ignored];
+    }
+
+    /** Activate only the reviewed snapshot, atomically.
+     * @param  list<array<string, mixed>>  $tariffs
+     */
+    public function activate(array $tariffs): int
+    {
+        return DB::transaction(function () use ($tariffs): int {
+            $activeDistributors = Distributor::query()->whereIn('id', array_unique(array_column($tariffs, 'distributor_id')))
+                ->where('active', true)->orderBy('id')->lockForUpdate()->pluck('id')->all();
+            $accepted = 0;
+            foreach ($tariffs as $attributes) {
+                if ($this->existingExactTariff($attributes)) {
+                    continue;
+                }
+                if (! in_array($attributes['distributor_id'], $activeDistributors, true)
+                    || ! $this->closePreviousTariffs($attributes)) {
+                    throw ValidationException::withMessages(['import' => 'Há conflito de vigência ou distribuidora inativa. Revise as tarifas antes de aprovar.']);
+                }
+                Tariff::query()->create($attributes);
+                $accepted++;
+            }
+
+            return $accepted;
+        });
+    }
+
     private const REQUIRED_COLUMNS = [
         'DscREH', 'SigAgente', 'DatInicioVigencia', 'DatFimVigencia', 'DscBaseTarifaria',
-        'DscSubGrupo', 'DscModalidadeTarifaria', 'NomPostoTarifario', 'DscUnidadeTerciaria',
+        'DscSubGrupo', 'DscModalidadeTarifaria', 'DscClasse', 'DscSubClasse', 'DscDetalhe', 'NomPostoTarifario', 'DscUnidadeTerciaria',
         'SigAgenteAcessante', 'VlrTUSD', 'VlrTE',
     ];
 
@@ -119,13 +197,19 @@ final class AneelTariffImporter
         $unit = $this->normalized($row['DscUnidadeTerciaria']);
         $base = $this->normalized($row['DscBaseTarifaria']);
         $agent = trim($row['SigAgenteAcessante']);
-        $distributor = $this->findDistributor($row['SigAgente']);
-
         if ($base !== $this->normalized('Tarifa de Aplicação')
+            || ! in_array($this->normalized($row['DscDetalhe'] ?? ''), ['', 'nao se aplica'], true)
+            || ! in_array($this->normalized($row['DscClasse'] ?? ''), ['', 'nao se aplica'], true)
+            || ! in_array($this->normalized($row['DscSubClasse'] ?? ''), ['', 'nao se aplica'], true)
             || ! in_array($subgroup, ['A4', 'AS'], true)
-            || ! in_array($modality, ['horaria azul', 'horaria verde'], true)
-            || $timeSlot === null || $distributor === null
+            || ! in_array($modality, ['horaria azul', 'horaria verde', 'azul', 'verde'], true)
+            || $timeSlot === null
             || ($agent !== '' && ! in_array($this->normalized($agent), ['', 'nao se aplica', 'na'], true))) {
+            return null;
+        }
+
+        $distributor = $this->findDistributor($row['SigAgente']);
+        if ($distributor === null) {
             return null;
         }
 
@@ -158,7 +242,7 @@ final class AneelTariffImporter
     private function findDistributor(string $agent): ?Distributor
     {
         $normalizedAgent = $this->normalized($agent);
-        $distributors = Distributor::query()->where('active', true)->get();
+        $distributors = $this->distributors ??= Distributor::query()->where('active', true)->get();
         foreach ($distributors as $distributor) {
             if ($normalizedAgent === $this->normalized($distributor->name)
                 || $normalizedAgent === $this->normalized((string) $distributor->parser_key)
@@ -188,7 +272,7 @@ final class AneelTariffImporter
             'tariff_modality' => $modality,
             'time_slot' => $timeSlot,
             'component' => $component,
-            'rate' => $rawRate,
+            'rate' => bcadd($this->normalizeDecimal($rawRate), '0', 5),
             'includes_taxes' => false,
             'source' => 'aneel_import',
             'source_reference' => $reference,
@@ -251,7 +335,10 @@ final class AneelTariffImporter
 
     private function isDecimal(string $value): bool
     {
-        return $value !== '' && is_numeric($this->normalizeDecimal($value));
+        $normalized = $this->normalizeDecimal($value);
+
+        return preg_match('/\A(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)\z/', $normalized)
+            && bccomp($normalized, '0', 8) > 0;
     }
 
     private function normalizeDecimal(string $value): string

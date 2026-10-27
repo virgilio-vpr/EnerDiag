@@ -501,3 +501,216 @@ endpoints:
     controller: null
     method: null
     route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/tariff-imports
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Revisão de tarifas baixadas automaticamente da ANEEL'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar importações pendentes'
+      description: 'Nenhuma tarifa pendente é usada pelo motor de cálculo.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[],"meta":{"current_page":1,"last_page":1,"total":0}}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/tariff-imports/{tariffImport_id}'
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Revisão de tarifas baixadas automaticamente da ANEEL'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revisar importação'
+      description: 'Mostra os valores normalizados, em decimal e sem tributos, antes da aprovação.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      tariffImport_id:
+        custom: []
+        name: tariffImport_id
+        description: 'The ID of the tariffImport.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      tariffImport_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":1,"status":"pending","pending_tariffs":[]}}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: '{"message":"Recurso não encontrado.","code":"NOT_FOUND","errors":null}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/tariff-imports/{tariffImport_id}/approve'
+    metadata:
+      custom: []
+      groupName: 'Administração: tarifas'
+      groupDescription: 'Revisão de tarifas baixadas automaticamente da ANEEL'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Aprovar importação'
+      description: 'Ativa somente os valores revisados, em transação única, e registra o administrador responsável.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      tariffImport_id:
+        custom: []
+        name: tariffImport_id
+        description: 'The ID of the tariffImport.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      tariffImport_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      confirmed:
+        custom: []
+        name: confirmed
+        description: 'Confirmação explícita da revisão das tarifas.'
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      confirmed: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message":"Importação aprovada. Tarifas ativadas.","data":{"id":1,"status":"completed"}}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: '{"message":"Acesso não autorizado.","code":"FORBIDDEN","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 409
+        content: '{"message":"Esta importação não está pendente de revisão.","code":"HTTP_ERROR","errors":null}'
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: '{"message":"Confirme a revisão.","code":"VALIDATION_ERROR","errors":{"confirmed":["Confirme a revisão."]}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { setAuthToken, setAuthenticatedUser } from './services/api/client'
+import { getAuthToken, setAuthToken, setAuthenticatedUser } from './services/api/client'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -11,6 +11,19 @@ afterEach(() => {
 })
 
 describe('application shell', () => {
+  it('preserves the in-memory session when navigating through an internal link', async () => {
+    setAuthToken('customer-session')
+    setAuthenticatedUser({ id: 1, role: 'customer' })
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify({
+      data: String(input).endsWith('/distributors') ? [] : { name: 'Cliente', email: 'customer@example.test', phone: '', profile: null },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })))
+    render(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Meu perfil' }))
+    expect(window.location.pathname).toBe('/perfil')
+    expect(await screen.findByRole('heading', { name: 'Meu perfil' })).toBeInTheDocument()
+    expect(getAuthToken()).toBe('customer-session')
+  })
+
   it('renders the landing page sections and links to registration', () => {
     render(<App />)
 

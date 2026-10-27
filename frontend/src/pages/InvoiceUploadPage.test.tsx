@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { InvoiceUploadPage } from './InvoiceUploadPage'
 import { setAuthToken } from '../services/api/client'
@@ -127,7 +127,7 @@ describe('invoice upload', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
 
     expect(await screen.findByText(message)).toBeInTheDocument()
-    expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations/12/status')).toBe(true)
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations/12/status')).toBe(true))
   })
 
   it('shows asynchronous file processing failures by file', async () => {

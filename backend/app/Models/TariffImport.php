@@ -23,6 +23,11 @@ class TariffImport extends Model
         'rows_accepted',
         'rows_ignored',
         'status',
+        'source_url',
+        'source_hash',
+        'pending_tariffs',
+        'reviewed_by',
+        'reviewed_at',
     ];
 
     /**
@@ -44,6 +49,8 @@ class TariffImport extends Model
             'imported_at' => 'datetime',
             'rows_accepted' => 'integer',
             'rows_ignored' => 'integer',
+            'pending_tariffs' => 'array',
+            'reviewed_at' => 'datetime',
         ];
     }
 }
