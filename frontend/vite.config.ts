@@ -8,6 +8,9 @@ const isWindowsMountedDirectory = process.platform === 'linux' && /^\/mnt\/[a-z]
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    allowedHosts: process.env.CODESPACE_NAME && process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+      ? [5173, 5174].map(port => `${process.env.CODESPACE_NAME}-${port}.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`)
+      : undefined,
     watch: isWindowsMountedDirectory ? { usePolling: true, interval: 500 } : undefined,
     proxy: process.env.ENERDIAG_E2E_API_ORIGIN
       ? { '/api': { target: process.env.ENERDIAG_E2E_API_ORIGIN, changeOrigin: true } }

@@ -88,10 +88,11 @@ function App() {
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="hero-eyebrow">Inteligência para sua energia</p>
+            <p className="free-analysis-badge"><span aria-hidden="true">✓</span> Análise 100% gratuita</p>
             <h1 id="hero-title">Sua energia pode trabalhar melhor pela sua empresa.</h1>
             <p className="hero-description">Descubra oportunidades de economia na sua conta de energia com uma análise clara do consumo e da demanda da sua empresa.</p>
-            <a className="button" href="/register">Começar minha análise <span aria-hidden="true">→</span></a>
-            <p className="hero-note">Análise guiada para empresas do Grupo A atendidas pela ENEL.</p>
+            <a className="button" href="/register">Começar minha análise gratuita <span aria-hidden="true">→</span></a>
+            <p className="hero-note">Análise guiada de faturas de energia para empresas do grupo A4 e AS - modalidades Azul e Verde.</p>
           </div>
           <div className="hero-artwork">
             <img
@@ -109,16 +110,16 @@ function App() {
           <h2 id="process-title">Como funciona</h2>
           <div className="process-grid">
             <article className="info-card">
-              <div className="process-card-top"><span className="step-number step-number--tertiary">01</span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="23" y="10" width="48" height="58" rx="8" className="process-visual__paper" /><path d="M35 28h24M35 38h24M35 48h15" className="process-visual__line" /><path d="M78 25h19a7 7 0 0 1 7 7v34a7 7 0 0 1-7 7H48" className="process-visual__outline" /><path d="m75 48 10 10 19-22" className="process-visual__accent" /></svg></div>
+              <div className="process-card-top"><span className="step-number">Etapa <span>1</span></span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="23" y="10" width="48" height="58" rx="8" className="process-visual__paper" /><path d="M35 28h24M35 38h24M35 48h15" className="process-visual__line" /><path d="M78 25h19a7 7 0 0 1 7 7v34a7 7 0 0 1-7 7H48" className="process-visual__outline" /><path d="m75 48 10 10 19-22" className="process-visual__accent" /></svg></div>
               <h3>Envie suas faturas</h3><p>Compartilhe de 6 a 12 contas recentes da sua empresa em PDF.</p>
             </article>
             <article className="info-card">
-              <div className="process-card-top"><span className="step-number step-number--tertiary">02</span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="17" y="12" width="86" height="56" rx="9" className="process-visual__paper" /><path d="M29 56V43M43 56V34M57 56V46M71 56V27" className="process-visual__bar" /><path d="m29 32 15-9 14 7 18-13 15 6" className="process-visual__accent" /><circle cx="91" cy="23" r="4" className="process-visual__dot" /></svg></div>
+              <div className="process-card-top"><span className="step-number">Etapa <span>2</span></span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="17" y="12" width="86" height="56" rx="9" className="process-visual__paper" /><path d="M29 56V43M43 56V34M57 56V46M71 56V27" className="process-visual__bar" /><path d="m29 32 15-9 14 7 18-13 15 6" className="process-visual__accent" /><circle cx="91" cy="23" r="4" className="process-visual__dot" /></svg></div>
               <h3>Deixe a análise com a gente</h3><p>Avaliamos demanda, consumo e oportunidades com base nos seus dados.</p>
             </article>
             <article className="info-card">
               <div className="process-card-top">
-                <span className="step-number step-number--tertiary">03</span>
+                <span className="step-number">Etapa <span>3</span></span>
                 <svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true">
                   <rect x="10" y="10" width="100" height="60" rx="9" className="process-visual__paper" />
                   <circle cx="38" cy="40" r="16" className="process-visual__report-ring" />
@@ -156,6 +157,7 @@ function App() {
         <section className="closing-cta" aria-labelledby="closing-title">
           <p className="section-eyebrow">O próximo passo começa aqui</p>
           <h2 id="closing-title">Faça sua energia render mais.</h2>
+          <p className="closing-cta__description">Descubra seu potencial de economia com uma análise de faturas completamente gratuita.</p>
           <a className="button" href="/register">Criar minha conta <span aria-hidden="true">→</span></a>
         </section>
 
