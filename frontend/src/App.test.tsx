@@ -35,7 +35,7 @@ describe('application shell', () => {
     expect(screen.getByRole('button', { name: 'Tema escuro' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /instalação industrial com transformador/ })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Criar conta|Começar minha análise|Criar minha conta/ })).toHaveLength(3)
-    expect(screen.getByRole('link', { name: 'Começar minha análise' })).toHaveAttribute('href', '/register')
+    expect(screen.getByRole('link', { name: 'Começar minha análise gratuita' })).toHaveAttribute('href', '/register')
   })
 
   it('protects the quotation area for admins and loads it for an admin', async () => {

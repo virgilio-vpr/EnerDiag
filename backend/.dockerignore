@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+vendor
+node_modules
+storage/**
+bootstrap/cache/*.php
+tests
+.git
+.phpunit.cache
+
+**/*.sqlite
+**/*.sqlite-*
+auth.json
+.scribe

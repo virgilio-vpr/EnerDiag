@@ -38,3 +38,5 @@ Thumbs.db
 frontend/test-results/
 frontend/playwright-report/
 enerdiag_backup.dump
+
+!.env.production.example

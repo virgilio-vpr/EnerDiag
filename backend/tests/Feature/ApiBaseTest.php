@@ -7,6 +7,11 @@ use Tests\TestCase;
 
 class ApiBaseTest extends TestCase
 {
+    public function test_unauthenticated_api_request_without_accept_header_returns_json(): void
+    {
+        $this->get('/api/v1/simulations')->assertUnauthorized()->assertJsonPath('code', 'UNAUTHENTICATED');
+    }
+
     public function test_unauthenticated_request_returns_standard_error_format(): void
     {
         $response = $this->getJson('/api/v1/user');
