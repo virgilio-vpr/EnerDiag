@@ -11,7 +11,8 @@ use Throwable;
 
 final class InvoiceUploadValidator
 {
-    public const int MIN_FILES = 6;
+    /** Temporary minimum for manual testing; restore to six after testing. */
+    public const int MIN_FILES = 2;
 
     public const int MAX_FILES = 12;
 
@@ -31,7 +32,7 @@ final class InvoiceUploadValidator
         $fileCount = count($files);
         if ($fileCount < self::MIN_FILES || $fileCount > self::MAX_FILES) {
             throw ValidationException::withMessages([
-                'invoices' => 'Envie de 6 a 12 faturas em PDF.',
+                'invoices' => 'Envie de '.self::MIN_FILES.' a '.self::MAX_FILES.' faturas em PDF.',
             ]);
         }
 

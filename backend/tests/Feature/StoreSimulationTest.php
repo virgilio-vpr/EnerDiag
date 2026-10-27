@@ -64,6 +64,21 @@ class StoreSimulationTest extends TestCase
         Queue::assertPushed(ProcessSimulation::class, fn ($job): bool => $job->simulationId === $simulation->id);
     }
 
+    public function test_customer_can_submit_two_invoices_for_temporary_manual_testing(): void
+    {
+        $user = User::factory()->create();
+        $distributor = $this->supportedDistributor();
+        $input = $this->validInput($distributor->id);
+        $input['invoices'] = array_slice($input['invoices'], 0, 2);
+
+        $this->withHeader('Accept', 'application/json')->withToken($user->createToken('simulation-upload')->plainTextToken)
+            ->post('/api/v1/simulations', $input)->assertStatus(202)->assertJsonPath('data.status', 'queued');
+
+        $simulation = Simulation::query()->sole();
+        $this->assertCount(2, Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
+        Queue::assertPushed(ProcessSimulation::class, fn ($job): bool => $job->simulationId === $simulation->id);
+    }
+
     public function test_invalid_company_data_is_rejected_before_simulation_or_file_storage(): void
     {
         $user = User::factory()->create();
@@ -85,12 +100,12 @@ class StoreSimulationTest extends TestCase
         $user = User::factory()->create();
         $distributor = $this->supportedDistributor();
         $input = $this->validInput($distributor->id);
-        $input['invoices'] = array_slice($input['invoices'], 0, 5);
+        $input['invoices'] = array_slice($input['invoices'], 0, 1);
         $token = $user->createToken('simulation-upload')->plainTextToken;
 
         $this->withHeader('Accept', 'application/json')->withToken($token)->post('/api/v1/simulations', $input)
             ->assertUnprocessable()
-            ->assertJsonPath('errors.invoices.0', 'Envie de 6 a 12 faturas em PDF.');
+            ->assertJsonPath('errors.invoices.0', 'Envie de 2 a 12 faturas em PDF.');
 
         $this->assertDatabaseCount('simulations', 0);
     }

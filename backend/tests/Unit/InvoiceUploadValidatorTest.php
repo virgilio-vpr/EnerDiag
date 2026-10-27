@@ -20,9 +20,9 @@ class InvoiceUploadValidatorTest extends TestCase
         $this->assertNull((new InvoiceUploadValidator($pageCounter))->validate($files));
     }
 
-    public function test_it_rejects_file_counts_outside_the_six_to_twelve_range(): void
+    public function test_it_rejects_file_counts_outside_the_configured_range(): void
     {
-        foreach ([5, 13] as $count) {
+        foreach ([InvoiceUploadValidator::MIN_FILES - 1, 13] as $count) {
             try {
                 (new InvoiceUploadValidator($this->createMock(PdfPageCounter::class)))->validate($this->pdfFiles($count));
                 $this->fail("A batch of {$count} files should be rejected.");
