@@ -47,7 +47,10 @@ for (const invoiceCount of [1, 12]) {
 
     await page.getByRole('combobox', { name: 'Distribuidora', exact: true }).selectOption({ label: 'ENEL SP' })
     await page.getByLabel('Endereço da unidade consumidora').fill('Rua Sintética, 100, São Paulo/SP')
-    await page.getByLabel('Faturas em PDF').setInputFiles(invoiceFixtures(invoiceCount))
+    const invoices = invoiceFixtures(invoiceCount)
+    await page.getByLabel('Faturas em PDF').setInputFiles([...invoices, { ...invoices[0], name: 'invoice-wrong.pdf' }])
+    await page.getByRole('button', { name: 'Remover invoice-wrong.pdf' }).click()
+    await expect(page.getByRole('button', { name: 'Remover invoice-wrong.pdf' })).toHaveCount(0)
     await expect(page.getByText(new RegExp(`${invoiceCount} páginas?`))).toBeVisible()
     const submitted = page.waitForResponse((response) => response.url().endsWith('/api/v1/simulations') && response.request().method() === 'POST')
     await page.getByRole('button', { name: 'Simular economia' }).click()

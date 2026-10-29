@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { InvoiceUploadPage } from './InvoiceUploadPage'
 import { setAuthToken } from '../services/api/client'
@@ -47,6 +47,96 @@ afterEach(() => {
 })
 
 describe('invoice upload', () => {
+  it('removes only the chosen invoice, updates totals and submits the remaining file', async () => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch()
+    render(<InvoiceUploadPage />)
+    const keep = new File(['%PDF-1.4\n/Type /Page\n', new Uint8Array(1024 * 1024)], 'keep.pdf', { type: 'application/pdf' })
+    const wrong = new File(['%PDF-1.4\n/Type /Page\n/Type /Page\n', new Uint8Array(2 * 1024 * 1024)], 'wrong.pdf', { type: 'application/pdf' })
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), { target: { files: [keep, wrong] } })
+    await screen.findByText(/2 arquivos selecionados · 3.0 MB · 3 páginas/)
+    fireEvent.click(screen.getByRole('button', { name: 'Remover wrong.pdf' }))
+    expect(await screen.findByText(/1 arquivo selecionado · 1.0 MB · 1 página/)).toBeInTheDocument()
+    expect(screen.queryByText('wrong.pdf')).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations')).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    await screen.findByRole('heading', { name: 'Sua análise começou' })
+    const uploaded = (fetchMock.mock.calls[2][1]?.body as FormData).getAll('invoices[]') as File[]
+    expect(uploaded.map((file) => file.name)).toEqual(['keep.pdf'])
+  })
+
+  it('allows removing the last file, blocks an empty submission and allows selecting it again', async () => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch()
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    const file = invoice('invoice.pdf')
+    fireEvent.change(picker, { target: { files: [file] } })
+    await screen.findByText(/1 página/)
+    fireEvent.click(screen.getByRole('button', { name: 'Remover invoice.pdf' }))
+    expect(screen.queryByLabelText('Faturas selecionadas')).not.toBeInTheDocument()
+    expect(picker).toHaveValue('')
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Envie de 1 a 12/)
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations')).toBe(false)
+    fireEvent.change(picker, { target: { files: [file] } })
+    expect(await screen.findByText(/1 página/)).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('revalidates the selection after removing an invalid file', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: [invoice('good.pdf'), invoice('wrong.txt', 1, 'text/plain')] },
+    })
+    await screen.findByText('Selecione apenas arquivos PDF.', { selector: 'small' })
+    fireEvent.click(screen.getByRole('button', { name: 'Remover wrong.txt' }))
+    await screen.findByText(/1 página/)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Simular economia' })).toBeEnabled()
+  })
+
+  it('ignores a pending page count from an invoice removed during validation', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    let finishReading!: (text: string) => void
+    const removed = invoice('slow.pdf')
+    const read = vi.spyOn(removed, 'text').mockImplementationOnce(() => new Promise<string>((resolve) => { finishReading = resolve }))
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), { target: { files: [removed, invoice('keep.pdf')] } })
+    await waitFor(() => expect(read).toHaveBeenCalled())
+    expect(screen.getByRole('button', { name: 'Simular economia' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Remover slow.pdf' }))
+    await screen.findByText(/1 página/)
+    await act(async () => { finishReading('/Type /Page\n'.repeat(601)) })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText(/1 página/)).toBeInTheDocument()
+  })
+
+  it('keeps the selection fixed while the upload is in progress', async () => {
+    setAuthToken('customer-token')
+    let finishUpload!: (response: Response) => void
+    const pending = new Promise<Response>((resolve) => { finishUpload = resolve })
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/me')) return Promise.resolve(jsonResponse(200, { data: account }))
+      if (url.endsWith('/distributors')) return Promise.resolve(jsonResponse(200, { data: distributors }))
+      if (url.endsWith('/simulations')) return pending
+      return Promise.resolve(jsonResponse(200, { data: { id: 12, status: 'queued' } }))
+    }))
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    fireEvent.change(picker, { target: { files: [invoice('invoice.pdf')] } })
+    await screen.findByText(/1 página/)
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    expect(screen.getByRole('button', { name: 'Remover invoice.pdf' })).toBeDisabled()
+    expect(picker).toBeDisabled()
+    await act(async () => { finishUpload(jsonResponse(202, { data: { id: 12, status: 'queued' } })) })
+    expect(await screen.findByRole('heading', { name: 'Sua análise começou' })).toBeInTheDocument()
+  })
+
   it('blocks empty selections, more than twelve invoices and non-PDF files', async () => {
     setAuthToken('customer-token')
     setupFetch()

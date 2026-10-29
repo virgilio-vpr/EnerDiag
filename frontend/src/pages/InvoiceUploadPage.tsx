@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024
@@ -44,6 +44,9 @@ export function InvoiceUploadPage() {
   const [substationAddress, setSubstationAddress] = useState('')
   const [distributorId, setDistributorId] = useState('')
   const [unsupportedName, setUnsupportedName] = useState('')
+  const fileInput = useRef<HTMLInputElement>(null)
+  const selectionVersion = useRef(0)
+  const [validatingFiles, setValidatingFiles] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [fileValidationErrors, setFileValidationErrors] = useState<Array<{ name: string; message: string }>>([])
   const [validationMessage, setValidationMessage] = useState('')
@@ -119,7 +122,18 @@ export function InvoiceUploadPage() {
   const hasUnsupportedDistributor = distributorId === 'other'
 
   async function changeFiles(event: ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = Array.from(event.target.files ?? [])
+    await updateFiles(Array.from(event.target.files ?? []))
+  }
+
+  function removeFile(index: number) {
+    if (submitting) return
+    if (fileInput.current) fileInput.current.value = ''
+    void updateFiles(files.filter((_, fileIndex) => fileIndex !== index))
+  }
+
+  async function updateFiles(selectedFiles: File[]) {
+    const version = ++selectionVersion.current
+    setValidatingFiles(true)
     setFiles(selectedFiles)
     setFileValidationErrors([])
     setPageCount(null)
@@ -128,48 +142,54 @@ export function InvoiceUploadPage() {
     setNotice('')
     setErrorMessage('')
 
-    if (selectedFiles.length < MIN_FILES || selectedFiles.length > MAX_FILES) {
-      setValidationMessage('Selecione de 1 a 12 faturas. O ideal é enviar 12 meses.')
-      return
-    }
-    const invalidFiles = selectedFiles.filter((file) => !file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf'))
-    if (invalidFiles.length) {
-      setFileValidationErrors(invalidFiles.map((file) => ({ name: file.name, message: 'Selecione apenas arquivos PDF.' })))
-      setValidationMessage('Revise os arquivos indicados: apenas PDFs são aceitos.')
-      return
-    }
-    const oversizedFiles = selectedFiles.filter((file) => file.size > MAX_FILE_BYTES)
-    if (oversizedFiles.length) {
-      setFileValidationErrors(oversizedFiles.map((file) => ({ name: file.name, message: 'Cada fatura pode ter no máximo 20 MB.' })))
-      setValidationMessage('Revise os arquivos indicados. Cada fatura pode ter no máximo 20 MB.')
-      return
-    }
-    if (selectedFiles.reduce((total, file) => total + file.size, 0) > MAX_TOTAL_BYTES) {
-      setValidationMessage('O conjunto das faturas pode ter no máximo 120 MB.')
-      return
-    }
-
     try {
-      const signatures = await Promise.all(selectedFiles.map(async (file) => file.slice(0, 1024).text()))
-      const invalidSignatureIndices = signatures.flatMap((signature, index) => !/%PDF-\d\.\d/.test(signature) ? [index] : [])
-      if (invalidSignatureIndices.length) {
-        setFileValidationErrors(invalidSignatureIndices.map((index) => ({ name: selectedFiles[index].name, message: 'O conteúdo não é um PDF válido.' })))
-        setValidationMessage('Revise o conteúdo dos arquivos indicados.')
+      if (selectedFiles.length < MIN_FILES || selectedFiles.length > MAX_FILES) {
+        setValidationMessage('Selecione de 1 a 12 faturas. O ideal é enviar 12 meses.')
         return
       }
-      const estimates = await Promise.all(selectedFiles.map(async (file) => estimatePageCount(await file.text())))
-      const knownPages = estimates.filter((count): count is number => count !== null)
-      if (knownPages.length === selectedFiles.length) {
-        const count = knownPages.reduce((sum, value) => sum + value, 0)
-        setPageCount(count)
-        if (count > MAX_PAGES) {
-          setValidationMessage('O conjunto das faturas pode ter no máximo 600 páginas.')
-        }
-      } else {
-        setPageCount(null)
+      const invalidFiles = selectedFiles.filter((file) => !file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf'))
+      if (invalidFiles.length) {
+        setFileValidationErrors(invalidFiles.map((file) => ({ name: file.name, message: 'Selecione apenas arquivos PDF.' })))
+        setValidationMessage('Revise os arquivos indicados: apenas PDFs são aceitos.')
+        return
       }
-    } catch {
-      setPageCount(null)
+      const oversizedFiles = selectedFiles.filter((file) => file.size > MAX_FILE_BYTES)
+      if (oversizedFiles.length) {
+        setFileValidationErrors(oversizedFiles.map((file) => ({ name: file.name, message: 'Cada fatura pode ter no máximo 20 MB.' })))
+        setValidationMessage('Revise os arquivos indicados. Cada fatura pode ter no máximo 20 MB.')
+        return
+      }
+      if (selectedFiles.reduce((total, file) => total + file.size, 0) > MAX_TOTAL_BYTES) {
+        setValidationMessage('O conjunto das faturas pode ter no máximo 120 MB.')
+        return
+      }
+
+      try {
+        const signatures = await Promise.all(selectedFiles.map(async (file) => file.slice(0, 1024).text()))
+        if (version !== selectionVersion.current) return
+        const invalidSignatureIndices = signatures.flatMap((signature, index) => !/%PDF-\d\.\d/.test(signature) ? [index] : [])
+        if (invalidSignatureIndices.length) {
+          setFileValidationErrors(invalidSignatureIndices.map((index) => ({ name: selectedFiles[index].name, message: 'O conteúdo não é um PDF válido.' })))
+          setValidationMessage('Revise o conteúdo dos arquivos indicados.')
+          return
+        }
+        const estimates = await Promise.all(selectedFiles.map(async (file) => estimatePageCount(await file.text())))
+        if (version !== selectionVersion.current) return
+        const knownPages = estimates.filter((count): count is number => count !== null)
+        if (knownPages.length === selectedFiles.length) {
+          const count = knownPages.reduce((sum, value) => sum + value, 0)
+          setPageCount(count)
+          if (count > MAX_PAGES) {
+            setValidationMessage('O conjunto das faturas pode ter no máximo 600 páginas.')
+          }
+        } else {
+          setPageCount(null)
+        }
+      } catch {
+        if (version === selectionVersion.current) setPageCount(null)
+      }
+    } finally {
+      if (version === selectionVersion.current) setValidatingFiles(false)
     }
   }
 
@@ -196,6 +216,7 @@ export function InvoiceUploadPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting || validatingFiles) return
     setErrorMessage('')
     setNotice('')
     setValidationMessage('')
@@ -296,13 +317,13 @@ export function InvoiceUploadPage() {
           <label className="upload-field">Endereço da unidade consumidora<textarea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} required /></label>
           <label className="consent-control"><input type="checkbox" checked={sameSubstationAddress} onChange={(event) => setSameSubstationAddress(event.target.checked)} /><span>O endereço da subestação é o mesmo da unidade consumidora.</span></label>
           {!sameSubstationAddress && <label className="upload-field">Endereço da subestação<textarea rows={3} value={substationAddress} onChange={(event) => setSubstationAddress(event.target.value)} required /></label>}
-          <label className="upload-field invoice-picker">Faturas em PDF<input type="file" accept="application/pdf,.pdf" multiple onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Selecione de 1 a 12 faturas. Até 20 MB por arquivo, 120 MB no total e 600 páginas por análise.</span></label>
-          {files.length > 0 && <div className="selected-files" aria-label="Faturas selecionadas"><p>{files.length} arquivo(s) selecionado(s) · {(totalBytes / (1024 * 1024)).toFixed(1)} MB{pageCount !== null ? ` · ${pageCount} páginas` : ''}</p><ul>{files.map((file) => {
+          <label className="upload-field invoice-picker">Faturas em PDF<input ref={fileInput} type="file" accept="application/pdf,.pdf" multiple disabled={submitting} onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Selecione de 1 a 12 faturas. Até 20 MB por arquivo, 120 MB no total e 600 páginas por análise.</span></label>
+          {files.length > 0 && <div className="selected-files" aria-label="Faturas selecionadas"><p aria-live="polite">{files.length} {files.length === 1 ? 'arquivo selecionado' : 'arquivos selecionados'} · {(totalBytes / (1024 * 1024)).toFixed(1)} MB{pageCount !== null ? ` · ${pageCount} ${pageCount === 1 ? 'página' : 'páginas'}` : ''}</p><ul>{files.map((file, index) => {
             const fileError = fileValidationErrors.find((error) => error.name === file.name)
-            return <li key={`${file.name}-${file.lastModified}`}>{file.name} <span>{(file.size / (1024 * 1024)).toFixed(1)} MB</span>{fileError && <small className="file-validation-error" role="alert">{fileError.message}</small>}</li>
+            return <li key={`${file.name}-${file.lastModified}-${index}`}><div className="selected-file-row"><span className="selected-file-name">{file.name}</span><span className="selected-file-size">{(file.size / (1024 * 1024)).toFixed(1)} MB</span><button className="remove-file-button" type="button" disabled={submitting} aria-label={`Remover ${file.name}`} onClick={() => removeFile(index)}>Remover</button></div>{fileError && <small className="file-validation-error" role="alert">{fileError.message}</small>}</li>
           })}</ul></div>}
           {validationMessage && <p className="field-error" role="alert">{validationMessage}</p>}
-          <button className="button access-submit" type="submit" disabled={submitting || !distributors.length}>{submitting ? 'Enviando faturas…' : 'Simular economia'}</button>
+          <button className="button access-submit" type="submit" disabled={submitting || validatingFiles || !distributors.length}>{submitting ? 'Enviando faturas…' : 'Simular economia'}</button>
         </>}
       </form>
     </section>
