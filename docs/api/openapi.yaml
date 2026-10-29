@@ -3266,7 +3266,7 @@ paths:
                 'invoices[]':
                   type: string
                   format: binary
-                  description: 'Faturas PDF (de 6 a 12 arquivos).'
+                  description: 'Faturas PDF (de 1 a 12 arquivos).'
               required:
                 - company_name
                 - distributor_id

@@ -6,6 +6,7 @@ use App\Invoices\Pdf\PdfPageCounter;
 use App\Invoices\Validation\InvoiceUploadValidator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Tests\TestCase;
 
@@ -20,9 +21,23 @@ class InvoiceUploadValidatorTest extends TestCase
         $this->assertNull((new InvoiceUploadValidator($pageCounter))->validate($files));
     }
 
-    public function test_it_rejects_file_counts_outside_the_six_to_twelve_range(): void
+    #[DataProvider('acceptedFileCounts')]
+    public function test_it_accepts_between_one_and_twelve_pdf_files(int $count): void
     {
-        foreach ([5, 13] as $count) {
+        $pageCounter = $this->createMock(PdfPageCounter::class);
+        $pageCounter->expects($this->exactly($count))->method('count')->willReturn(1);
+
+        $this->assertNull((new InvoiceUploadValidator($pageCounter))->validate($this->pdfFiles($count)));
+    }
+
+    public static function acceptedFileCounts(): array
+    {
+        return [[1], [2], [5], [12]];
+    }
+
+    public function test_it_rejects_file_counts_outside_the_one_to_twelve_range(): void
+    {
+        foreach ([0, 13] as $count) {
             try {
                 (new InvoiceUploadValidator($this->createMock(PdfPageCounter::class)))->validate($this->pdfFiles($count));
                 $this->fail("A batch of {$count} files should be rejected.");

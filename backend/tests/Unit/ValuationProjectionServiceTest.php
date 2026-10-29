@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Calculation\Data\ValuationMonthData;
 use App\Calculation\Services\ValuationProjectionService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ValuationProjectionServiceTest extends TestCase
@@ -21,16 +22,22 @@ class ValuationProjectionServiceTest extends TestCase
         $this->assertSame([], $result->warnings);
     }
 
-    public function test_six_months_are_averaged_then_multiplied_by_twelve_with_warning(): void
+    #[DataProvider('incompleteMonthCounts')]
+    public function test_incomplete_history_is_averaged_then_multiplied_by_twelve_with_warning(int $count): void
     {
-        $months = array_map(fn (int $month): ValuationMonthData => $this->month($month, '7.00', '11.25'), range(1, 6));
+        $months = array_map(fn (int $month): ValuationMonthData => $this->month($month, '7.00', '11.25'), range(1, $count));
 
         $result = (new ValuationProjectionService)->project($months);
 
-        $this->assertSame(6, $result->monthsCount);
+        $this->assertSame($count, $result->monthsCount);
         $this->assertSame(['demand' => '11.25'], $result->projectedMonthlyAveragesByComponent);
         $this->assertSame(['demand' => '135.00'], $result->projectedAnnualTotalsByComponent);
         $this->assertContains(ValuationProjectionService::INCOMPLETE_SERIES_WARNING, $result->warnings);
+    }
+
+    public static function incompleteMonthCounts(): array
+    {
+        return [[1], [2], [5], [6], [11]];
     }
 
     public function test_missing_current_tariff_uses_that_month_historical_value_and_warns(): void

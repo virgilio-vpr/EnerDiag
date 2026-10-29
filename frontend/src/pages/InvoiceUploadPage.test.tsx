@@ -47,13 +47,13 @@ afterEach(() => {
 })
 
 describe('invoice upload', () => {
-  it('blocks fewer than six invoices and non-PDF files', async () => {
+  it('blocks empty selections, more than twelve invoices and non-PDF files', async () => {
     setAuthToken('customer-token')
     setupFetch()
     render(<InvoiceUploadPage />)
     const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: [invoice('one.pdf'), invoice('two.pdf')] } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 6 a 12 faturas/)
+    fireEvent.change(picker, { target: { files: [] } })
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 1 a 12 faturas/)
 
     fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
     await screen.findByText(/6 páginas/)
@@ -64,7 +64,7 @@ describe('invoice upload', () => {
     expect(await screen.findAllByText('O conteúdo não é um PDF válido.', { selector: 'small' })).toHaveLength(6)
 
     fireEvent.change(picker, { target: { files: Array.from({ length: 13 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 6 a 12 faturas/)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 1 a 12 faturas/)
   })
 
   it('blocks any invoice above 20 MB', async () => {
@@ -86,13 +86,13 @@ describe('invoice upload', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/no máximo 600 páginas/)
   })
 
-  it('submits company data and six PDF files as a multipart simulation', async () => {
+  it.each([1, 2, 5, 6, 12])('submits company data and %i PDF files as a multipart simulation', async (count) => {
     setAuthToken('customer-token')
     const fetchMock = setupFetch()
     render(<InvoiceUploadPage />)
     const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + (index + 1) + '.pdf')) } })
-    await screen.findByText(/6 páginas/)
+    fireEvent.change(picker, { target: { files: Array.from({ length: count }, (_, index) => invoice('invoice-' + (index + 1) + '.pdf')) } })
+    await screen.findByText(new RegExp(`${count} páginas?`))
     fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
 
     expect(await screen.findByRole('heading', { name: 'Sua análise começou' })).toBeInTheDocument()
@@ -106,7 +106,19 @@ describe('invoice upload', () => {
     expect(body.get('distributor_id')).toBe('9')
     expect(body.get('address_details')).toBe('Rua da Energia, 10, São Paulo/SP')
     expect(body.get('substation_same_address')).toBe('1')
-    expect(body.getAll('invoices[]')).toHaveLength(6)
+    expect(body.getAll('invoices[]')).toHaveLength(count)
+  })
+
+  it('explains the annual history recommendation and prevents submitting without invoices', async () => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch()
+    render(<InvoiceUploadPage />)
+    await screen.findByLabelText(/Faturas em PDF/)
+    expect(screen.getByText(/recomendamos 12 faturas mensais, cobrindo um ciclo anual/)).toBeInTheDocument()
+    expect(screen.getByText(/apenas 1 fatura para uma avaliação inicial/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Envie de 1 a 12 faturas PDF/)
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/v1/simulations')).toBe(false)
   })
 
   it.each([

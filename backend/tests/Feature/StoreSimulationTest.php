@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class StoreSimulationTest extends TestCase
@@ -38,13 +39,14 @@ class StoreSimulationTest extends TestCase
         $this->assertDatabaseCount('simulations', 0);
     }
 
-    public function test_customer_can_submit_valid_company_details_and_six_pdf_invoices(): void
+    #[DataProvider('acceptedFileCounts')]
+    public function test_customer_can_submit_valid_company_details_and_pdf_invoices(int $count): void
     {
         $user = User::factory()->create();
         $distributor = $this->supportedDistributor();
         $token = $user->createToken('simulation-upload')->plainTextToken;
 
-        $response = $this->withHeader('Accept', 'application/json')->withToken($token)->post('/api/v1/simulations', $this->validInput($distributor->id));
+        $response = $this->withHeader('Accept', 'application/json')->withToken($token)->post('/api/v1/simulations', $this->validInput($distributor->id, count: $count));
 
         $response->assertStatus(202)
             ->assertJsonPath('data.status', 'queued')
@@ -60,7 +62,7 @@ class StoreSimulationTest extends TestCase
             'distributor_id' => $distributor->id,
             'address_details' => 'Rua Exemplo, 100, São Paulo/SP',
         ]);
-        $this->assertCount(6, Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
+        $this->assertCount($count, Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
         Queue::assertPushed(ProcessSimulation::class, fn ($job): bool => $job->simulationId === $simulation->id);
     }
 
@@ -80,19 +82,31 @@ class StoreSimulationTest extends TestCase
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles());
     }
 
-    public function test_invalid_invoice_count_is_rejected_before_simulation_creation(): void
+    public static function acceptedFileCounts(): array
+    {
+        return [[1], [2], [5], [6], [12]];
+    }
+
+    #[DataProvider('invalidFileCounts')]
+    public function test_invalid_invoice_count_is_rejected_before_simulation_creation(int $count): void
     {
         $user = User::factory()->create();
         $distributor = $this->supportedDistributor();
-        $input = $this->validInput($distributor->id);
-        $input['invoices'] = array_slice($input['invoices'], 0, 5);
+        $input = $this->validInput($distributor->id, count: $count);
         $token = $user->createToken('simulation-upload')->plainTextToken;
 
         $this->withHeader('Accept', 'application/json')->withToken($token)->post('/api/v1/simulations', $input)
             ->assertUnprocessable()
-            ->assertJsonPath('errors.invoices.0', 'Envie de 6 a 12 faturas em PDF.');
+            ->assertJsonPath('errors.invoices.0', 'Envie de 1 a 12 faturas em PDF.');
 
         $this->assertDatabaseCount('simulations', 0);
+        $this->assertSame([], Storage::disk('invoice_temp')->allFiles());
+        Queue::assertNothingPushed();
+    }
+
+    public static function invalidFileCounts(): array
+    {
+        return [[0], [13]];
     }
 
     public function test_unsupported_distributor_returns_422_and_records_a_lead(): void
@@ -147,10 +161,10 @@ class StoreSimulationTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function validInput(?int $distributorId = null, ?string $distributorName = null): array
+    private function validInput(?int $distributorId = null, ?string $distributorName = null, int $count = 6): array
     {
         $invoices = [];
-        for ($index = 0; $index < 6; $index++) {
+        for ($index = 0; $index < $count; $index++) {
             $invoices[] = UploadedFile::fake()->createWithContent(
                 "invoice-{$index}.pdf",
                 "%PDF-1.4\nsynthetic PDF fixture",

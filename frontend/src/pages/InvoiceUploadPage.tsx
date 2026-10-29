@@ -4,7 +4,7 @@ import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 const MAX_FILE_BYTES = 20 * 1024 * 1024
 const MAX_TOTAL_BYTES = 120 * 1024 * 1024
 const MAX_PAGES = 600
-const MIN_FILES = 6
+const MIN_FILES = 1
 const MAX_FILES = 12
 
 type Distributor = { id: number; name: string; state: string }
@@ -129,7 +129,7 @@ export function InvoiceUploadPage() {
     setErrorMessage('')
 
     if (selectedFiles.length < MIN_FILES || selectedFiles.length > MAX_FILES) {
-      setValidationMessage('Selecione de 6 a 12 faturas. O ideal é enviar 12 meses.')
+      setValidationMessage('Selecione de 1 a 12 faturas. O ideal é enviar 12 meses.')
       return
     }
     const invalidFiles = selectedFiles.filter((file) => !file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf'))
@@ -200,7 +200,7 @@ export function InvoiceUploadPage() {
     setNotice('')
     setValidationMessage('')
     if (files.length < MIN_FILES || files.length > MAX_FILES) {
-      setValidationMessage('Envie de 6 a 12 faturas PDF. O ideal são 12 meses.')
+      setValidationMessage('Envie de 1 a 12 faturas PDF. O ideal são 12 meses.')
       return
     }
     if (!selectedDistributor) {
@@ -281,7 +281,7 @@ export function InvoiceUploadPage() {
     <section className="upload-page" aria-labelledby="upload-title">
       <p className="section-eyebrow">Análise da sua empresa</p>
       <h1 id="upload-title">Envie suas faturas</h1>
-      <p className="access-intro">Envie 12 meses de faturas para uma análise mais completa. O mínimo é de 6 arquivos PDF; cada arquivo pode ter até 20 MB, o conjunto até 120 MB e a análise aceita até 600 páginas.</p>
+      <p className="access-intro">Envie de 1 a 12 faturas em PDF. Para uma análise mais completa, recomendamos 12 faturas mensais, cobrindo um ciclo anual. Você pode começar com apenas 1 fatura para uma avaliação inicial; nesse caso, as estimativas serão baseadas em um histórico limitado.</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
       {notice && <p className="form-success" role="status">{notice}</p>}
       <form className="upload-form" onSubmit={submit}>
@@ -296,7 +296,7 @@ export function InvoiceUploadPage() {
           <label className="upload-field">Endereço da unidade consumidora<textarea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} required /></label>
           <label className="consent-control"><input type="checkbox" checked={sameSubstationAddress} onChange={(event) => setSameSubstationAddress(event.target.checked)} /><span>O endereço da subestação é o mesmo da unidade consumidora.</span></label>
           {!sameSubstationAddress && <label className="upload-field">Endereço da subestação<textarea rows={3} value={substationAddress} onChange={(event) => setSubstationAddress(event.target.value)} required /></label>}
-          <label className="upload-field invoice-picker">Faturas em PDF<input type="file" accept="application/pdf,.pdf" multiple onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Selecione de 6 a 12 faturas; o ideal são 12. Até 20 MB por arquivo e 120 MB no total.</span></label>
+          <label className="upload-field invoice-picker">Faturas em PDF<input type="file" accept="application/pdf,.pdf" multiple onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Selecione de 1 a 12 faturas. Até 20 MB por arquivo, 120 MB no total e 600 páginas por análise.</span></label>
           {files.length > 0 && <div className="selected-files" aria-label="Faturas selecionadas"><p>{files.length} arquivo(s) selecionado(s) · {(totalBytes / (1024 * 1024)).toFixed(1)} MB{pageCount !== null ? ` · ${pageCount} páginas` : ''}</p><ul>{files.map((file) => {
             const fileError = fileValidationErrors.find((error) => error.name === file.name)
             return <li key={`${file.name}-${file.lastModified}`}>{file.name} <span>{(file.size / (1024 * 1024)).toFixed(1)} MB</span>{fileError && <small className="file-validation-error" role="alert">{fileError.message}</small>}</li>

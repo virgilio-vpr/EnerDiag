@@ -175,7 +175,7 @@ endpoints:
       'invoices[]':
         custom: []
         name: 'invoices[]'
-        description: 'Faturas PDF (de 6 a 12 arquivos).'
+        description: 'Faturas PDF (de 1 a 12 arquivos).'
         required: true
         example: null
         type: file

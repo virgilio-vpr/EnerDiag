@@ -110,7 +110,7 @@ function App() {
           <div className="process-grid">
             <article className="info-card">
               <div className="process-card-top"><span className="step-number step-number--tertiary">01</span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="23" y="10" width="48" height="58" rx="8" className="process-visual__paper" /><path d="M35 28h24M35 38h24M35 48h15" className="process-visual__line" /><path d="M78 25h19a7 7 0 0 1 7 7v34a7 7 0 0 1-7 7H48" className="process-visual__outline" /><path d="m75 48 10 10 19-22" className="process-visual__accent" /></svg></div>
-              <h3>Envie suas faturas</h3><p>Compartilhe de 6 a 12 contas recentes da sua empresa em PDF.</p>
+              <h3>Envie suas faturas</h3><p>Comece com 1 fatura em PDF para uma avaliação inicial. O ideal são 12 faturas mensais para cobrir um ciclo anual.</p>
             </article>
             <article className="info-card">
               <div className="process-card-top"><span className="step-number step-number--tertiary">02</span><svg className="process-visual process-visual--tertiary" viewBox="0 0 120 80" fill="none" aria-hidden="true"><rect x="17" y="12" width="86" height="56" rx="9" className="process-visual__paper" /><path d="M29 56V43M43 56V34M57 56V46M71 56V27" className="process-visual__bar" /><path d="m29 32 15-9 14 7 18-13 15 6" className="process-visual__accent" /><circle cx="91" cy="23" r="4" className="process-visual__dot" /></svg></div>

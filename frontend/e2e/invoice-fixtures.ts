@@ -22,9 +22,9 @@ function pdfFromText(text: string) {
   return Buffer.from(pdf, 'latin1')
 }
 
-export function invoiceFixtures() {
+export function invoiceFixtures(count = 6) {
   const reference = readFileSync(new URL('../../backend/tests/Fixtures/enel-reference-blue.txt', import.meta.url), 'utf8')
-  return ['03', '04', '05', '06', '07', '08'].map((month) => ({
+  return Array.from({ length: count }, (_, index) => String(index + 1).padStart(2, '0')).map((month) => ({
     name: `invoice-2025-${month}.pdf`,
     mimeType: 'application/pdf',
     buffer: pdfFromText(reference.replace('08/2025', `${month}/2025`)),

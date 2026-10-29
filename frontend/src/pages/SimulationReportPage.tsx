@@ -51,7 +51,7 @@ type Report = {
 }
 
 const warningText: Record<string, string> = {
-  incomplete_invoice_series: 'A projeção considera menos de 12 faturas; por isso, o resultado anual usa a média dos meses enviados.',
+  incomplete_invoice_series: 'Esta avaliação inicial considera menos de 12 faturas. A projeção anual usa a média dos meses enviados e pode não refletir as variações de um ciclo anual completo.',
   tariff_unavailable_using_historical_value: 'Não há tarifa vigente para todos os períodos. Onde necessário, foi usado o valor histórico da fatura como referência.',
   tariff_unavailable: 'Não foi encontrada uma tarifa vigente para um dos períodos analisados.',
   idle_demand_discount_fallback: 'A proporção da demanda ociosa usa a reserva padrão prevista para esta análise.',

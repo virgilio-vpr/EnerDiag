@@ -66,6 +66,9 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             'demand_savings_unavailable_pending_section_9_limits',
             'tariff_migration_unavailable_pending_section_9_rules',
         ];
+        if (count($invoices) < 12) {
+            $warnings[] = ValuationProjectionService::INCOMPLETE_SERIES_WARNING;
+        }
 
         $warnings = array_merge($warnings, $ratios->warnings());
         foreach ($invoices as $invoice) {

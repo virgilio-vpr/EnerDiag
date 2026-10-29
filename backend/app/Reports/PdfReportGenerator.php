@@ -19,6 +19,13 @@ class PdfReportGenerator
             'Economia mensal por migracao: R$ '.($report->migration_savings_monthly ?? '0,00'),
         ];
         foreach ($report->warnings ?? [] as $warning) {
+            if ($warning === 'incomplete_invoice_series') {
+                $lines[] = 'Aviso: avaliacao inicial com menos de 12 faturas.';
+                $lines[] = 'A projecao anual usa a media dos meses enviados.';
+                $lines[] = 'O ideal sao 12 faturas para cobrir um ciclo anual.';
+
+                continue;
+            }
             $lines[] = 'Aviso: '.(is_scalar($warning) ? (string) $warning : json_encode($warning));
         }
         foreach ($report->recommendations ?? [] as $recommendation) {

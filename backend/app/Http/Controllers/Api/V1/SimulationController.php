@@ -159,7 +159,7 @@ class SimulationController extends Controller
     #[BodyParam('distributor_name', 'string', 'Nome de uma distribuidora ainda não atendida.', example: 'Distribuidora Exemplo')]
     #[BodyParam('address_details', 'string', 'Endereço da empresa.', example: 'Rua Exemplo, 100, São Paulo/SP')]
     #[BodyParam('substation_same_address', 'boolean', 'Indica se o endereço da subestação é o mesmo da fatura.', example: true)]
-    #[BodyParam('invoices[]', 'file', 'Faturas PDF (de 6 a 12 arquivos).')]
+    #[BodyParam('invoices[]', 'file', 'Faturas PDF (de 1 a 12 arquivos).')]
     #[Response(status: 202, content: '{"data":{"id":1,"status":"queued","created_at":"2026-10-24T12:00:00Z"}}', description: 'Simulação registrada')]
     #[Response(status: 401, content: '{"message":"Não autenticado.","code":"UNAUTHENTICATED","errors":null}', description: 'Token ausente ou inválido')]
     #[Response(status: 422, content: '{"message":"A distribuidora selecionada ainda não possui leitor disponível.","code":"DISTRIBUTOR_UNSUPPORTED","errors":null}', description: 'Distribuidora sem leitor')]

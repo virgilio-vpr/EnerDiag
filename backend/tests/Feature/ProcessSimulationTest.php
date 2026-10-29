@@ -20,6 +20,7 @@ use App\Models\InvoiceItem;
 use App\Models\Report;
 use App\Models\Simulation;
 use App\Models\User;
+use App\Reports\PdfReportGenerator;
 use Database\Seeders\RegulatoryParameterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -67,6 +68,8 @@ class ProcessSimulationTest extends TestCase
         $this->assertGreaterThan(0, InvoiceItem::query()->whereHas('invoice', fn ($query) => $query->where('simulation_id', $simulation->id))->count());
         $report = Report::query()->where('simulation_id', $simulation->id)->firstOrFail();
         $this->assertSame('1.0', $report->algorithm_version);
+        $this->assertContains('incomplete_invoice_series', $report->warnings);
+        $this->assertStringContainsString('avaliacao inicial com menos de 12 faturas', app(PdfReportGenerator::class)->generate($report));
         $this->assertContains('demand_invoice_reconciliation_mismatch', $report->warnings);
         $this->assertSame('0.820000', $report->r_values[0]['ratio']);
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));

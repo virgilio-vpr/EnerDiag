@@ -37,7 +37,7 @@ class StoreSimulationRequest extends FormRequest
     {
         return [
             'substation_address.required_if' => 'Informe o endereço da subestação quando ele for diferente do endereço da fatura.',
-            'invoices.required' => 'Envie de 6 a 12 faturas em PDF.',
+            'invoices.required' => 'Envie de 1 a 12 faturas em PDF.',
             'invoices.*.file' => 'Cada fatura deve ser um arquivo válido.',
         ];
     }
