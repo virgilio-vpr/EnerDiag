@@ -404,6 +404,13 @@
 .admin-lead-filters input, .admin-lead-filters select { width: 100%; min-height: 2.9rem; box-sizing: border-box; padding: 0.65rem 0.8rem; color: var(--text-h); background: var(--surface); border: 1px solid var(--border); border-radius: 0.55rem; font: inherit; font-weight: 400; }
 .admin-lead-filters input:focus-visible, .admin-lead-filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+:where(.access-page, .upload-page, .profile-page, .report-page, .admin-page, .error-page) { line-height: 1.6; }
+:is(.access-page, .upload-page, .profile-page, .report-page, .admin-page, .error-page) :is(h1, h2, h3, h4, h5, h6) { line-height: 1.25; overflow-wrap: anywhere; }
+:is(.access-page, .upload-page, .profile-page, .report-page, .admin-page, .error-page) h1 { line-height: 1.2; }
+.access-page > h1, .upload-page > h1, .report-heading h1 { margin-bottom: 0.9rem; }
+.access-page > .form-success { margin-block: 0.75rem 1rem; }
+.report-highlight strong { line-height: 1.3; }
+
 @media (max-width: 640px) {
   .report-heading { align-items: stretch; flex-direction: column; }
   .report-actions { flex-direction: column; }
