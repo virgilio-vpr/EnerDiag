@@ -91,7 +91,7 @@ function App() {
             <h1 id="hero-title">Sua energia pode trabalhar melhor pela sua empresa.</h1>
             <p className="hero-description">Descubra oportunidades de economia na sua conta de energia com uma análise clara do consumo e da demanda da sua empresa.</p>
             <a className="button" href="/register">Começar minha análise <span aria-hidden="true">→</span></a>
-            <p className="hero-note">Análise guiada para empresas do Grupo A atendidas pela ENEL.</p>
+            <p className="hero-note">Análise guiada para empresas do Grupo A4 e AS - Modalidades Azul e Verde</p>
           </div>
           <div className="hero-artwork">
             <img
