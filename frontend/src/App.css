@@ -187,7 +187,8 @@
 .process-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
 .info-card { min-height: 11rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--bg) 88%, var(--code-bg)); }
 .process-card-top { display: flex; align-items: flex-start; justify-content: space-between; min-height: 5.5rem; margin-bottom: 0.9rem; }
-.step-number { display: inline-block; margin: 0.25rem 0 0; color: var(--accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; }
+.process-grid > .info-card { position: relative; border-top: 3px solid var(--accent); }
+.step-number { display: inline-grid; place-items: center; width: 3rem; height: 3rem; flex-shrink: 0; margin: 0.25rem 0 0; box-sizing: border-box; color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-border); border-radius: 0.9rem 0.9rem 0.9rem 0.25rem; font-family: var(--heading); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; }
 .step-number--tertiary { color: var(--tertiary); }
 .process-visual { width: 7.5rem; height: 5rem; overflow: visible; }
 .process-visual__paper { fill: var(--accent-bg); stroke: var(--accent-border); stroke-width: 1.5; }
