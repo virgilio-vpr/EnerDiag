@@ -122,7 +122,12 @@ export function InvoiceUploadPage() {
   const hasUnsupportedDistributor = distributorId === 'other'
 
   async function changeFiles(event: ChangeEvent<HTMLInputElement>) {
-    await updateFiles(Array.from(event.target.files ?? []))
+    const addedFiles = Array.from(event.target.files ?? [])
+    if (submitting || addedFiles.length === 0) return
+    const combinedFiles = new Map(
+      [...files, ...addedFiles].map((file) => [JSON.stringify([file.name, file.size, file.lastModified, file.type]), file]),
+    )
+    await updateFiles([...combinedFiles.values()])
   }
 
   function removeFile(index: number) {
@@ -317,7 +322,7 @@ export function InvoiceUploadPage() {
           <label className="upload-field">Endereço da unidade consumidora<textarea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} required /></label>
           <label className="consent-control"><input type="checkbox" checked={sameSubstationAddress} onChange={(event) => setSameSubstationAddress(event.target.checked)} /><span>O endereço da subestação é o mesmo da unidade consumidora.</span></label>
           {!sameSubstationAddress && <label className="upload-field">Endereço da subestação<textarea rows={3} value={substationAddress} onChange={(event) => setSubstationAddress(event.target.value)} required /></label>}
-          <label className="upload-field invoice-picker">Faturas em PDF<input ref={fileInput} type="file" accept="application/pdf,.pdf" multiple disabled={submitting} onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Selecione de 1 a 12 faturas. Até 20 MB por arquivo, 120 MB no total e 600 páginas por análise.</span></label>
+          <label className="upload-field invoice-picker">Faturas em PDF<input ref={fileInput} type="file" accept="application/pdf,.pdf" multiple disabled={submitting} onChange={changeFiles} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Adicione de 1 a 12 faturas, de uma vez ou em várias seleções. Os arquivos anteriores serão mantidos. Até 20 MB por arquivo, 120 MB no total e 600 páginas por análise.</span></label>
           {files.length > 0 && <div className="selected-files" aria-label="Faturas selecionadas"><p aria-live="polite">{files.length} {files.length === 1 ? 'arquivo selecionado' : 'arquivos selecionados'} · {(totalBytes / (1024 * 1024)).toFixed(1)} MB{pageCount !== null ? ` · ${pageCount} ${pageCount === 1 ? 'página' : 'páginas'}` : ''}</p><ul>{files.map((file, index) => {
             const fileError = fileValidationErrors.find((error) => error.name === file.name)
             return <li key={`${file.name}-${file.lastModified}-${index}`}><div className="selected-file-row"><span className="selected-file-name">{file.name}</span><span className="selected-file-size">{(file.size / (1024 * 1024)).toFixed(1)} MB</span><button className="remove-file-button" type="button" disabled={submitting} aria-label={`Remover ${file.name}`} onClick={() => removeFile(index)}>Remover</button></div>{fileError && <small className="file-validation-error" role="alert">{fileError.message}</small>}</li>

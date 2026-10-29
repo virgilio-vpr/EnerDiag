@@ -47,6 +47,63 @@ afterEach(() => {
 })
 
 describe('invoice upload', () => {
+  it('adds later selections without losing earlier invoices and submits every remaining file', async () => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch()
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    fireEvent.change(picker, { target: { files: [invoice('january.pdf')] } })
+    await screen.findByText(/1 página/)
+    fireEvent.change(picker, { target: { files: [invoice('february.pdf'), invoice('march.pdf')] } })
+    await screen.findByText(/3 arquivos selecionados.*3 páginas/)
+    expect(screen.getByRole('button', { name: 'Remover january.pdf' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Simular economia' }))
+    await screen.findByRole('heading', { name: 'Sua análise começou' })
+    const uploaded = (fetchMock.mock.calls[2][1]?.body as FormData).getAll('invoices[]') as File[]
+    expect(uploaded.map((file) => file.name)).toEqual(['january.pdf', 'february.pdf', 'march.pdf'])
+  })
+
+  it('preserves the selection when the file picker is canceled', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    fireEvent.change(picker, { target: { files: [invoice('keep.pdf')] } })
+    await screen.findByText(/1 página/)
+    fireEvent.change(picker, { target: { files: [] } })
+    expect(screen.getByRole('button', { name: 'Remover keep.pdf' })).toBeInTheDocument()
+    expect(screen.getByText(/1 arquivo selecionado.*1 página/)).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('does not duplicate a previously selected file when it is selected again with a new invoice', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    const first = invoice('january.pdf')
+    fireEvent.change(picker, { target: { files: [first] } })
+    await screen.findByText(/1 página/)
+    fireEvent.change(picker, { target: { files: [first, invoice('february.pdf')] } })
+    await screen.findByText(/2 arquivos selecionados.*2 páginas/)
+    expect(screen.getAllByRole('button', { name: 'Remover january.pdf' })).toHaveLength(1)
+  })
+
+  it('enforces the twelve-file limit across selections and allows removing the extra invoice', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    const picker = await screen.findByLabelText(/Faturas em PDF/)
+    fireEvent.change(picker, { target: { files: Array.from({ length: 12 }, (_, index) => invoice(`invoice-${index}.pdf`)) } })
+    await screen.findByText(/12 páginas/)
+    fireEvent.change(picker, { target: { files: [invoice('extra.pdf')] } })
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 1 a 12 faturas/)
+    expect(screen.getAllByRole('button', { name: /^Remover / })).toHaveLength(13)
+    fireEvent.click(screen.getByRole('button', { name: 'Remover extra.pdf' }))
+    await screen.findByText(/12 páginas/)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('removes only the chosen invoice, updates totals and submits the remaining file', async () => {
     setAuthToken('customer-token')
     const fetchMock = setupFetch()
@@ -137,23 +194,31 @@ describe('invoice upload', () => {
     expect(await screen.findByRole('heading', { name: 'Sua análise começou' })).toBeInTheDocument()
   })
 
-  it('blocks empty selections, more than twelve invoices and non-PDF files', async () => {
+  it('blocks non-PDF files', async () => {
     setAuthToken('customer-token')
     setupFetch()
     render(<InvoiceUploadPage />)
-    const picker = await screen.findByLabelText(/Faturas em PDF/)
-    fireEvent.change(picker, { target: { files: [] } })
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 1 a 12 faturas/)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), { target: { files: [invoice('wrong.txt', 1, 'text/plain')] } })
+    expect(await screen.findByText('Selecione apenas arquivos PDF.', { selector: 'small' })).toBeInTheDocument()
+  })
 
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
-    await screen.findByText(/6 páginas/)
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => invoice('invoice-' + index + '.txt', 1, 'text/plain')) } })
-    expect(await screen.findAllByText('Selecione apenas arquivos PDF.', { selector: 'small' })).toHaveLength(6)
+  it('blocks files with a PDF extension but invalid content', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: [new File(['not a PDF'], 'wrong.pdf', { type: 'application/pdf' })] },
+    })
+    expect(await screen.findByText('O conteúdo não é um PDF válido.', { selector: 'small' })).toBeInTheDocument()
+  })
 
-    fireEvent.change(picker, { target: { files: Array.from({ length: 6 }, (_, index) => new File(['not a PDF'], 'invoice-' + index + '.pdf', { type: 'application/pdf' })) } })
-    expect(await screen.findAllByText('O conteúdo não é um PDF válido.', { selector: 'small' })).toHaveLength(6)
-
-    fireEvent.change(picker, { target: { files: Array.from({ length: 13 }, (_, index) => invoice('invoice-' + index + '.pdf')) } })
+  it('blocks more than twelve invoices', async () => {
+    setAuthToken('customer-token')
+    setupFetch()
+    render(<InvoiceUploadPage />)
+    fireEvent.change(await screen.findByLabelText(/Faturas em PDF/), {
+      target: { files: Array.from({ length: 13 }, (_, index) => invoice(`invoice-${index}.pdf`)) },
+    })
     expect(await screen.findByRole('alert')).toHaveTextContent(/Selecione de 1 a 12 faturas/)
   })
 
