@@ -23,7 +23,7 @@ class InvoiceProcessingFailureRecorderTest extends TestCase
         ]);
 
         $valid = $this->invoice('2025-08', '10.00');
-        $invalid = $this->invoice('2025-09', '9.00');
+        $invalid = $this->invoice('2025-09', '8.99');
         try {
             app(InvoiceExtractionValidator::class)->validate([$valid, $invalid]);
             $this->fail('The inconsistent invoice should fail post-extraction validation.');

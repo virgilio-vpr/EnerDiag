@@ -23,7 +23,10 @@ const report = {
   optimal_demand_off_peak: null,
   optimal_demand_single: null,
   chart_series: {
-    demand: [{ reference_month: '2026-01', time_slot: 'peak', measured: '450.000', contracted: '500.000' }],
+    demand: [
+      { reference_month: '2026-01', time_slot: 'peak', measured: '450.000', contracted: '500.000' },
+      { reference_month: '2026-01', time_slot: 'off_peak', measured: '550.000', contracted: '600.000' },
+    ],
     reactive: [{ reference_month: '2026-01', value: '1250.40' }],
     modality: [] as Array<{ reference_month: string; blue: string; green: string }>,
   },
@@ -66,11 +69,23 @@ describe('simulation report', () => {
     expect(screen.getByText(/tarifa vigente para todos os períodos/)).toBeInTheDocument()
     expect(screen.getByText(/r = 82%/)).toBeInTheDocument()
     expect(screen.getByText(/diverge do valor registrado/)).toBeInTheDocument()
-    expect(screen.getByTestId('demand-chart')).toBeInTheDocument()
+    expect(screen.getByTestId('demand-chart-peak')).toBeInTheDocument()
+    expect(screen.getByTestId('demand-chart-off_peak')).toBeInTheDocument()
     expect(screen.getByTestId('reactive-chart')).toBeInTheDocument()
     expect(screen.getByText(/Comparação entre Azul e Verde/)).toBeInTheDocument()
     expect(screen.getByText(/critérios regulatórios pendentes forem definidos/)).toBeInTheDocument()
     expect(screen.getByText('Confira as condições antes de alterar a demanda contratada.')).toBeInTheDocument()
+  })
+
+  it('shows one demand chart for the green modality', async () => {
+    setAuthToken('customer-token')
+    setupFetch({}, { ...report, chart_series: { ...report.chart_series, demand: [
+      { reference_month: '2026-01', time_slot: 'unique', measured: '450.000', contracted: '500.000' },
+    ] } })
+    render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByTestId('demand-chart-unique')).toBeInTheDocument()
+    expect(screen.queryByTestId('demand-chart-peak')).not.toBeInTheDocument()
   })
 
   it('escapes untrusted recommendations instead of creating executable markup', async () => {

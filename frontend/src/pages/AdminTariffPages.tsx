@@ -39,6 +39,7 @@ const emptyTariff: TariffFormState = {
 }
 const emptyParameter: ParameterFormState = { key: 'overrun_tolerance', value: '', valid_from: '', valid_to: '' }
 const parameterLabels: Record<string, string> = {
+  minimum_contracted_demand: 'Demanda mínima de referência (kW)',
   overrun_tolerance: 'Tolerância de ultrapassagem',
   overrun_multiplier: 'Multiplicador de ultrapassagem',
   reference_power_factor: 'Fator de potência de referência',

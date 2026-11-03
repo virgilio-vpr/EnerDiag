@@ -53,6 +53,7 @@ final class AdminRegulatoryParameterService
             'overrun_multiplier' => bccomp($value, '0', 5) > 0,
             'reference_power_factor' => bccomp($value, '0', 5) > 0 && bccomp($value, '1', 5) <= 0,
             'idle_demand_discount_fallback' => bccomp($value, '0', 5) >= 0 && bccomp($value, '1', 5) <= 0,
+            'minimum_contracted_demand' => bccomp($value, '0', 5) > 0 && bccomp($value, '1000000', 5) <= 0 && bccomp($value, bcadd($value, '0', 0), 5) === 0,
             default => false,
         };
 

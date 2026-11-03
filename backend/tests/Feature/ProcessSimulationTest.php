@@ -17,8 +17,10 @@ use App\Models\CustomerProfile;
 use App\Models\Distributor;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\RegulatoryParameter;
 use App\Models\Report;
 use App\Models\Simulation;
+use App\Models\Tariff;
 use App\Models\User;
 use App\Reports\PdfReportGenerator;
 use Database\Seeders\RegulatoryParameterSeeder;
@@ -37,6 +39,45 @@ class ProcessSimulationTest extends TestCase
         parent::setUp();
         $this->seed(RegulatoryParameterSeeder::class);
         Storage::fake('invoice_temp');
+    }
+
+    public function test_job_completes_two_invoices_with_amount_differences_within_one_real(): void
+    {
+        Mail::fake();
+        [$simulation] = $this->simulationWithFiles();
+        Storage::disk('invoice_temp')->put('simulation-'.$simulation->id.'/invoice-2.pdf', '%PDF-1.4 fixture');
+        $this->app->instance(InvoiceReaderResolver::class, new InvoiceReaderResolver([new EnelInvoiceReader]));
+        $this->mock(PdfTextParser::class)->shouldReceive('extract')->twice()->andReturn(
+            file_get_contents(base_path('tests/Fixtures/enel-rounded-january-blue.txt')),
+            file_get_contents(base_path('tests/Fixtures/enel-rounded-february-blue.txt')),
+        );
+
+        (new ProcessSimulation($simulation->id))->handle(
+            app(InvoiceReaderResolver::class),
+            app(TemporaryPdfTextExtractor::class),
+            app(InvoiceExtractionValidator::class),
+            app(InvoiceProcessingFailureRecorder::class),
+            app(ReportCalculationEngine::class),
+        );
+
+        $this->assertDatabaseHas('simulations', ['id' => $simulation->id, 'status' => 'completed', 'months_count' => 2]);
+        $this->assertSame(2, $simulation->invoices()->count());
+        $this->assertSame(1, $simulation->report()->count());
+        $report = $simulation->report()->firstOrFail();
+        $this->assertSame('276.000', $report->optimal_demand_peak);
+        $this->assertSame('348.000', $report->optimal_demand_off_peak);
+        $this->assertSame('1926.80', $report->demand_savings_monthly);
+        $this->assertNotContains('demand_optimization_unavailable', $report->warnings);
+        $this->assertSame([], $report->recommendations);
+        $this->assertContains('minimum_contracted_demand', RegulatoryParameter::query()->whereIn('id', $report->regulatory_parameter_version_ids)->pluck('key')->all());
+        foreach ($report->chart_series['demand'] as $point) {
+            $this->assertSame($point['time_slot'] === 'peak' ? $report->optimal_demand_peak : $report->optimal_demand_off_peak, $point['optimal']);
+            $this->assertSame('0.05000', $point['overrun_tolerance']);
+        }
+        $this->assertDatabaseHas('invoice_items', ['amount' => '48427.71', 'unit_price_taxed' => '0.32136']);
+        $this->assertDatabaseHas('invoice_items', ['amount' => '50934.67', 'unit_price_taxed' => '0.32129']);
+        $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
+        Mail::assertSent(SimulationCompleted::class);
     }
 
     public function test_job_persists_invoices_creates_report_and_is_idempotent(): void
@@ -74,6 +115,34 @@ class ProcessSimulationTest extends TestCase
         $this->assertSame('0.820000', $report->r_values[0]['ratio']);
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));
         Mail::assertSent(SimulationCompleted::class, fn (SimulationCompleted $mail): bool => $mail->report->simulation_id === $simulation->id);
+    }
+
+    public function test_report_compares_modalities_when_approved_green_tariffs_are_available(): void
+    {
+        Mail::fake();
+        [$simulation] = $this->simulationWithFiles();
+        $distributorId = $simulation->user->profile->distributor_id;
+        foreach ([['single', 'demand', '10.00000'], ['peak', 'energy_tusd', '0.10000'], ['off_peak', 'energy_tusd', '0.05000']] as [$slot, $component, $rate]) {
+            Tariff::query()->create([
+                'distributor_id' => $distributorId, 'subgroup' => 'A4', 'tariff_modality' => 'green',
+                'time_slot' => $slot, 'component' => $component, 'rate' => $rate,
+                'includes_taxes' => false, 'source' => 'aneel_import', 'valid_from' => '2025-01-01',
+            ]);
+        }
+        $this->app->instance(InvoiceReaderResolver::class, new InvoiceReaderResolver([new EnelInvoiceReader]));
+        $this->mock(PdfTextParser::class)->shouldReceive('extract')->andReturn(file_get_contents(base_path('tests/Fixtures/enel-rounded-january-blue.txt')));
+
+        (new ProcessSimulation($simulation->id))->handle(
+            app(InvoiceReaderResolver::class), app(TemporaryPdfTextExtractor::class),
+            app(InvoiceExtractionValidator::class), app(InvoiceProcessingFailureRecorder::class), app(ReportCalculationEngine::class),
+        );
+
+        $report = $simulation->report()->firstOrFail();
+        $this->assertSame('green', $report->recommended_modality);
+        $this->assertGreaterThan(0, bccomp($report->migration_savings_monthly, '0', 2));
+        $this->assertNotContains('migration_unavailable', $report->warnings);
+        $this->assertCount(3, $report->tariff_version_ids);
+        $this->assertArrayHasKey('modality', $report->chart_series);
     }
 
     public function test_final_read_failure_records_file_error_and_removes_temporary_pdf(): void

@@ -17,7 +17,7 @@ class StoreRegulatoryParameterRequest extends FormRequest
     {
         return [
             'key' => ['required', Rule::in([
-                'overrun_tolerance', 'overrun_multiplier', 'reference_power_factor', 'idle_demand_discount_fallback',
+                'overrun_tolerance', 'overrun_multiplier', 'reference_power_factor', 'idle_demand_discount_fallback', 'minimum_contracted_demand',
             ])],
             'value' => ['required', 'numeric', 'decimal:0,5'],
             'valid_from' => ['required', 'date_format:Y-m-d'],

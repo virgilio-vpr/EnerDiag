@@ -13,5 +13,6 @@ final readonly class TariffMigrationResult
         public ?string $savings,
         public ?string $message = null,
         public array $warnings = [],
+        public array $tariffVersionIds = [],
     ) {}
 }

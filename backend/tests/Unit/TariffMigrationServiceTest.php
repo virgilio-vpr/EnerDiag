@@ -46,7 +46,8 @@ class TariffMigrationServiceTest extends TestCase
         $this->assertSame('blue', $result->selectedModality);
         $this->assertSame('800.20', $result->blueCost);
         $this->assertSame('10300.20', $result->greenCost);
-        $this->assertSame('9500.00', $result->savings);
+        $this->assertSame('0.00', $result->savings);
+        $this->assertSame('Sem ganho financeiro na migração', $result->message);
     }
 
     public function test_equal_costs_report_no_financial_gain(): void
@@ -93,7 +94,7 @@ class TariffMigrationServiceTest extends TestCase
         $invoiceItem = static fn (string $component, string $slot, string $taxed, string $untaxed): ExtractedInvoiceItemData => ExtractedInvoiceItemData::fromArray([
             'item_type' => 'active_consumption', 'tariff_component' => $component, 'time_slot' => $slot,
             'reactive_nature' => 'not_applicable', 'quantity' => $consumption[$slot], 'unit' => 'kWh',
-            'unit_price_taxed' => $taxed, 'tariff_rate' => $untaxed, 'amount' => '1.00',
+            'unit_price_taxed' => $taxed, 'tariff_rate' => $untaxed, 'amount' => bcadd(bcmul($consumption[$slot], $taxed, 8), '0.005', 2),
             'pis_cofins_amount' => '0.00', 'icms_base' => '0.00', 'icms_rate' => '0.0000', 'icms_amount' => '0.00',
         ]);
 
@@ -120,7 +121,7 @@ class TariffMigrationServiceTest extends TestCase
     private function greenTariffs(Distributor $distributor, string $demand, string $te, string $peakTusd, string $offPeakTusd, bool $includePeakTusd = true): void
     {
         $rows = [
-            ['unique', 'demand', $demand],
+            ['single', 'demand', $demand],
             ['peak', 'energy_te', $te], ['off_peak', 'energy_te', $te],
             ['off_peak', 'energy_tusd', $offPeakTusd],
         ];

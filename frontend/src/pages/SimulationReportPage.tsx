@@ -64,6 +64,7 @@ const warningText: Record<string, string> = {
   migration_unavailable: 'A comparação entre as modalidades Azul e Verde está indisponível por falta de tarifa ou dado necessário.',
   tariff_migration_unavailable_pending_section_9_rules: 'A comparação entre Azul e Verde ficará disponível quando os critérios regulatórios pendentes forem definidos.',
   demand_optimization_unavailable_pending_section_9_limits: 'A demanda ótima não foi calculada porque os limites regulatórios ainda não estão definidos.',
+  demand_optimization_unavailable: 'Não foi possível calcular a demanda ótima: faltam dados da fatura ou parâmetros regulatórios necessários.',
   demand_savings_unavailable_pending_section_9_limits: 'A economia com otimização da demanda ainda não está disponível.',
   no_migration_savings: 'A análise não encontrou economia na migração entre modalidades.',
   no_savings_on_migration: 'A análise não encontrou economia na migração entre modalidades.',
@@ -122,7 +123,8 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   }, [simulationId])
 
   const demandData = useMemo(() => (report?.chart_series.demand ?? []).map((point) => ({
-    month: `${monthLabel(point.reference_month)}${point.time_slot ? ` · ${point.time_slot === 'peak' ? 'Ponta' : point.time_slot === 'off_peak' ? 'Fora ponta' : 'Única'}` : ''}`,
+    month: monthLabel(point.reference_month),
+    timeSlot: point.time_slot ?? 'unique',
     measured: numeric(point.measured),
     contracted: numeric(point.contracted),
     optimal: numeric(point.optimal) ?? numeric(
@@ -190,9 +192,13 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   const reserveValues = report.r_values.filter((value) => value.source === 'fallback')
   const demandUnavailable = uniqueWarnings.includes('demand_savings_unavailable_pending_section_9_limits')
     || uniqueWarnings.includes('demand_optimization_unavailable_pending_section_9_limits')
+    || uniqueWarnings.includes('demand_optimization_unavailable')
   const migrationUnavailable = uniqueWarnings.includes('migration_unavailable')
     || uniqueWarnings.includes('tariff_migration_unavailable_pending_section_9_rules')
   const percentageText = report.savings_percentage === null ? '—' : `${decimal.format(Number(report.savings_percentage))}%`
+  const demandSlots = demandData.some((point) => point.timeSlot === 'peak' || point.timeSlot === 'off_peak')
+    ? [{ key: 'peak', label: 'Ponta' }, { key: 'off_peak', label: 'Fora de ponta' }]
+    : [{ key: 'unique', label: 'Demanda única' }]
 
   return <section className="report-page" aria-labelledby="report-title">
     <div className="report-heading">
@@ -220,7 +226,10 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
     {reserveValues.length > 0 && <section className="report-ratio" aria-label="Reserva da demanda ociosa"><h2>Reserva aplicada à demanda ociosa</h2><p>Foi usada a proporção r = {decimal.format(Number(reserveValues[0].ratio) * 100)}% nos períodos em que a fatura não indicou essa proporção.</p></section>}
 
     <section className="report-charts" aria-label="Gráficos do relatório">
-      <article className="report-chart"><h2>Demanda registrada × contratada × ótima</h2>{demandData.length ? <div className="chart-container" data-testid="demand-chart" aria-label="Gráfico de demanda em kW"><ResponsiveContainer width="100%" height={280}><LineChart data={demandData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis unit=" kW" tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => value == null ? '—' : `${decimal.format(Number(value))} kW`} /><Legend /><Line type="monotone" dataKey="measured" name="Registrada" stroke="#0b8f6a" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="contracted" name="Contratada" stroke="#2764c5" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="optimal" name="Ótima" stroke="#b86d13" strokeWidth={2} connectNulls /></LineChart></ResponsiveContainer></div> : <p className="chart-empty">A série de demanda não está disponível neste relatório.</p>}</article>
+      {demandSlots.map(({ key, label }) => {
+        const points = demandData.filter((point) => point.timeSlot === key)
+        return <article className="report-chart" key={key}><h2>Demanda {label.toLowerCase()}: registrada × contratada × ótima</h2>{points.length ? <div className="chart-container" data-testid={`demand-chart-${key}`} aria-label={`Gráfico de demanda ${label.toLowerCase()} em kW`}><ResponsiveContainer width="100%" height={280}><LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis unit=" kW" tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => value == null ? '—' : `${decimal.format(Number(value))} kW`} /><Legend /><Line type="monotone" dataKey="measured" name="Registrada" stroke="#0b8f6a" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="contracted" name="Contratada" stroke="#2764c5" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="optimal" name="Ótima" stroke="#b86d13" strokeWidth={2} connectNulls /></LineChart></ResponsiveContainer></div> : <p className="chart-empty">A série de demanda não está disponível neste relatório.</p>}</article>
+      })}
       <article className="report-chart"><h2>Economia com reativos por mês</h2>{reactiveData.length ? <div className="chart-container" data-testid="reactive-chart" aria-label="Gráfico mensal da economia com reativos"><ResponsiveContainer width="100%" height={280}><BarChart data={reactiveData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis tickFormatter={(value) => `R$ ${decimal.format(Number(value))}`} tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => amount(String(value ?? ''))} /><Bar dataKey="value" name="Economia mensal" fill="#0b8f6a" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div> : <p className="chart-empty">A série de reativos não está disponível neste relatório.</p>}</article>
       <article className="report-chart"><h2>Comparação entre Azul e Verde</h2>{modalityData.length ? <div className="chart-container" data-testid="modality-chart" aria-label="Comparação dos custos da modalidade Azul e Verde"><ResponsiveContainer width="100%" height={280}><BarChart data={modalityData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis tickFormatter={(value) => `R$ ${decimal.format(Number(value))}`} tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => amount(String(value ?? ''))} /><Legend /><Bar dataKey="Azul" fill="#2764c5" /><Bar dataKey="Verde" fill="#0b8f6a" /></BarChart></ResponsiveContainer></div> : <p className="chart-empty">A comparação não está disponível sem tarifas válidas e dados suficientes para as duas modalidades.</p>}</article>
     </section>

@@ -25,6 +25,7 @@ final class TariffMigrationService
         array $months,
         int $minimumDemand,
         int $maximumDemand,
+        bool $minimumEitherBlueSlot = false,
     ): TariffMigrationResult {
         if (! in_array($currentModality, ['blue', 'green'], true)) {
             throw new InvalidArgumentException('Tariff migration modality must be blue or green.');
@@ -39,6 +40,7 @@ final class TariffMigrationService
         $currentEnergyCost = '0.00';
         $otherEnergyCost = '0.00';
         $warnings = [];
+        $tariffVersionIds = [];
 
         foreach ($months as $month) {
             $date = $month->referenceMonth.'-01';
@@ -57,9 +59,12 @@ final class TariffMigrationService
                         $rate = $month->currentDemandRatesByTimeSlot[$slot] ?? null;
                     } else {
                         $rateResolution = $this->tariffService->resolve(
-                            $distributorId, $subgroup, $modality, 'demand', $slot, $date, false,
+                            $distributorId, $subgroup, $modality, 'demand', $slot === 'unique' ? 'single' : $slot, $date, false,
                         );
                         $warnings = array_merge($warnings, $rateResolution->warnings);
+                        if ($rateResolution->tariff !== null) {
+                            $tariffVersionIds[] = $rateResolution->tariff->id;
+                        }
                         $calibrated = $this->calibrationService->convertTariff($rateResolution->tariff, $month->calibrationFactor);
                         $warnings = array_merge($warnings, $calibrated->warnings);
                         $rate = $calibrated->rate;
@@ -82,7 +87,7 @@ final class TariffMigrationService
                     if ($invoiceItem === null || $invoiceItem->unitPriceTaxed === null) {
                         return $this->unavailable(array_merge($warnings, [self::MIGRATION_UNAVAILABLE_WARNING]));
                     }
-                    $currentEnergyCost = bcadd($currentEnergyCost, $this->money(bcmul($quantity, $invoiceItem->unitPriceTaxed, 10)), 2);
+                    $currentEnergyCost = bcadd($currentEnergyCost, $invoiceItem->amount, 2);
 
                     if ($component === 'energy_te') {
                         $teResolution = $this->tariffService->resolve(
@@ -90,6 +95,9 @@ final class TariffMigrationService
                         );
                         // TE is taken from the invoice when the ANEEL table has no row or the rates match.
                         $otherTe = $teResolution->tariff;
+                        if ($otherTe !== null) {
+                            $tariffVersionIds[] = $otherTe->id;
+                        }
                         if ($otherTe === null || ($invoiceItem->tariffRate !== null && bccomp($invoiceItem->tariffRate, $otherTe->rate, 5) === 0)) {
                             $otherRate = $invoiceItem->unitPriceTaxed;
                         } else {
@@ -102,6 +110,9 @@ final class TariffMigrationService
                             $distributorId, $subgroup, $otherModality, $component, $slot, $date, false,
                         );
                         $warnings = array_merge($warnings, $resolution->warnings);
+                        if ($resolution->tariff !== null) {
+                            $tariffVersionIds[] = $resolution->tariff->id;
+                        }
                         $calibrated = $this->calibrationService->convertTariff($resolution->tariff, $month->calibrationFactor);
                         $warnings = array_merge($warnings, $calibrated->warnings);
                         $otherRate = $calibrated->rate;
@@ -116,7 +127,8 @@ final class TariffMigrationService
         }
 
         $blueDemand = $this->demandOptimizationService->optimizeBlue(
-            $demandMonths['blue']['peak'], $demandMonths['blue']['off_peak'], $minimumDemand, $maximumDemand,
+            $demandMonths['blue']['peak'], $demandMonths['blue']['off_peak'], $minimumEitherBlueSlot ? 0 : $minimumDemand, $maximumDemand,
+            $minimumEitherBlueSlot ? $minimumDemand : null,
         );
         $greenDemand = $this->demandOptimizationService->optimizeGreen(
             $demandMonths['green']['unique'], $minimumDemand, $maximumDemand,
@@ -142,9 +154,12 @@ final class TariffMigrationService
             $savings = bcsub($blueCost, $greenCost, 2);
             $selected = 'green';
         }
+        if ($selected === $currentModality) {
+            $savings = '0.00';
+        }
         $message = bccomp($savings, '0.00', 2) === 0 ? 'Sem ganho financeiro na migração' : null;
 
-        return new TariffMigrationResult(true, $selected, $blueCost, $greenCost, $savings, $message, array_values(array_unique($warnings)));
+        return new TariffMigrationResult(true, $selected, $blueCost, $greenCost, $savings, $message, array_values(array_unique($warnings)), array_values(array_unique($tariffVersionIds)));
     }
 
     /** @param list<string> $warnings */

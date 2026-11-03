@@ -52,6 +52,36 @@ class DemandOptimizationServiceTest extends TestCase
         $this->assertSame('3364.00', $result->slots['unique']->totalCost);
     }
 
+    public function test_blue_requires_minimum_in_at_least_one_slot_not_both(): void
+    {
+        $service = $this->service();
+        $result = $service->optimizeBlue(
+            [$this->month('2025-01', '10.000')],
+            [$this->month('2025-01', '20.000')],
+            0,
+            50,
+            30,
+        );
+
+        $this->assertSame('10.000', $result->slots['peak']->optimalDemand);
+        $this->assertSame('30.000', $result->slots['off_peak']->optimalDemand);
+    }
+
+    public function test_blue_tie_keeps_the_lower_peak_demand(): void
+    {
+        $service = $this->service();
+        $result = $service->optimizeBlue(
+            [$this->month('2025-01', '10.000')],
+            [$this->month('2025-01', '10.000')],
+            0,
+            50,
+            30,
+        );
+
+        $this->assertSame('10.000', $result->slots['peak']->optimalDemand);
+        $this->assertSame('30.000', $result->slots['off_peak']->optimalDemand);
+    }
+
     public function test_tied_cost_chooses_the_lowest_demand_without_unnecessary_overrun_penalty(): void
     {
         $service = $this->service();

@@ -8,7 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 final class InvoiceExtractionValidator
 {
-    public const string AMOUNT_TOLERANCE = '0.01';
+    public const string AMOUNT_TOLERANCE = '1.00';
+
+    public const string ICMS_TOLERANCE = '0.01';
 
     /**
      * @param  list<ExtractedInvoiceData>  $invoices
@@ -53,13 +55,13 @@ final class InvoiceExtractionValidator
             $amountDifference = $this->absolute(bcsub($expectedAmount, $item->amount, 2));
 
             if (bccomp($amountDifference, self::AMOUNT_TOLERANCE, 2) > 0) {
-                $errors["invoices.{$invoiceIndex}.items.{$itemIndex}.amount"][] = 'A quantidade multiplicada pelo preço unitário não confere com o valor faturado.';
+                $errors["invoices.{$invoiceIndex}.items.{$itemIndex}.amount"][] = 'A quantidade multiplicada pelo preço unitário difere em mais de R$ 1,00 do valor faturado.';
             }
         }
 
         $expectedIcms = $this->roundHalfUp(bcmul($item->icmsBase, $item->icmsRate, 10));
         $icmsDifference = $this->absolute(bcsub($expectedIcms, $item->icmsAmount, 2));
-        if (bccomp($icmsDifference, self::AMOUNT_TOLERANCE, 2) > 0) {
+        if (bccomp($icmsDifference, self::ICMS_TOLERANCE, 2) > 0) {
             $errors["invoices.{$invoiceIndex}.items.{$itemIndex}.icms_amount"][] = 'A base e a alíquota de ICMS não conferem com o valor do imposto.';
         }
     }

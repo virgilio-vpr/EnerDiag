@@ -39,7 +39,7 @@ class AdminRegulatoryParameterManagementTest extends TestCase
         $this->assertSame('0.18000', $previous->fresh()->value);
         $this->assertSame('2026-12-31', $previous->fresh()->valid_to->toDateString());
         $this->assertSame([$previous->id], $report->fresh()->regulatory_parameter_version_ids);
-        $this->assertDatabaseCount('regulatory_parameters', 2);
+        $this->assertSame(2, RegulatoryParameter::query()->where('key', 'idle_demand_discount_fallback')->count());
     }
 
     public function test_overlapping_or_out_of_range_parameter_versions_are_rejected(): void
@@ -63,7 +63,22 @@ class AdminRegulatoryParameterManagementTest extends TestCase
             'valid_from' => '2020-01-01',
         ])->assertUnprocessable()->assertJsonValidationErrors('valid_from');
 
-        $this->assertDatabaseCount('regulatory_parameters', 1);
+        $this->assertSame(1, RegulatoryParameter::query()->where('key', 'reference_power_factor')->count());
+    }
+
+    public function test_admin_can_version_non_negative_integer_minimum_demand(): void
+    {
+        $adminToken = User::factory()->create(['role' => 'admin'])->createToken('admin')->plainTextToken;
+        $this->withToken($adminToken)->postJson('/api/v1/admin/parameters', [
+            'key' => 'minimum_contracted_demand', 'value' => '30.5', 'valid_from' => '2027-01-01',
+        ])->assertUnprocessable()->assertJsonValidationErrors('value');
+
+        $this->withToken($adminToken)->postJson('/api/v1/admin/parameters', [
+            'key' => 'minimum_contracted_demand', 'value' => '40', 'valid_from' => '2027-01-01',
+        ])->assertCreated()->assertJsonPath('data.value', '40.00000');
+        $previous = RegulatoryParameter::query()->where('key', 'minimum_contracted_demand')->where('valid_from', '2022-01-03')->firstOrFail();
+        $this->assertSame('30.00000', $previous->value);
+        $this->assertSame('2026-12-31', $previous->valid_to->toDateString());
     }
 
     public function test_parameter_listing_is_admin_only(): void

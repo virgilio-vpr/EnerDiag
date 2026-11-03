@@ -14,6 +14,13 @@ class RegulatoryParameterSeeder extends Seeder
     {
         $parameters = [
             [
+                'key' => 'minimum_contracted_demand',
+                'value' => '30.00000',
+                'state' => null,
+                'valid_from' => '2022-01-03',
+                'valid_to' => null,
+            ],
+            [
                 'key' => 'overrun_tolerance',
                 'value' => '0.05000',
                 'state' => null,

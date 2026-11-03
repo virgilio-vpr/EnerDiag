@@ -19,6 +19,9 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
         private readonly IdleDemandRatioService $idleDemandRatioService,
         private readonly DemandBillingService $demandBillingService,
         private readonly DemandReconciliationService $demandReconciliationService,
+        private readonly ReportDemandOptimizationService $reportDemandOptimizationService,
+        private readonly ReportTariffMigrationService $reportTariffMigrationService,
+        private readonly RegulatoryParameterService $parameterService,
     ) {}
 
     public function calculate(Simulation $simulation): RecalculatedReportData
@@ -55,17 +58,27 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             $invoices,
         );
         $ratios = $this->idleDemandRatioService->resolve($demandMonths, true);
+        $demandOptimization = $this->reportDemandOptimizationService->calculate($invoices, $demandMonths, $ratios);
+        $migration = $this->reportTariffMigrationService->compare($simulation, $invoices, $demandMonths, $ratios);
+        $migrationMonthly = $migration->savings !== null && count($invoices) > 0
+            ? bcadd(bcdiv($migration->savings, (string) count($invoices), 8), '0.005', 2)
+            : '0.00';
         $reactiveByMonth = $reactive->byMonth;
         $indicatorMonths = [];
         $chartSeries = ['demand' => []];
         $kValues = [];
         $rValues = [];
         $regulatoryParameterIds = [];
-        $warnings = [
-            'demand_optimization_unavailable_pending_section_9_limits',
-            'demand_savings_unavailable_pending_section_9_limits',
-            'tariff_migration_unavailable_pending_section_9_rules',
-        ];
+        $warnings = array_merge($demandOptimization['warnings'], $migration->warnings);
+        if ($migration->available && $migration->message !== null) {
+            $warnings[] = 'no_savings_on_migration';
+        }
+        if ($migration->available) {
+            $chartSeries['modality'] = [['reference_month' => 'Período', 'blue' => $migration->blueCost, 'green' => $migration->greenCost]];
+        }
+        if ($demandOptimization['parameter_id'] !== null) {
+            $regulatoryParameterIds[] = $demandOptimization['parameter_id'];
+        }
         if (count($invoices) < 12) {
             $warnings[] = ValuationProjectionService::INCOMPLETE_SERIES_WARNING;
         }
@@ -152,10 +165,10 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             $indicatorMonths[] = new ReportIndicatorMonthData(
                 referenceMonth: $invoice->referenceMonth,
                 monthlySavingsByComponent: [
-                    'demand' => '0.00',
+                    'demand' => $demandOptimization['savings'][$invoice->referenceMonth] ?? '0.00',
                     'overrun' => '0.00',
                     'reactive' => $reactiveSavings,
-                    'migration' => '0.00',
+                    'migration' => $migrationMonthly,
                 ],
                 totalPaid: $invoice->totalPaid,
                 chartValuesByKey: [],
@@ -172,11 +185,14 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                 }
             }
             foreach (array_unique(array_merge(array_keys($contracted), array_keys($measured))) as $slot) {
+                $tolerance = $this->parameterService->resolve('overrun_tolerance', $invoice->referenceMonth.'-01');
                 $chartSeries['demand'][] = [
                     'reference_month' => $invoice->referenceMonth,
                     'time_slot' => $slot,
                     'contracted' => $contracted[$slot] ?? null,
                     'measured' => $measured[$slot] ?? null,
+                    'optimal' => $demandOptimization['optimal'][$slot] ?? null,
+                    'overrun_tolerance' => $tolerance?->value,
                 ];
             }
         }
@@ -203,17 +219,17 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                 'reactive_savings_yearly' => $componentAnnual['reactive'] ?? '0.00',
                 'migration_savings_monthly' => $componentMonthly['migration'] ?? '0.00',
                 'migration_savings_yearly' => $componentAnnual['migration'] ?? '0.00',
-                'recommended_modality' => null,
-                'optimal_demand_peak' => null,
-                'optimal_demand_off_peak' => null,
-                'optimal_demand_single' => null,
+                'recommended_modality' => $migration->selectedModality,
+                'optimal_demand_peak' => $demandOptimization['optimal']['peak'] ?? null,
+                'optimal_demand_off_peak' => $demandOptimization['optimal']['off_peak'] ?? null,
+                'optimal_demand_single' => $demandOptimization['optimal']['unique'] ?? null,
                 'chart_series' => $chartSeries + $indicators->seriesByKey,
                 'warnings' => $warnings,
                 'r_values' => $rValues,
                 'k_values' => $kValues,
             ],
             algorithmVersion: '1.0',
-            tariffVersionIds: [],
+            tariffVersionIds: $migration->tariffVersionIds,
             regulatoryParameterVersionIds: array_values(array_unique($regulatoryParameterIds)),
         );
     }

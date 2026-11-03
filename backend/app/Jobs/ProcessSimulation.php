@@ -140,10 +140,7 @@ class ProcessSimulation implements ShouldQueue
                     'percentage' => '% do valor médio pago no período',
                     'percentage_observation' => 'A economia usa tarifas atuais e o valor pago usa as tarifas históricas.',
                 ],
-                'recommendations' => [
-                    'O potencial de economia por demanda não foi calculado porque os limites da demanda ótima seguem pendentes na seção 9.',
-                    'A migração de modalidade não foi calculada porque as regras correspondentes seguem pendentes na seção 9.',
-                ],
+                'recommendations' => [],
             ];
             $locked->report()->create($attributes);
             $locked->forceFill([

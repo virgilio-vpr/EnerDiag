@@ -43,15 +43,27 @@ class InvoiceExtractionValidatorTest extends TestCase
         $this->assertNull((new InvoiceExtractionValidator)->validate([$this->invoice('2025-08', items: [$item])]));
     }
 
-    public function test_it_rejects_quantity_price_difference_above_one_cent(): void
+    public function test_it_accepts_quantity_price_differences_up_to_one_real_in_either_direction(): void
     {
-        $item = $this->item(quantity: '1.000', price: '9.98000', amount: '10.00');
+        foreach (['99.00', '100.68', '101.00'] as $amount) {
+            $invoice = $this->invoice('2025-01', items: [$this->item('1.000', '100.00000', $amount)]);
+            $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
+            $this->assertSame($amount, $invoice->items[0]->amount);
+            $this->assertSame('100.00000', $invoice->items[0]->unitPriceTaxed);
+        }
+    }
 
-        try {
-            (new InvoiceExtractionValidator)->validate([$this->invoice('2025-08', items: [$item])]);
-            $this->fail('An amount mismatch above one cent must be rejected.');
-        } catch (ValidationException $exception) {
-            $this->assertArrayHasKey('invoices.0.items.0.amount', $exception->errors());
+    public function test_it_rejects_quantity_price_differences_above_one_real_in_either_direction(): void
+    {
+        foreach (['98.99', '101.01'] as $amount) {
+            try {
+                (new InvoiceExtractionValidator)->validate([
+                    $this->invoice('2025-01', items: [$this->item('1.000', '100.00000', $amount)]),
+                ]);
+                $this->fail('An amount mismatch above one real must be rejected.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('invoices.0.items.0.amount', $exception->errors());
+            }
         }
     }
 

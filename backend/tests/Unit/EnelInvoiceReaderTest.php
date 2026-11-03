@@ -9,6 +9,19 @@ use Tests\TestCase;
 
 class EnelInvoiceReaderTest extends TestCase
 {
+    public function test_it_preserves_values_from_january_and_february_invoices_with_rounding_differences(): void
+    {
+        $invoices = [];
+        foreach (['january' => '48427.71', 'february' => '50934.67'] as $month => $billedAmount) {
+            $invoice = (new EnelInvoiceReader)->read(file_get_contents(__DIR__.'/../Fixtures/enel-rounded-'.$month.'-blue.txt'));
+            $consumption = array_values(array_filter($invoice->items, static fn ($item): bool => $item->itemType === 'active_consumption' && $item->timeSlot === 'off_peak' && $item->tariffComponent === 'energy_te'))[0];
+            $this->assertSame($billedAmount, $consumption->amount);
+            $this->assertSame($month === 'january' ? '0.32136' : '0.32129', $consumption->unitPriceTaxed);
+            $invoices[] = $invoice;
+        }
+        $this->assertNull((new InvoiceExtractionValidator)->validate($invoices));
+    }
+
     public function test_it_normalizes_the_reference_invoice_and_matches_reversed_idle_demand_rows(): void
     {
         $reader = new EnelInvoiceReader;

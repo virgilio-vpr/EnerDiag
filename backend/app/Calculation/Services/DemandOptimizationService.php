@@ -16,13 +16,36 @@ final class DemandOptimizationService
     /** @param list<DemandOptimizationMonthData> $peakMonths
      * @param  list<DemandOptimizationMonthData>  $offPeakMonths
      */
-    public function optimizeBlue(array $peakMonths, array $offPeakMonths, int $minimumDemand, int $maximumDemand): DemandOptimizationResult
+    public function optimizeBlue(array $peakMonths, array $offPeakMonths, int $minimumDemand, int $maximumDemand, ?int $minimumEitherSlot = null): DemandOptimizationResult
     {
         $this->validateRange($minimumDemand, $maximumDemand);
 
+        if ($minimumEitherSlot !== null && ($minimumEitherSlot < 0 || $minimumEitherSlot > $maximumDemand)) {
+            throw new InvalidArgumentException('The minimum for either time slot must be within the optimization range.');
+        }
+
+        $peak = $this->optimizeSlot($peakMonths, $minimumDemand, $maximumDemand);
+        $offPeak = $this->optimizeSlot($offPeakMonths, $minimumDemand, $maximumDemand);
+        if ($minimumEitherSlot !== null && $peak->optimalDemand !== null && $offPeak->optimalDemand !== null
+            && bccomp($peak->optimalDemand, (string) $minimumEitherSlot, 3) < 0
+            && bccomp($offPeak->optimalDemand, (string) $minimumEitherSlot, 3) < 0) {
+            $constrainedMinimum = max($minimumDemand, $minimumEitherSlot);
+            $peakConstrained = $this->optimizeSlot($peakMonths, $constrainedMinimum, $maximumDemand);
+            $offPeakConstrained = $this->optimizeSlot($offPeakMonths, $constrainedMinimum, $maximumDemand);
+            if ($peakConstrained->totalCost !== null && $offPeakConstrained->totalCost !== null) {
+                $peakConstrainedCost = bcadd($peakConstrained->totalCost, $offPeak->totalCost, 2);
+                $offPeakConstrainedCost = bcadd($peak->totalCost, $offPeakConstrained->totalCost, 2);
+                if (bccomp($peakConstrainedCost, $offPeakConstrainedCost, 2) < 0) {
+                    $peak = $peakConstrained;
+                } else {
+                    $offPeak = $offPeakConstrained;
+                }
+            }
+        }
+
         return new DemandOptimizationResult([
-            'peak' => $this->optimizeSlot($peakMonths, $minimumDemand, $maximumDemand),
-            'off_peak' => $this->optimizeSlot($offPeakMonths, $minimumDemand, $maximumDemand),
+            'peak' => $peak,
+            'off_peak' => $offPeak,
         ]);
     }
 
