@@ -23,6 +23,7 @@ class SubmitSimulation
     public function __construct(
         private readonly InvoiceReaderResolver $readerResolver,
         private readonly InvoiceUploadValidator $uploadValidator,
+        private readonly SimulationCapacity $capacity,
     ) {}
 
     /**
@@ -53,6 +54,7 @@ class SubmitSimulation
         $directory = null;
         try {
             return DB::transaction(function () use ($user, $data, $files, $distributor, &$directory): Simulation {
+                $this->capacity->assertCanCreate($user);
                 CustomerProfile::query()->updateOrCreate(
                     ['user_id' => $user->id],
                     [

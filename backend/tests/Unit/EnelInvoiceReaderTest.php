@@ -9,6 +9,63 @@ use Tests\TestCase;
 
 class EnelInvoiceReaderTest extends TestCase
 {
+    public function test_it_reads_discounted_demand_credits_and_all_billing_rows_without_losing_signs_or_precision(): void
+    {
+        $invoice = (new EnelInvoiceReader)->read(file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt'));
+        $this->assertSame('2026-08', $invoice->referenceMonth);
+        $this->assertSame('42446.32', $invoice->totalPaid);
+        $this->assertSame(['free_market_invoice'], $invoice->warnings);
+        $this->assertCount(17, $invoice->items);
+        $this->assertSame('252.000', $this->item($invoice->items, 'measured_demand', 'peak')->quantity);
+        $idle = $this->item($invoice->items, 'idle_demand', 'off_peak');
+        $this->assertSame('67.920', $idle->quantity);
+        $this->assertSame('10.05771', $idle->unitPriceTaxed);
+        $this->assertSame('9.52000', $idle->tariffRate);
+        $credits = array_values(array_filter($invoice->items, static fn ($item): bool => $item->sourceLabel === 'BENEFÍCIO TARIFÁRIO LÍQUIDO'));
+        $this->assertSame('-9410.65', $credits[0]->amount);
+        $this->assertSame('-503.46', $credits[0]->pisCofinsAmount);
+        $sum = '0.00';
+        foreach ($invoice->items as $item) {
+            $sum = bcadd($sum, $item->amount, 2);
+        }
+        $this->assertSame($invoice->totalPaid, $sum);
+        $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
+    }
+
+    public function test_it_warns_when_a_billing_row_is_missing_instead_of_silently_accepting_a_partial_table(): void
+    {
+        $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');
+        $text = preg_replace('/^ENCARGO ESCASSEZ.*\n/mu', '', $text);
+        $invoice = (new EnelInvoiceReader)->read($text);
+        $this->assertContains('invoice_billing_total_mismatch', $invoice->warnings);
+    }
+
+    public function test_reading_date_takes_precedence_over_issue_month_due_date_and_dates_in_legal_notices(): void
+    {
+        $text = file_get_contents(__DIR__.'/../Fixtures/enel-reference-blue.txt');
+        $invoice = (new EnelInvoiceReader)->read("LEITURA ATUAL 30/06/2026\nMês/Ano: 07/2026\n".$text);
+        $this->assertSame('2026-06', $invoice->referenceMonth);
+
+        $invoice = (new EnelInvoiceReader)->read("13/07/2026\n31/05/2026 30/06/2026 31/07/2026\n".$text);
+        $this->assertSame('2026-06', $invoice->referenceMonth);
+    }
+
+    public function test_it_uses_the_standalone_header_month_without_taking_the_year_from_a_legal_notice(): void
+    {
+        $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');
+        $text = str_replace('31/07/2026 31/08/2026 30/09/2026', '', $text);
+        $this->assertSame('2026-08', (new EnelInvoiceReader)->read($text)->referenceMonth);
+    }
+
+    public function test_it_matches_short_idle_demand_rows_using_net_tariffs_when_tax_rounding_exceeds_two_cents(): void
+    {
+        $text = file_get_contents(__DIR__.'/../Fixtures/enel-rounded-january-blue.txt');
+        $invoice = (new EnelInvoiceReader)->read($text);
+        $this->assertSame([], $invoice->warnings);
+        $this->assertSame('571.06', $this->item($invoice->items, 'idle_demand', 'off_peak')->amount);
+        $this->assertSame('1795.88', $this->item($invoice->items, 'idle_demand', 'peak')->amount);
+    }
+
     public function test_it_preserves_values_from_january_and_february_invoices_with_rounding_differences(): void
     {
         $invoices = [];

@@ -11,11 +11,14 @@ final class RegulatoryParameterService
     /** @var array<string, RegulatoryParameter|null> */
     private array $resolvedParameters = [];
 
+    /** @var array<string, string> */
+    private array $referenceDates = [];
+
     public function resolve(string $key, DateTimeInterface|string $date): ?RegulatoryParameter
     {
         $referenceDate = $date instanceof DateTimeInterface
             ? CarbonImmutable::instance($date)->toDateString()
-            : CarbonImmutable::parse($date)->toDateString();
+            : ($this->referenceDates[$date] ??= CarbonImmutable::parse($date)->toDateString());
 
         $cacheKey = $key.'|'.$referenceDate;
         if (array_key_exists($cacheKey, $this->resolvedParameters)) {

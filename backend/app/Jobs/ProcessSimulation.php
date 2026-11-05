@@ -9,6 +9,7 @@ use App\Invoices\Validation\InvoiceExtractionValidator;
 use App\Invoices\Validation\InvoiceProcessingFailureRecorder;
 use App\Mail\SimulationCompleted;
 use App\Models\Simulation;
+use App\Services\RunSavedSimulation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -49,18 +50,27 @@ class ProcessSimulation implements ShouldQueue
         InvoiceExtractionValidator $validator,
         InvoiceProcessingFailureRecorder $failureRecorder,
         ReportCalculationEngine $calculationEngine,
+        ?RunSavedSimulation $runSavedSimulation = null,
     ): void {
-        $simulation = Simulation::query()->with('user.profile.distributor')->findOrFail($this->simulationId);
-        $directory = 'simulation-'.$simulation->id;
+        $simulation = Simulation::query()->with('user.profile.distributor')->find($this->simulationId);
+        $directory = 'simulation-'.$this->simulationId;
 
-        if ($simulation->status === 'completed') {
+        if ($simulation === null || $simulation->status === 'completed') {
             Storage::disk(TemporaryPdfTextExtractor::DISK)->deleteDirectory($directory);
+
+            return;
+        }
+
+        if ($simulation->invoices()->exists()) {
+            $this->activeStage = 'calculating';
+            ($runSavedSimulation ?? app(RunSavedSimulation::class))->handle($simulation);
 
             return;
         }
 
         $this->activeStage = 'setup';
         $simulation->forceFill(['status' => 'processing', 'processing_errors' => null])->save();
+
         $profile = $simulation->user?->profile;
         $distributor = $profile?->distributor;
         if ($distributor === null) {
@@ -104,6 +114,7 @@ class ProcessSimulation implements ShouldQueue
             foreach ($invoices as $data) {
                 $invoice = $locked->invoices()->create([
                     'reference_month' => $data->referenceMonth,
+                    'extraction_warnings' => $data->warnings,
                     'consumer_unit' => $data->consumerUnit,
                     'subgroup' => $data->subgroup,
                     'tariff_modality' => $data->tariffModality,

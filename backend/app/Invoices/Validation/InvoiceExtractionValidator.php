@@ -50,8 +50,12 @@ final class InvoiceExtractionValidator
     /** @param array<string, list<string>> $errors */
     private function validateItem(ExtractedInvoiceItemData $item, int $invoiceIndex, int $itemIndex, array &$errors): void
     {
-        if ($item->quantity !== null && $item->unitPriceTaxed !== null) {
+        $lumpSum = $item->itemType === 'other_charge' && $item->quantity !== null && bccomp($item->quantity, '0', 3) === 0;
+        if (! $lumpSum && $item->quantity !== null && $item->unitPriceTaxed !== null) {
             $expectedAmount = $this->roundHalfUp(bcmul($item->quantity, $item->unitPriceTaxed, 10));
+            if ($item->itemType === 'other_charge' && bccomp($item->amount, '0', 2) < 0) {
+                $expectedAmount = bcsub('0', $this->absolute($expectedAmount), 2);
+            }
             $amountDifference = $this->absolute(bcsub($expectedAmount, $item->amount, 2));
 
             if (bccomp($amountDifference, self::AMOUNT_TOLERANCE, 2) > 0) {

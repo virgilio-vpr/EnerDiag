@@ -6,6 +6,7 @@ use App\Models\Report;
 use App\Models\Simulation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Smalot\PdfParser\Parser;
 use Tests\TestCase;
 
 class SimulationReadApiTest extends TestCase
@@ -147,8 +148,11 @@ class SimulationReadApiTest extends TestCase
             ->assertHeader('Content-Type', 'application/pdf')
             ->assertHeader('Content-Disposition', 'attachment; filename="relatorio-enerdiag-'.$simulation->id.'.pdf"');
         $this->assertStringStartsWith('%PDF-1.4', $response->getContent());
-        $this->assertStringContainsString('54.42', $response->getContent());
-        $this->assertStringContainsString('653.04', $response->getContent());
+        $pdfText = (new Parser)->parseContent($response->getContent())->getText();
+        $this->assertStringContainsString('54,42', $pdfText);
+        $this->assertStringContainsString('653,04', $pdfText);
+        $this->assertStringContainsString('Economia por componente', $pdfText);
+        $this->assertStringContainsString('Economia com reativos por mês', $pdfText);
 
         $this->withToken($token)->get('/api/v1/simulations/'.$this->simulation($customer, 'queued')->id.'/pdf')
             ->assertStatus(409);

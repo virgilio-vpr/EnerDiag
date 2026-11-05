@@ -217,7 +217,7 @@ export function LoginPage() {
   }
 
   if (signedIn) {
-    return <section className="access-page" aria-labelledby="login-success-title"><p className="section-eyebrow">Acesso confirmado</p><h1 id="login-success-title">Você entrou na sua conta</h1><p className="form-success" role="status">Sua sessão está ativa neste dispositivo.</p><button className="button access-submit" type="button" onClick={() => { window.history.pushState({}, '', '/upload-faturas'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Continuar para minhas faturas</button></section>
+    return <section className="access-page" aria-labelledby="login-success-title"><p className="section-eyebrow">Acesso confirmado</p><h1 id="login-success-title">Você entrou na sua conta</h1><p className="form-success" role="status">Sua sessão está ativa neste dispositivo.</p><button className="button access-submit" type="button" onClick={() => { window.history.pushState({}, '', '/minhas-simulacoes'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Continuar para minhas simulações</button></section>
   }
 
   return (

@@ -38,7 +38,7 @@ const report = {
   ],
   explanatory_texts: {},
   recommendations: ['Confira as condições antes de alterar a demanda contratada.'],
-  r_values: [{ reference_month: '2026-01', time_slot: 'peak', ratio: '0.820000', source: 'fallback', inherited: false }],
+  r_values: [{ reference_month: '2026-01', time_slot: 'peak', ratio: '0.820000' as string | null, source: 'fallback', inherited: false }],
 }
 
 function setupFetch(responses: Record<string, Response | Blob> = {}, reportData = report) {
@@ -56,6 +56,14 @@ afterEach(() => {
 })
 
 describe('simulation report', () => {
+  it('does not show a zero reserve when the ratio is unavailable', async () => {
+    setAuthToken('customer-token')
+    setupFetch({}, { ...report, r_values: [{ ...report.r_values[0], ratio: null }] })
+    render(<SimulationReportPage simulationId="12" />)
+    await screen.findByRole('heading', { name: 'Seu relatório de energia' })
+    expect(screen.queryByRole('heading', { name: 'Reserva aplicada à demanda ociosa' })).not.toBeInTheDocument()
+  })
+
   it('renders indicators, charts, D14 explanation, and relevant warnings', async () => {
     setAuthToken('customer-token')
     setupFetch()

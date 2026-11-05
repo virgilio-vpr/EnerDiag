@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { apiRequest, getAuthToken } from '../services/api/client'
+import reportTexts from '../../../backend/resources/report-texts.json'
 
 type ChartPoint = {
   reference_month?: string
@@ -47,32 +48,10 @@ type Report = {
   warnings: string[]
   explanatory_texts: Record<string, string>
   recommendations: string[]
-  r_values: Array<{ reference_month: string; time_slot: string; ratio: string; source: string; inherited: boolean }>
+  r_values: Array<{ reference_month: string; time_slot: string; ratio: string | null; source: string; inherited: boolean }>
 }
 
-const warningText: Record<string, string> = {
-  incomplete_invoice_series: 'Esta avaliação inicial considera menos de 12 faturas. A projeção anual usa a média dos meses enviados e pode não refletir as variações de um ciclo anual completo.',
-  tariff_unavailable_using_historical_value: 'Não há tarifa vigente para todos os períodos. Onde necessário, foi usado o valor histórico da fatura como referência.',
-  tariff_unavailable: 'Não foi encontrada uma tarifa vigente para um dos períodos analisados.',
-  idle_demand_discount_fallback: 'A proporção da demanda ociosa usa a reserva padrão prevista para esta análise.',
-  idle_demand_fallback_parameter_unavailable: 'O parâmetro de reserva da demanda ociosa não estava disponível para a vigência analisada.',
-  idle_demand_ratio_unavailable: 'Não foi possível determinar a proporção aplicável à demanda ociosa em todos os períodos.',
-  idle_demand_pis_cofins_inconsistent: 'Os componentes de PIS e COFINS da demanda ociosa divergem do valor normal da fatura.',
-  idle_demand_post_matching_unresolved: 'Não foi possível associar com segurança as linhas de demanda ociosa aos postos tarifários.',
-  demand_invoice_reconciliation_mismatch: 'O valor calculado de demanda diverge do valor registrado em uma ou mais faturas; o relatório considera o valor faturado nesses meses.',
-  demand_invoice_reconciliation_unavailable: 'Não foi possível comparar todos os valores de demanda calculados com as faturas.',
-  migration_unavailable: 'A comparação entre as modalidades Azul e Verde está indisponível por falta de tarifa ou dado necessário.',
-  tariff_migration_unavailable_pending_section_9_rules: 'A comparação entre Azul e Verde ficará disponível quando os critérios regulatórios pendentes forem definidos.',
-  demand_optimization_unavailable_pending_section_9_limits: 'A demanda ótima não foi calculada porque os limites regulatórios ainda não estão definidos.',
-  demand_optimization_unavailable: 'Não foi possível calcular a demanda ótima: faltam dados da fatura ou parâmetros regulatórios necessários.',
-  demand_savings_unavailable_pending_section_9_limits: 'A economia com otimização da demanda ainda não está disponível.',
-  no_migration_savings: 'A análise não encontrou economia na migração entre modalidades.',
-  no_savings_on_migration: 'A análise não encontrou economia na migração entre modalidades.',
-  average_total_paid_zero: 'Não foi possível calcular o percentual porque o total médio pago nas faturas é zero.',
-  tax_calibration_factor_divergence: 'As tarifas identificadas nas faturas apresentam divergência de calibração tributária.',
-  invoice_aneel_tariff_rate_mismatch: 'A tarifa identificada na fatura diverge da referência usada na calibração.',
-  tax_calibration_factor_unavailable: 'Não foi possível validar a conversão entre tarifas com e sem tributos em todos os períodos.',
-}
+const warningText: Record<string, string> = reportTexts.warnings
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 })
@@ -189,7 +168,7 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   const warnings = [...report.warnings]
   if (report.months_count > 0 && report.months_count < 12) warnings.unshift('incomplete_invoice_series')
   const uniqueWarnings = [...new Set(warnings)]
-  const reserveValues = report.r_values.filter((value) => value.source === 'fallback')
+  const reserveValues = report.r_values.filter((value) => value.source === 'fallback' && value.ratio !== null && value.ratio !== '')
   const demandUnavailable = uniqueWarnings.includes('demand_savings_unavailable_pending_section_9_limits')
     || uniqueWarnings.includes('demand_optimization_unavailable_pending_section_9_limits')
     || uniqueWarnings.includes('demand_optimization_unavailable')
@@ -198,12 +177,12 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   const percentageText = report.savings_percentage === null ? '—' : `${decimal.format(Number(report.savings_percentage))}%`
   const demandSlots = demandData.some((point) => point.timeSlot === 'peak' || point.timeSlot === 'off_peak')
     ? [{ key: 'peak', label: 'Ponta' }, { key: 'off_peak', label: 'Fora de ponta' }]
-    : [{ key: 'unique', label: 'Demanda única' }]
+    : [{ key: 'unique', label: 'Única' }]
 
   return <section className="report-page" aria-labelledby="report-title">
     <div className="report-heading">
       <div><p className="section-eyebrow">Análise concluída · Protocolo {simulationId}</p><h1 id="report-title">Seu relatório de energia</h1><p className="access-intro">Resultados calculados para {report.months_count} {report.months_count === 1 ? 'fatura' : 'faturas'}.</p></div>
-      <div className="report-actions"><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button><button className="button" type="button" disabled={requestingContact || contactRequested} onClick={requestContact}>{requestingContact ? 'Enviando…' : contactRequested ? 'Contato solicitado' : 'Solicitar contato comercial'}</button></div>
+      <div className="report-actions"><a className="button button--secondary" href="/minhas-simulacoes">Minhas simulações</a><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button><button className="button" type="button" disabled={requestingContact || contactRequested} onClick={requestContact}>{requestingContact ? 'Enviando…' : contactRequested ? 'Contato solicitado' : 'Solicitar contato comercial'}</button></div>
     </div>
     {pdfMessage && <p className="form-success" role="status">{pdfMessage}</p>}
     {contactMessage && <p className={contactRequested ? 'form-success' : 'field-error'} role={contactRequested ? 'status' : 'alert'}>{contactMessage}</p>}
@@ -222,7 +201,7 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
       {report.recommended_modality && <div><dt>Modalidade recomendada</dt><dd>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</dd></div>}
     </dl></section>
 
-    {uniqueWarnings.length > 0 && <section className="report-warnings" aria-labelledby="warnings-title"><h2 id="warnings-title">Avisos da análise</h2><ul>{uniqueWarnings.map((warning) => <li key={warning}>{warningText[warning] ?? 'A análise identificou um ponto que merece atenção.'}</li>)}</ul></section>}
+    {uniqueWarnings.length > 0 && <section className="report-warnings" aria-labelledby="warnings-title"><h2 id="warnings-title">Avisos da análise</h2><ul>{uniqueWarnings.map((warning) => <li key={warning}>{warningText[warning] ?? reportTexts.fallback_warning}</li>)}</ul></section>}
     {reserveValues.length > 0 && <section className="report-ratio" aria-label="Reserva da demanda ociosa"><h2>Reserva aplicada à demanda ociosa</h2><p>Foi usada a proporção r = {decimal.format(Number(reserveValues[0].ratio) * 100)}% nos períodos em que a fatura não indicou essa proporção.</p></section>}
 
     <section className="report-charts" aria-label="Gráficos do relatório">

@@ -28,6 +28,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Smalot\PdfParser\Parser;
 use Tests\TestCase;
 
 class ProcessSimulationTest extends TestCase
@@ -110,7 +111,8 @@ class ProcessSimulationTest extends TestCase
         $report = Report::query()->where('simulation_id', $simulation->id)->firstOrFail();
         $this->assertSame('1.0', $report->algorithm_version);
         $this->assertContains('incomplete_invoice_series', $report->warnings);
-        $this->assertStringContainsString('avaliacao inicial com menos de 12 faturas', app(PdfReportGenerator::class)->generate($report));
+        $pdfText = (new Parser)->parseContent(app(PdfReportGenerator::class)->generate($report))->getText();
+        $this->assertStringContainsString('menos de 12 faturas', preg_replace('/\s+/u', ' ', $pdfText));
         $this->assertContains('demand_invoice_reconciliation_mismatch', $report->warnings);
         $this->assertSame('0.820000', $report->r_values[0]['ratio']);
         $this->assertSame([], Storage::disk('invoice_temp')->allFiles('simulation-'.$simulation->id));

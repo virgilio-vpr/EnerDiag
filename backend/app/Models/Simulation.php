@@ -40,7 +40,7 @@ class Simulation extends Model
      */
     public function invoices(): HasMany
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(Invoice::class)->orderBy('reference_month');
     }
 
     /**

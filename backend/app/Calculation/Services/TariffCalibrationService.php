@@ -24,7 +24,7 @@ final class TariffCalibrationService
     {
         $itemFactors = [];
         foreach ($invoice->items as $index => $item) {
-            if ($item->itemType === 'idle_demand' || bccomp($item->icmsRate, '0', 4) <= 0) {
+            if (in_array($item->itemType, ['idle_demand', 'other_charge'], true) || bccomp($item->icmsRate, '0', 4) <= 0) {
                 continue;
             }
 

@@ -62,7 +62,14 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/simulations', [SimulationController::class, 'index']);
+    Route::delete('/simulations/{simulationId}', [SimulationController::class, 'destroy'])->whereNumber('simulationId');
+    Route::post('/simulations/{simulationId}/process', [SimulationController::class, 'completeInvoiceImport'])->whereNumber('simulationId')->middleware('throttle:invoice_imports');
     Route::post('/simulations', [SimulationController::class, 'store'])->middleware('throttle:uploads');
+    Route::post('/invoice-imports', [SimulationController::class, 'startInvoiceImport'])->middleware('throttle:invoice_imports');
+    Route::get('/invoice-imports/{simulationId}', [SimulationController::class, 'invoiceImportStatus'])->whereNumber('simulationId');
+    Route::post('/invoice-imports/{simulationId}/invoices', [SimulationController::class, 'importInvoice'])->whereNumber('simulationId')->middleware('throttle:invoice_imports');
+    Route::delete('/invoice-imports/{simulationId}/invoices/{invoiceId}', [SimulationController::class, 'removeImportedInvoice'])->whereNumber(['simulationId', 'invoiceId']);
+    Route::post('/invoice-imports/{simulationId}/complete', [SimulationController::class, 'completeInvoiceImport'])->whereNumber('simulationId')->middleware('throttle:invoice_imports');
     Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status'])->whereNumber('simulationId');
     Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report'])->whereNumber('simulationId');
     Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf'])->whereNumber('simulationId');

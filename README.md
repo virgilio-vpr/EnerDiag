@@ -72,6 +72,15 @@ php artisan serve --host=0.0.0.0
 
 A API ficará disponível na porta 8000, com a documentação em `/docs` e o OpenAPI em `/docs.openapi`.
 
+Em outro terminal, mantenha o processamento das simulações ativo:
+
+```bash
+cd backend
+php artisan queue:work database --queue=default --tries=3 --timeout=300
+```
+
+As faturas já salvas são calculadas diretamente pela API ao clicar em Simular relatório. O trabalhador processa o envio do relatório por e-mail e as importações pelo fluxo antigo em lote. Após alterar código do backend, reinicie o trabalhador. O `DB_QUEUE_RETRY_AFTER` deve ser maior que o timeout de 300 segundos; o padrão é 360 segundos.
+
 ## Instalar e iniciar o frontend
 
 Em outro terminal, na raiz do repositório:

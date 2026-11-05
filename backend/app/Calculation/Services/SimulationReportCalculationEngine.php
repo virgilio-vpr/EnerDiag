@@ -7,7 +7,6 @@ use App\Calculation\Data\DemandMonthData;
 use App\Calculation\Data\ExtractedInvoiceData;
 use App\Calculation\Data\RecalculatedReportData;
 use App\Calculation\Data\ReportIndicatorMonthData;
-use App\Models\RegulatoryParameter;
 use App\Models\Simulation;
 
 final class SimulationReportCalculationEngine implements ReportCalculationEngine
@@ -33,6 +32,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                 'subgroup' => $invoice->subgroup,
                 'tariff_modality' => $invoice->tariff_modality,
                 'total_paid' => $invoice->total_paid,
+                'warnings' => $invoice->extraction_warnings ?? [],
                 'items' => $invoice->items->map(static fn ($item): array => [
                     'item_type' => $item->item_type,
                     'tariff_component' => $item->tariff_component,
@@ -92,13 +92,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             ];
             $warnings = array_merge($warnings, $invoice->warnings, $k->warnings);
             foreach (['overrun_tolerance', 'overrun_multiplier'] as $key) {
-                $parameter = RegulatoryParameter::query()
-                    ->where('key', $key)
-                    ->whereNull('state')
-                    ->whereDate('valid_from', '<=', $invoice->referenceMonth.'-01')
-                    ->where(fn ($query) => $query->whereNull('valid_to')->orWhereDate('valid_to', '>=', $invoice->referenceMonth.'-01'))
-                    ->orderByDesc('valid_from')
-                    ->first();
+                $parameter = $this->parameterService->resolve($key, $invoice->referenceMonth.'-01');
                 if ($parameter !== null) {
                     $regulatoryParameterIds[] = $parameter->id;
                 }
@@ -147,13 +141,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                         'inherited' => $ratio->inherited,
                     ];
                     if ($ratio->source === IdleDemandRatioService::FALLBACK_SOURCE) {
-                        $parameter = RegulatoryParameter::query()
-                            ->where('key', 'idle_demand_discount_fallback')
-                            ->whereNull('state')
-                            ->whereDate('valid_from', '<=', $invoice->referenceMonth.'-01')
-                            ->where(fn ($query) => $query->whereNull('valid_to')->orWhereDate('valid_to', '>=', $invoice->referenceMonth.'-01'))
-                            ->orderByDesc('valid_from')
-                            ->first();
+                        $parameter = $this->parameterService->resolve('idle_demand_discount_fallback', $invoice->referenceMonth.'-01');
                         if ($parameter !== null) {
                             $regulatoryParameterIds[] = $parameter->id;
                         }

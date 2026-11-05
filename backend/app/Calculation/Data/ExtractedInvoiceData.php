@@ -88,7 +88,7 @@ final readonly class ExtractedInvoiceData
             }
 
             foreach (($data['items'] ?? []) as $index => $item) {
-                if (! is_array($item) || ($item['item_type'] ?? null) === 'idle_demand') {
+                if (! is_array($item) || in_array($item['item_type'] ?? null, ['idle_demand', 'other_charge'], true)) {
                     continue;
                 }
 

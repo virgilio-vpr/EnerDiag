@@ -29,7 +29,7 @@ final class EnelInvoiceReader implements InvoiceReader
             'tariff_modality' => $modality,
             'total_paid' => $this->totalPaid($text),
             'items' => [],
-            'warnings' => [],
+            'warnings' => preg_match('~(?:DEDU[CÇ][AÃ]O\s+)?ENERGIA\s+ACL\s+KWH~iu', $text) === 1 ? ['free_market_invoice'] : [],
         ];
 
         $contractedBySlot = $this->contractedDemand($text, $modality);
@@ -62,7 +62,9 @@ final class EnelInvoiceReader implements InvoiceReader
                 continue;
             }
 
-            $parsed = $this->parseRegularRow($row['content']);
+            $parsed = $row['kind'] === 'short_charge'
+                ? $this->parseIdleRow($row['content'])
+                : $this->parseRegularRow($row['content']);
             if ($parsed === null) {
                 throw new InvalidArgumentException("A linha '{$row['source_label']}' do quadro de faturamento da ENEL está incompleta.");
             }
@@ -99,6 +101,16 @@ final class EnelInvoiceReader implements InvoiceReader
         $data['items'] = array_merge($data['items'], $matchedIdleRows);
         $data['warnings'] = array_merge($data['warnings'], $matchingWarnings);
 
+        if (preg_match('/Subtotal\s+Faturamento/iu', $text) === 1 && preg_match('/Subtotal\s+Outros/iu', $text) === 1) {
+            $sum = '0.00';
+            foreach ($data['items'] as $item) {
+                $sum = bcadd($sum, $item['amount'], 2);
+            }
+            if (bccomp($this->absolute(bcsub($sum, $data['total_paid'], 2)), '0.02', 2) > 0) {
+                $data['warnings'][] = 'invoice_billing_total_mismatch';
+            }
+        }
+
         return ExtractedInvoiceData::fromArray($data);
     }
 
@@ -109,8 +121,8 @@ final class EnelInvoiceReader implements InvoiceReader
             ['kind' => 'idle_demand', 'pattern' => '~DEMANDA\s+LEI\s+ESTADUAL\s+16\.886/18\s+(?:KW\s*)?~iu', 'item_type' => 'idle_demand', 'tariff_component' => 'demand', 'time_slot' => 'unresolved', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'DEMANDA LEI ESTADUAL 16.886/18'],
             ['kind' => 'regular', 'pattern' => '~DEMANDA\s+(?:DE\s+)?ULTRAPASSAGEM\s+PONTA\s+KW\s*~iu', 'item_type' => 'demand_overrun', 'tariff_component' => 'demand', 'time_slot' => 'peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'Demanda de Ultrapassagem Ponta'],
             ['kind' => 'regular', 'pattern' => '~DEMANDA\s+(?:DE\s+)?ULTRAPASSAGEM\s+(?:FORA\s+(?:DE\s+)?PONTA|F\.?\s*PONTA)\s+KW\s*~iu', 'item_type' => 'demand_overrun', 'tariff_component' => 'demand', 'time_slot' => 'off_peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'Demanda de Ultrapassagem Fora de Ponta'],
-            ['kind' => 'regular', 'pattern' => '~DEMANDA\s+PONTA\s+KW\s*~iu', 'item_type' => 'measured_demand', 'tariff_component' => 'demand', 'time_slot' => 'peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'DEMANDA PONTA'],
-            ['kind' => 'regular', 'pattern' => '~DEMANDA\s+(?:FORA\s+DE\s+PONTA|F\.?\s*PONTA)\s+KW\s*~iu', 'item_type' => 'measured_demand', 'tariff_component' => 'demand', 'time_slot' => 'off_peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'DEMANDA FORA DE PONTA'],
+            ['kind' => 'regular', 'pattern' => '~DEMANDA\s+PONTA\s+(?:C/\s*DESCONTO\s+)?KW\s*~iu', 'item_type' => 'measured_demand', 'tariff_component' => 'demand', 'time_slot' => 'peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'DEMANDA PONTA'],
+            ['kind' => 'regular', 'pattern' => '~DEMANDA\s+(?:FORA\s+(?:DE\s+)?PONTA|F\.?\s*PONTA)\s+(?:C/\s*DESCONTO\s+)?KW\s*~iu', 'item_type' => 'measured_demand', 'tariff_component' => 'demand', 'time_slot' => 'off_peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'DEMANDA FORA DE PONTA'],
             ['kind' => 'regular', 'pattern' => '~CONSUMO\s+ATIVO\s+PONTA\s+(TUSD|TE)\s+KWH\s*~iu', 'item_type' => 'active_consumption', 'tariff_component' => 'captured_energy_component', 'time_slot' => 'peak', 'unit' => 'kWh', 'reactive_nature' => 'not_applicable', 'source_label' => 'CONSUMO ATIVO PONTA'],
             ['kind' => 'regular', 'pattern' => '~CONSUMO\s+ATIVO\s+(?:FORA\s+DE\s+PONTA|F\.?\s*PONTA)\s+(TUSD|TE)\s+KWH\s*~iu', 'item_type' => 'active_consumption', 'tariff_component' => 'captured_energy_component', 'time_slot' => 'off_peak', 'unit' => 'kWh', 'reactive_nature' => 'not_applicable', 'source_label' => 'CONSUMO ATIVO FORA DE PONTA'],
             ['kind' => 'regular', 'pattern' => '~(?:UFDR|DUR|DEMANDA\s+REATIVA\s+(?:EXCEDENTE|INDUTIVA\s*(?:/|E)\s*CAPACITIVA))\s+(?:FORA\s+(?:DE\s+)?PONTA|F\.?\s*PONTA)\s+KW\s*~iu', 'item_type' => 'reactive_demand_excess', 'tariff_component' => 'demand', 'time_slot' => 'off_peak', 'unit' => 'kW', 'reactive_nature' => 'not_applicable', 'source_label' => 'UFDR FORA DE PONTA'],
@@ -119,6 +131,16 @@ final class EnelInvoiceReader implements InvoiceReader
             ['kind' => 'regular', 'pattern' => '~UFER\s+(?:FORA\s+(?:DE\s+)?PONTA|F\.?\s*PONTA)\s+(?:INDU(?:TIVO)?\s+)?(?:TE\s+)?KWH\s*~iu', 'item_type' => 'reactive_energy_excess', 'tariff_component' => 'energy_te', 'time_slot' => 'off_peak', 'unit' => 'kWh', 'reactive_nature' => 'inductive', 'source_label' => 'UFER FORA DE PONTA INDU'],
             ['kind' => 'regular', 'pattern' => '~UFER\s+(?:MADRUGADA|FIM\s+DE\s+SEMANA|F\.?\s*PONTA)\s+CAP(?:ACITIVO)?\s+(?:TE\s+)?KWH\s*~iu', 'item_type' => 'reactive_energy_excess', 'tariff_component' => 'energy_te', 'time_slot' => 'late_night_weekend', 'unit' => 'kWh', 'reactive_nature' => 'capacitive', 'source_label' => 'UFER MADRUGADA/FIM DE SEMANA CAPACITIVO'],
         ];
+
+        foreach ([
+            ['~(?:DEDU[CÇ][AÃ]O\s+)?ENERGIA\s+ACL\s+KWH\s*~iu', 'regular', 'kWh'],
+            ['~(?:ADICIONAL|ADIC\.)\s+BANDEIRA\s+(?:TARIF[AÁ]RIA\s+|AMARELA\s+|VERMELHA\s+)?(?:FP|PT)\s*~iu', 'regular', null],
+            ['~ENCARGO\s+(?:CONTA\s+)?ESCASSEZ\s+H[IÍ]DRICA\s+KWH\s*~iu', 'regular', 'kWh'],
+            ['~BENEF[IÍ]CIO\s+TARIF[AÁ]RIO\s+(?:BRUTO|L[IÍ]QUIDO)\s*~iu', 'regular', null],
+            ['~COSIP\s*-\s*S[AÃ]O\s+PAULO\s*-\s*MUNICIPAL\s*~iu', 'short_charge', null],
+        ] as [$pattern, $kind, $unit]) {
+            $specifications[] = ['kind' => $kind, 'pattern' => $pattern, 'item_type' => 'other_charge', 'tariff_component' => 'other', 'time_slot' => 'not_applicable', 'unit' => $unit, 'reactive_nature' => 'not_applicable', 'source_label' => ''];
+        }
 
         $matches = [];
         foreach ($specifications as $specification) {
@@ -129,6 +151,7 @@ final class EnelInvoiceReader implements InvoiceReader
                     'offset' => $offset,
                     'content_offset' => $offset + strlen($label),
                     'captured_component' => $found[1][$matchIndex][0] ?? null,
+                    'source_label' => preg_replace('/\s+/u', ' ', trim(preg_replace('/\s+(?:KWH|KW)\s*$/iu', '', $label))),
                 ];
             }
         }
@@ -186,15 +209,25 @@ final class EnelInvoiceReader implements InvoiceReader
         ];
     }
 
-    /** @return array{amount: string, pis_cofins_amount: string, icms_base: string, icms_rate: string, icms_amount: string} */
+    /** @return array{amount: string, pis_cofins_amount: string, icms_base: string, icms_rate: string, icms_amount: string, quantity: ?string, unit_price_taxed: ?string, tariff_rate: ?string} */
     private function parseIdleRow(string $content): array
     {
         $offset = 0;
+        $quantity = $this->takeDecimal($content, $offset, 3);
+        $unitPrice = $this->takeDecimal($content, $offset, 5);
+
+        if ($quantity === null || $unitPrice === null) {
+            $offset = 0;
+            $quantity = null;
+            $unitPrice = null;
+        }
+
         $amount = $this->takeDecimal($content, $offset, 2);
         $pisCofins = $this->takeDecimal($content, $offset, 2);
         $icmsBase = $this->takeDecimal($content, $offset, 2);
         $icmsRate = $this->takeRate($content, $offset);
         $icmsAmount = $this->takeDecimal($content, $offset, 2);
+        $tariffRate = $quantity === null ? null : $this->takeDecimal($content, $offset, 5);
 
         if (in_array(null, [$amount, $pisCofins, $icmsBase, $icmsRate, $icmsAmount], true)) {
             throw new InvalidArgumentException('A linha de demanda ociosa da ENEL está incompleta.');
@@ -206,6 +239,9 @@ final class EnelInvoiceReader implements InvoiceReader
             'icms_base' => $icmsBase,
             'icms_rate' => $icmsRate,
             'icms_amount' => $icmsAmount,
+            'quantity' => $quantity,
+            'unit_price_taxed' => $unitPrice,
+            'tariff_rate' => $tariffRate,
         ];
     }
 
@@ -242,7 +278,7 @@ final class EnelInvoiceReader implements InvoiceReader
         return $values;
     }
 
-    /** @param list<array<string, string>> $idleRows
+    /** @param list<array{amount: string, pis_cofins_amount: string, icms_base: string, icms_rate: string, icms_amount: string, quantity: ?string, unit_price_taxed: ?string, tariff_rate: ?string}> $idleRows
      * @param  array<string, string>  $contractedBySlot
      * @param  array<string, array<string, mixed>>  $normalDemandBySlot
      * @return array{list<array<string, mixed>>, list<string>}
@@ -254,51 +290,53 @@ final class EnelInvoiceReader implements InvoiceReader
         }
 
         $slots = $modality === 'green' ? ['unique'] : ['peak', 'off_peak'];
+        $tariffAssignment = $this->idleRowsByTariff($idleRows, $slots, $normalDemandBySlot);
+        if ($tariffAssignment !== null) {
+            return [$this->idleDemandItems($idleRows, $tariffAssignment), []];
+        }
+
         if (count($idleRows) === count($slots) && $this->hasExpectedDemandValues($slots, $contractedBySlot, $normalDemandBySlot)) {
-            $direct = $this->assignmentCost($idleRows, $slots, $contractedBySlot, $normalDemandBySlot, false);
-            $reverse = count($slots) === 2
-                ? $this->assignmentCost($idleRows, $slots, $contractedBySlot, $normalDemandBySlot, true)
-                : null;
-            $reversed = $reverse !== null && bccomp($reverse, $direct, 4) < 0;
-            $cost = $reversed ? $reverse : $direct;
-            $assignment = $reversed ? array_reverse($slots) : $slots;
-            $errors = $this->assignmentErrors($idleRows, $assignment, $contractedBySlot, $normalDemandBySlot);
-
-            if (count(array_filter($errors, fn (string $error): bool => bccomp($error, self::IDLE_MATCH_TOLERANCE, 2) > 0)) === 0
-                && ($reverse === null || bccomp($direct, $reverse, 4) !== 0)) {
-                $items = [];
-                foreach ($idleRows as $index => $row) {
-                    $items[] = $this->item(
-                        itemType: 'idle_demand',
-                        tariffComponent: 'demand',
-                        timeSlot: $assignment[$index],
-                        quantity: null,
-                        unit: 'kW',
-                        unitPriceTaxed: null,
-                        tariffRate: null,
-                        amount: $row['amount'],
-                        pisCofins: $row['pis_cofins_amount'],
-                        icmsBase: $row['icms_base'],
-                        icmsRate: $row['icms_rate'],
-                        icmsAmount: $row['icms_amount'],
-                        sourceLabel: 'DEMANDA LEI ESTADUAL 16.886/18',
-                    );
+            foreach ([false, true] as $netOfTaxes) {
+                if ($netOfTaxes && array_filter($slots, fn (string $slot): bool => $normalDemandBySlot[$slot]['tariff_rate'] === null) !== []) {
+                    continue;
                 }
+                $direct = $this->assignmentCost($idleRows, $slots, $contractedBySlot, $normalDemandBySlot, false, $netOfTaxes);
+                $reverse = count($slots) === 2
+                    ? $this->assignmentCost($idleRows, $slots, $contractedBySlot, $normalDemandBySlot, true, $netOfTaxes)
+                    : null;
+                $reversed = $reverse !== null && bccomp($reverse, $direct, 4) < 0;
+                $assignment = $reversed ? array_reverse($slots) : $slots;
+                $errors = $this->assignmentErrors($idleRows, $assignment, $contractedBySlot, $normalDemandBySlot, $netOfTaxes);
 
-                return [$items, []];
+                if (count(array_filter($errors, fn (string $error): bool => bccomp($error, self::IDLE_MATCH_TOLERANCE, 2) > 0)) === 0
+                    && ($reverse === null || bccomp($direct, $reverse, 4) !== 0)) {
+                    return [$this->idleDemandItems($idleRows, $assignment), []];
+                }
             }
         }
 
+        $unresolvedSlots = array_map(static fn (int $index): string => 'unresolved_'.$index, array_keys($idleRows));
+
+        return [$this->idleDemandItems($idleRows, $unresolvedSlots), ['idle_demand_post_matching_unresolved']];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $idleRows
+     * @param  list<string>  $slots
+     * @return list<array<string, mixed>>
+     */
+    private function idleDemandItems(array $idleRows, array $slots): array
+    {
         $items = [];
         foreach ($idleRows as $index => $row) {
             $items[] = $this->item(
                 itemType: 'idle_demand',
                 tariffComponent: 'demand',
-                timeSlot: 'unresolved_'.$index,
-                quantity: null,
+                timeSlot: $slots[$index],
+                quantity: $row['quantity'],
                 unit: 'kW',
-                unitPriceTaxed: null,
-                tariffRate: null,
+                unitPriceTaxed: $row['unit_price_taxed'],
+                tariffRate: $row['tariff_rate'],
                 amount: $row['amount'],
                 pisCofins: $row['pis_cofins_amount'],
                 icmsBase: $row['icms_base'],
@@ -308,7 +346,50 @@ final class EnelInvoiceReader implements InvoiceReader
             );
         }
 
-        return [$items, ['idle_demand_post_matching_unresolved']];
+        return $items;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $idleRows
+     * @param  list<string>  $slots
+     * @param  array<string, array<string, mixed>>  $normalDemandBySlot
+     * @return list<string>|null
+     */
+    private function idleRowsByTariff(array $idleRows, array $slots, array $normalDemandBySlot): ?array
+    {
+        if (count($idleRows) !== count($slots)) {
+            return null;
+        }
+
+        $assignment = [];
+        $usedSlots = [];
+        foreach ($idleRows as $row) {
+            if (! is_string($row['tariff_rate'] ?? null)) {
+                return null;
+            }
+
+            $matchedSlot = null;
+            foreach ($slots as $slot) {
+                $normalTariffRate = $normalDemandBySlot[$slot]['tariff_rate'] ?? null;
+                if (isset($usedSlots[$slot]) || ! is_string($normalTariffRate)) {
+                    continue;
+                }
+
+                if (bccomp($row['tariff_rate'], $normalTariffRate, 5) === 0) {
+                    $matchedSlot = $slot;
+                    break;
+                }
+            }
+
+            if ($matchedSlot === null) {
+                return null;
+            }
+
+            $assignment[] = $matchedSlot;
+            $usedSlots[$matchedSlot] = true;
+        }
+
+        return $assignment;
     }
 
     /** @param list<string> $slots
@@ -327,29 +408,29 @@ final class EnelInvoiceReader implements InvoiceReader
         return true;
     }
 
-    /** @param list<array<string, string>> $idleRows
+    /** @param list<array{amount: string, pis_cofins_amount: string, icms_base: string, icms_rate: string, icms_amount: string, quantity: ?string, unit_price_taxed: ?string, tariff_rate: ?string}> $idleRows
      * @param  list<string>  $slots
      * @param  array<string, string>  $contractedBySlot
      * @param  array<string, array<string, mixed>>  $normalDemandBySlot
      */
-    private function assignmentCost(array $idleRows, array $slots, array $contractedBySlot, array $normalDemandBySlot, bool $reverse): string
+    private function assignmentCost(array $idleRows, array $slots, array $contractedBySlot, array $normalDemandBySlot, bool $reverse, bool $netOfTaxes = false): string
     {
         $assignment = $reverse ? array_reverse($slots) : $slots;
         $cost = '0.0000';
-        foreach ($this->assignmentErrors($idleRows, $assignment, $contractedBySlot, $normalDemandBySlot) as $error) {
+        foreach ($this->assignmentErrors($idleRows, $assignment, $contractedBySlot, $normalDemandBySlot, $netOfTaxes) as $error) {
             $cost = bcadd($cost, bcmul($error, $error, 4), 4);
         }
 
         return $cost;
     }
 
-    /** @param list<array<string, string>> $idleRows
+    /** @param list<array{amount: string, pis_cofins_amount: string, icms_base: string, icms_rate: string, icms_amount: string, quantity: ?string, unit_price_taxed: ?string, tariff_rate: ?string}> $idleRows
      * @param  list<string>  $assignment
      * @param  array<string, string>  $contractedBySlot
      * @param  array<string, array<string, mixed>>  $normalDemandBySlot
      * @return list<string>
      */
-    private function assignmentErrors(array $idleRows, array $assignment, array $contractedBySlot, array $normalDemandBySlot): array
+    private function assignmentErrors(array $idleRows, array $assignment, array $contractedBySlot, array $normalDemandBySlot, bool $netOfTaxes = false): array
     {
         $errors = [];
         foreach ($idleRows as $index => $row) {
@@ -357,10 +438,13 @@ final class EnelInvoiceReader implements InvoiceReader
             $normal = $normalDemandBySlot[$slot];
             $unusedDemand = bcsub($contractedBySlot[$slot], $normal['quantity'], 3);
             $taxRatio = bcsub('1.0000', $normal['icms_rate'], 4);
-            $expected = bcmul(bcmul($unusedDemand, $normal['unit_price_taxed'], 10), $taxRatio, 10);
+            $expected = $netOfTaxes
+                ? bcmul($unusedDemand, $normal['tariff_rate'], 10)
+                : bcmul(bcmul($unusedDemand, $normal['unit_price_taxed'], 10), $taxRatio, 10);
             $expected = bcadd($expected, '0.0050000000', 10);
             $expected = bcadd($expected, '0', 2);
-            $difference = bcsub($row['amount'], $expected, 2);
+            $amount = $netOfTaxes ? bcsub(bcsub($row['amount'], $row['pis_cofins_amount'], 2), $row['icms_amount'], 2) : $row['amount'];
+            $difference = bcsub($amount, $expected, 2);
             $errors[] = bccomp($difference, '0.00', 2) < 0 ? bcsub('0.00', $difference, 2) : $difference;
         }
 
@@ -369,27 +453,39 @@ final class EnelInvoiceReader implements InvoiceReader
 
     private function referenceMonth(string $text): string
     {
+        if (preg_match('/LEITURA\s+ATUAL\s*[:\-]?\s*(?:\d{1,2}[\/.-])?(0[1-9]|1[0-2])[\/.-](20\d{2})/iu', $text, $match) === 1) {
+            return $match[2].'-'.$match[1];
+        }
+
+        // Some ENEL headers are images; their three reading dates remain selectable text.
+        $date = '(\d{2}/\d{2}/20\d{2})';
+        if (preg_match_all('~(?<!\d)(?='.$date.'\s+'.$date.'\s+'.$date.'(?!\d))~', substr($text, 0, 2048), $readingDates, PREG_SET_ORDER)) {
+            foreach ($readingDates as $dates) {
+                $previous = \DateTimeImmutable::createFromFormat('!d/m/Y', $dates[1]);
+                $current = \DateTimeImmutable::createFromFormat('!d/m/Y', $dates[2]);
+                $next = \DateTimeImmutable::createFromFormat('!d/m/Y', $dates[3]);
+                if ($previous && $current && $next && $previous->format('d/m/Y') === $dates[1]
+                    && $current->format('d/m/Y') === $dates[2] && $next->format('d/m/Y') === $dates[3]
+                    && $previous < $current && $current < $next
+                    && $previous->diff($current)->days <= 62 && $current->diff($next)->days <= 62) {
+                    return $current->format('Y-m');
+                }
+            }
+        }
+
         if (preg_match('/(?:refer[eê]ncia|m[eê]s(?:\s*\/\s*ano)?)\s*[:\-]?\s*(0[1-9]|1[0-2])[\/.-](20\d{2})/iu', $text, $match) === 1) {
             return $match[2].'-'.$match[1];
         }
 
-        if (preg_match('/(?:janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s+(?:de\s+)?(20\d{2})/iu', $text, $match, PREG_OFFSET_CAPTURE) === 1) {
-            $month = mb_strtolower(substr($text, $match[0][1], strpos($match[0][0], ' ') ?: strlen($match[0][0])));
+        if (preg_match('/(?:refer[eê]ncia|m[eê]s(?:\s*\/\s*ano)?)\s*[:\-]?\s*(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s+(?:de\s+)?(20\d{2})/iu', $text, $match) === 1) {
+            $month = mb_strtolower($match[1]);
             $months = ['janeiro' => '01', 'fevereiro' => '02', 'março' => '03', 'marco' => '03', 'abril' => '04', 'maio' => '05', 'junho' => '06', 'julho' => '07', 'agosto' => '08', 'setembro' => '09', 'outubro' => '10', 'novembro' => '11', 'dezembro' => '12'];
 
-            return $match[1][0].'-'.($months[$month] ?? '01');
+            return $match[2].'-'.$months[$month];
         }
 
-        preg_match_all('~\b(0[1-9]|1[0-2])/(20\d{2})\b~', $text, $dates, PREG_SET_ORDER);
-        $dateCounts = [];
-        foreach ($dates as $date) {
-            $key = $date[2].'-'.$date[1];
-            $dateCounts[$key] = ($dateCounts[$key] ?? 0) + 1;
-        }
-        if ($dateCounts !== []) {
-            arsort($dateCounts);
-
-            return (string) array_key_first($dateCounts);
+        if (preg_match('~^\h*(0[1-9]|1[0-2])/(20\d{2})\h*$~mu', $text, $match) === 1) {
+            return $match[2].'-'.$match[1];
         }
 
         throw new InvalidArgumentException('Não foi possível ler o mês de referência da fatura ENEL.');
@@ -440,7 +536,7 @@ final class EnelInvoiceReader implements InvoiceReader
     private function totalPaid(string $text): string
     {
         $number = '(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}';
-        if (preg_match('/\bTOTAL(?:\s+A\s+PAGAR|\s+DA\s+FATURA|\s+GERAL)?\s*[:\t ]+('.$number.')/iu', $text, $match) === 1) {
+        if (preg_match('/(?<!\p{L})TOTAL(?:\s+A\s+PAGAR|\s+DA\s+FATURA|\s+GERAL)?\s*[:\t ]+('.$number.')/iu', $text, $match) === 1) {
             return $this->normalizeLocaleDecimal($match[1]);
         }
 
@@ -486,7 +582,7 @@ final class EnelInvoiceReader implements InvoiceReader
     {
         $this->skipSeparators($text, $offset);
         $integer = '(?:\d{1,3}(?:\.\d{3})+|\d+)';
-        $pattern = '/^('.$integer.',\d{'.$scale.'})/';
+        $pattern = '/^(-?'.$integer.',\d{'.$scale.'})/';
 
         if (preg_match($pattern, substr($text, $offset), $match) !== 1) {
             return null;
@@ -520,5 +616,10 @@ final class EnelInvoiceReader implements InvoiceReader
     private function normalizeLocaleDecimal(string $value): string
     {
         return str_replace(',', '.', str_replace('.', '', $value));
+    }
+
+    private function absolute(string $value): string
+    {
+        return bccomp($value, '0', 2) < 0 ? bcsub('0', $value, 2) : $value;
     }
 }

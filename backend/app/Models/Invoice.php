@@ -18,6 +18,11 @@ class Invoice extends Model
      */
     protected $fillable = [
         'simulation_id',
+        'source_sha256',
+        'source_filename',
+        'extraction_warnings',
+        'source_bytes',
+        'page_count',
         'reference_month',
         'consumer_unit',
         'subgroup',
@@ -50,6 +55,7 @@ class Invoice extends Model
     {
         return [
             'total_paid' => 'decimal:2',
+            'extraction_warnings' => 'array',
         ];
     }
 }
