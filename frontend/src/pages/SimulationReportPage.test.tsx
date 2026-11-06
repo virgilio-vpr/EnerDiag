@@ -56,6 +56,38 @@ afterEach(() => {
 })
 
 describe('simulation report', () => {
+  it('reloads a recalculated report when the customer returns to the tab', async () => {
+    setAuthToken('customer-token')
+    const fetchMock = setupFetch()
+    const { unmount } = render(<SimulationReportPage simulationId="12" />)
+    await screen.findByRole('heading', { name: 'Seu relatório de energia' })
+    await waitFor(() => expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument())
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: { ...report, total_monthly_savings: '984.36', total_yearly_savings: '11812.32' } }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    fireEvent(window, new Event('focus'))
+
+    await waitFor(() => expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('984,36')))).toBeInTheDocument())
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/v1/simulations/12/report', expect.objectContaining({ cache: 'no-store' }))
+    unmount()
+    const requests = fetchMock.mock.calls.length
+    fireEvent(window, new Event('focus'))
+    expect(fetchMock).toHaveBeenCalledTimes(requests)
+  })
+
+  it('keeps customer warnings while hiding internal tax diagnostics', async () => {
+    setAuthToken('customer-token')
+    setupFetch({}, { ...report, months_count: 12, warnings: [
+      'no_migration_savings', 'idle_demand_pis_cofins_inconsistent',
+      'tax_calibration_factor_divergence', 'demand_invoice_reconciliation_mismatch',
+    ] })
+    render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByText('A análise não encontrou economia na migração entre modalidades.')).toBeInTheDocument()
+    expect(screen.getByText(/o relatório considera o valor faturado nesses meses/)).toBeInTheDocument()
+    expect(screen.queryByText(/Os componentes de PIS e COFINS/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/divergência de calibração tributária/)).not.toBeInTheDocument()
+  })
+
   it('does not show a zero reserve when the ratio is unavailable', async () => {
     setAuthToken('customer-token')
     setupFetch({}, { ...report, r_values: [{ ...report.r_values[0], ratio: null }] })
@@ -121,15 +153,15 @@ describe('simulation report', () => {
     })))
   })
 
-  it('registers a commercial contact request', async () => {
+  it('shows direct company contacts without an extra icon or contact request button', async () => {
     setAuthToken('customer-token')
-    const fetchMock = setupFetch({ '/api/v1/me/contact-request': new Response(JSON.stringify({ message: 'Solicitação registrada.' }), { status: 200, headers: { 'Content-Type': 'application/json' } }) })
+    setupFetch()
     render(<SimulationReportPage simulationId="12" />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Solicitar contato comercial' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Nossa equipe entrará em contato')
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/me/contact-request', expect.objectContaining({ method: 'POST' }))
-    expect(screen.getByRole('button', { name: 'Contato solicitado' })).toBeDisabled()
+    await screen.findByRole('heading', { name: 'Seu relatório de energia' })
+    expect(screen.getByRole('link', { name: 'contato@enerdiag.example' })).toHaveAttribute('href', 'mailto:contato@enerdiag.example')
+    expect(screen.queryByRole('img', { name: 'Ícone da EnerDiag' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Solicitar contato comercial' })).not.toBeInTheDocument()
   })
 
   it('renders the Azul and Verde comparison when the report has both series', async () => {

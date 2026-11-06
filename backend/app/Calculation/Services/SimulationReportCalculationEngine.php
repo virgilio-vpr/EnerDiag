@@ -216,7 +216,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                 'r_values' => $rValues,
                 'k_values' => $kValues,
             ],
-            algorithmVersion: '1.0',
+            algorithmVersion: '1.1',
             tariffVersionIds: $migration->tariffVersionIds,
             regulatoryParameterVersionIds: array_values(array_unique($regulatoryParameterIds)),
         );

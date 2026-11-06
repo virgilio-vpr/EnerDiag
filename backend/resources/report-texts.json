@@ -24,5 +24,9 @@
     "invoice_aneel_tariff_rate_mismatch": "A tarifa identificada na fatura diverge da referência usada na calibração.",
     "tax_calibration_factor_unavailable": "Não foi possível validar a conversão entre tarifas com e sem tributos em todos os períodos."
   },
-  "fallback_warning": "A análise identificou um ponto que merece atenção."
+  "fallback_warning": "A análise identificou um ponto que merece atenção.",
+  "internal_warnings": [
+    "idle_demand_pis_cofins_inconsistent",
+    "tax_calibration_factor_divergence"
+  ]
 }

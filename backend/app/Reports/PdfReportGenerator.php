@@ -16,7 +16,14 @@ class PdfReportGenerator
         }
         $warnings = array_values(array_unique($warnings));
         $texts = json_decode(file_get_contents(resource_path('report-texts.json')), true, flags: JSON_THROW_ON_ERROR);
-        $document = new PdfDocument((string) $report->simulation_id);
+        $contact = json_decode(file_get_contents(resource_path('company-contact.json')), true, flags: JSON_THROW_ON_ERROR);
+        $contacts = [];
+        foreach (['email' => 'E-mail', 'phone' => 'Telefone', 'whatsapp' => 'WhatsApp'] as $key => $label) {
+            if (($contact[$key] ?? '') !== '') {
+                $contacts[] = $label.': '.$contact[$key];
+            }
+        }
+        $document = new PdfDocument((string) $report->simulation_id, implode(' · ', $contacts));
         $document->textAt(PdfDocument::MARGIN, $document->y, 25, 'Seu relatório de energia', '#17352d', true);
         $document->y += 38;
         $document->paragraph('Resultados calculados para '.$months.' '.($months === 1 ? 'fatura.' : 'faturas.'), 11);
@@ -40,9 +47,10 @@ class PdfReportGenerator
             $document->paragraph('Modalidade recomendada: '.$modality);
         }
 
-        if ($warnings !== []) {
+        $customerWarnings = array_values(array_diff($warnings, $texts['internal_warnings']));
+        if ($customerWarnings !== []) {
             $document->heading('Avisos da análise');
-            foreach ($warnings as $warning) {
+            foreach ($customerWarnings as $warning) {
                 $document->paragraph('• '.($texts['warnings'][$warning] ?? $texts['fallback_warning']));
             }
         }
@@ -70,13 +78,22 @@ class PdfReportGenerator
                     default => $report->optimal_demand_single,
                 };
                 $point['optimal'] ??= $optimal;
+                $contracted = $this->pointValue($point, 'contracted');
+                $point['contracted_tolerance'] = $contracted === null ? null : bcmul($contracted, '1.05', 8);
+                $optimalValue = $this->pointValue($point, 'optimal');
+                $point['optimal_tolerance'] = $optimalValue === null ? null : bcmul($optimalValue, '1.05', 8);
                 $points[] = $point;
             }
             $this->chartSection($document, 'Demanda '.$label.': registrada × contratada × ótima', $points, [
                 ['key' => 'measured', 'label' => 'Registrada', 'color' => '#0b8f6a'],
                 ['key' => 'contracted', 'label' => 'Contratada', 'color' => '#2764c5'],
+                ['key' => 'contracted_tolerance', 'label' => 'Contratada + 5%', 'color' => '#dc2626', 'dashed' => true],
                 ['key' => 'optimal', 'label' => 'Ótima', 'color' => '#b86d13'],
+                ['key' => 'optimal_tolerance', 'label' => 'Ótima + 5%', 'color' => '#a855f7', 'dashed' => true],
             ], false, false, 'A série de demanda não está disponível neste relatório.');
+            if ($points !== []) {
+                $document->paragraph('As linhas tracejadas indicam +5% sobre a demanda contratada e sobre a ótima simulada, para comparar a medição com o limite de tolerância de cada cenário.', 9);
+            }
         }
         $this->chartSection($document, 'Economia com reativos por mês', $chartSeries['reactive'] ?? [], [
             ['key' => 'value', 'label' => 'Economia mensal', 'color' => '#0b8f6a'],
@@ -98,11 +115,11 @@ class PdfReportGenerator
 
     /**
      * @param  list<array<string, mixed>>  $points
-     * @param  list<array{key: string, label: string, color: string}>  $series
+     * @param  list<array{key: string, label: string, color: string, dashed?: bool}>  $series
      */
     private function chartSection(PdfDocument $document, string $title, array $points, array $series, bool $money, bool $bars, string $emptyText): void
     {
-        $document->ensureSpace($points === [] ? 95 : 330);
+        $document->ensureSpace($points === [] ? 95 : 350);
         $document->heading($title);
         if ($points === []) {
             $document->paragraph($emptyText);
@@ -130,7 +147,7 @@ class PdfReportGenerator
      * Floating point values are used only for chart coordinates, never for report calculations.
      *
      * @param  list<array<string, mixed>>  $points
-     * @param  list<array{key: string, label: string, color: string}>  $series
+     * @param  list<array{key: string, label: string, color: string, dashed?: bool}>  $series
      */
     private function drawChart(PdfDocument $document, array $points, array $series, bool $money, bool $bars): void
     {
@@ -163,14 +180,21 @@ class PdfReportGenerator
             $upper = $lower + $step * 4;
         }
         $left = PdfDocument::MARGIN + 62;
-        $top = $document->y + 33;
+        $legendColumns = min(3, count($series));
+        $legendExtraHeight = (ceil(count($series) / $legendColumns) - 1) * 18;
+        $top = $document->y + 33 + $legendExtraHeight;
         $width = PdfDocument::CONTENT_WIDTH - 78;
         $height = 156.0;
         $yCoordinate = static fn (float $value): float => $top + $height - ($value - $lower) / ($upper - $lower) * $height;
         foreach ($series as $index => $entry) {
-            $x = $left + $index * 125;
-            $document->rectangle($x, $document->y + 3, 8, 8, $entry['color']);
-            $document->textAt($x + 13, $document->y + 2, 8, $entry['label']);
+            $x = $left + ($index % $legendColumns) * min(150, $width / $legendColumns);
+            $legendY = $document->y + intdiv($index, $legendColumns) * 18;
+            if ($bars) {
+                $document->rectangle($x, $legendY + 3, 8, 8, $entry['color']);
+            } else {
+                $document->line($x, $legendY + 7, $x + 18, $legendY + 7, $entry['color'], 1.8, $entry['dashed'] ?? false);
+            }
+            $document->textAt($x + ($bars ? 13 : 22), $legendY + 2, 8, $entry['label']);
         }
         $document->textAt(PdfDocument::MARGIN, $top - 17, 8, $money ? 'R$' : 'kW', '#64748b');
         for ($tick = $lower; $tick <= $upper + $step / 100; $tick += $step) {
@@ -201,14 +225,16 @@ class PdfReportGenerator
                     $document->rectangle($barX, min($y, $yCoordinate(0)), max(1, $barWidth - 2), abs($yCoordinate(0) - $y), $entry['color']);
                 } else {
                     if ($previous !== null) {
-                        $document->line($previous[0], $previous[1], $x, $y, $entry['color'], 1.8);
+                        $document->line($previous[0], $previous[1], $x, $y, $entry['color'], 1.8, $entry['dashed'] ?? false);
                     }
-                    $document->rectangle($x - 2, $y - 2, 4, 4, $entry['color']);
+                    if (! ($entry['dashed'] ?? false) || count($points) === 1) {
+                        $document->rectangle($x - 2, $y - 2, 4, 4, $entry['color']);
+                    }
                     $previous = [$x, $y];
                 }
             }
         }
-        $document->y += 226;
+        $document->y += 226 + $legendExtraHeight;
     }
 
     /** @param array<string, mixed> $point */

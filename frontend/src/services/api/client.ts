@@ -25,6 +25,25 @@ export class ApiError extends Error {
 
 let authToken: string | null = null
 let authenticatedUser: AuthenticatedUser | null = null
+let responseGeneration = 0
+const responses = new Map<string, { value: unknown; expiresAt: number }>()
+const pendingReads = new Map<string, Promise<unknown>>()
+
+function clearResponses() {
+  responseGeneration += 1
+  responses.clear()
+  pendingReads.clear()
+}
+
+export function getCachedApiResponse<T>(path: string): T | undefined {
+  const cached = responses.get(path)
+  if (!cached) return undefined
+  if (cached.expiresAt <= Date.now()) {
+    responses.delete(path)
+    return undefined
+  }
+  return cached.value as T
+}
 
 const errorMessages: Record<number, string> = {
   400: 'Não foi possível entender a solicitação.',
@@ -40,6 +59,7 @@ const errorMessages: Record<number, string> = {
 }
 
 export function setAuthToken(token: string | null) {
+  clearResponses()
   authToken = token
   if (token === null) authenticatedUser = null
 }
@@ -59,7 +79,7 @@ export function getAuthenticatedUser() {
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-  config: { notifyGlobalError?: boolean } = {},
+  config: { notifyGlobalError?: boolean; cacheTtlMs?: number; forceRefresh?: boolean } = {},
 ): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Accept', 'application/json')
@@ -70,18 +90,44 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${authToken}`)
   }
 
-  const response = await fetch(`/api/v1${path}`, { ...options, headers })
-  const payload = await response.json().catch(() => ({})) as ApiErrorPayload
-  if (!response.ok) {
-    const message = payload.message || errorMessages[response.status] || errorMessages[500]
-    const error = new ApiError(response.status, message, payload.code, payload.errors)
-    if (config.notifyGlobalError !== false) {
-      window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
+  const isRead = (options.method ?? 'GET').toUpperCase() === 'GET'
+  if (!isRead) clearResponses()
+  const generation = responseGeneration
+  const cacheable = isRead && !options.headers && !options.signal && !options.credentials && (config.cacheTtlMs ?? 0) > 0
+  if (cacheable && !config.forceRefresh) {
+    const cached = getCachedApiResponse<T>(path)
+    if (cached !== undefined) return cached
+  }
+  async function requestData(): Promise<unknown> {
+    const response = await fetch(`/api/v1${path}`, { ...options, headers })
+    const payload = await response.json().catch(() => ({})) as ApiErrorPayload
+    if (!response.ok) {
+      throw new ApiError(response.status, payload.message || errorMessages[response.status] || errorMessages[500], payload.code, payload.errors)
     }
+    return payload
+  }
+  try {
+    let request: Promise<unknown>
+    if (isRead && !options.signal) {
+      const key = JSON.stringify([path, generation, [...headers], options.cache, options.credentials])
+      const pending = pendingReads.get(key)
+      if (pending) request = pending
+      else {
+        request = requestData().finally(() => { if (pendingReads.get(key) === request) pendingReads.delete(key) })
+        pendingReads.set(key, request)
+      }
+    } else request = requestData()
+    const payload = await request
+    if (!isRead) clearResponses()
+    if (cacheable && generation === responseGeneration) {
+      if (responses.size >= 50) responses.delete(responses.keys().next().value!)
+      responses.set(path, { value: payload, expiresAt: Date.now() + config.cacheTtlMs! })
+    }
+    return payload as T
+  } catch (error) {
+    if (error instanceof ApiError && config.notifyGlobalError !== false) window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
     throw error
   }
-
-  return payload as T
 }
 
 export function getHttpErrorMessage(status: number, serverMessage?: string) {

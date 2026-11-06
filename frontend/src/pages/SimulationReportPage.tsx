@@ -11,8 +11,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { apiRequest, getAuthToken } from '../services/api/client'
+import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
 import reportTexts from '../../../backend/resources/report-texts.json'
+import { CompanyContactDetails } from '../components/CompanyContactDetails'
 
 type ChartPoint = {
   reference_month?: string
@@ -76,14 +77,11 @@ function numeric(value: string | null | undefined) {
 }
 
 export function SimulationReportPage({ simulationId }: { simulationId: string }) {
-  const [report, setReport] = useState<Report | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [report, setReport] = useState<Report | null>(() => getCachedApiResponse<{ data: Report }>(`/simulations/${simulationId}/report`)?.data ?? null)
+  const [loading, setLoading] = useState(() => !getCachedApiResponse(`/simulations/${simulationId}/report`))
   const [errorMessage, setErrorMessage] = useState('')
   const [pdfMessage, setPdfMessage] = useState('')
-  const [contactMessage, setContactMessage] = useState('')
-  const [contactRequested, setContactRequested] = useState(false)
   const [downloading, setDownloading] = useState(false)
-  const [requestingContact, setRequestingContact] = useState(false)
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -92,24 +90,54 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
       return
     }
     let active = true
-    apiRequest<{ data: Report }>(`/simulations/${simulationId}/report`, {}, { notifyGlobalError: false })
-      .then((response) => { if (active) setReport(response.data) })
-      .catch((error: unknown) => {
-        if (active) setErrorMessage(error instanceof Error ? error.message : 'Não foi possível carregar o relatório.')
-      })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
+    let inFlight = false
+    let loaded = getCachedApiResponse(`/simulations/${simulationId}/report`) !== undefined
+    function loadReport() {
+      if (inFlight || document.visibilityState === 'hidden') return
+      inFlight = true
+      apiRequest<{ data: Report }>(`/simulations/${simulationId}/report`, { cache: 'no-store' }, { notifyGlobalError: false, cacheTtlMs: 60_000, forceRefresh: true })
+        .then((response) => {
+          if (active) {
+            loaded = true
+            setReport(response.data)
+            setErrorMessage('')
+          }
+        })
+        .catch((error: unknown) => {
+          if (active && !loaded) setErrorMessage(error instanceof Error ? error.message : 'Não foi possível carregar o relatório.')
+        })
+        .finally(() => {
+          inFlight = false
+          if (active) setLoading(false)
+        })
+    }
+    loadReport()
+    window.addEventListener('focus', loadReport)
+    window.addEventListener('pageshow', loadReport)
+    document.addEventListener('visibilitychange', loadReport)
+    return () => {
+      active = false
+      window.removeEventListener('focus', loadReport)
+      window.removeEventListener('pageshow', loadReport)
+      document.removeEventListener('visibilitychange', loadReport)
+    }
   }, [simulationId])
 
-  const demandData = useMemo(() => (report?.chart_series.demand ?? []).map((point) => ({
-    month: monthLabel(point.reference_month),
-    timeSlot: point.time_slot ?? 'unique',
-    measured: numeric(point.measured),
-    contracted: numeric(point.contracted),
-    optimal: numeric(point.optimal) ?? numeric(
+  const demandData = useMemo(() => (report?.chart_series.demand ?? []).map((point) => {
+    const contracted = numeric(point.contracted)
+    const optimal = numeric(point.optimal) ?? numeric(
       point.time_slot === 'peak' ? report?.optimal_demand_peak : point.time_slot === 'off_peak' ? report?.optimal_demand_off_peak : report?.optimal_demand_single,
-    ),
-  })), [report])
+    )
+    return {
+      month: monthLabel(point.reference_month),
+      timeSlot: point.time_slot ?? 'unique',
+      measured: numeric(point.measured),
+      contracted,
+      contractedTolerance: contracted === null ? null : contracted * 1.05,
+      optimal,
+      optimalTolerance: optimal === null ? null : optimal * 1.05,
+    }
+  }), [report])
 
   const reactiveData = useMemo(() => (report?.chart_series.reactive ?? []).map((point) => ({
     month: monthLabel(point.reference_month),
@@ -148,19 +176,6 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
     }
   }
 
-  async function requestContact() {
-    setContactMessage('')
-    setRequestingContact(true)
-    try {
-      await apiRequest('/me/contact-request', { method: 'POST' }, { notifyGlobalError: false })
-      setContactRequested(true)
-      setContactMessage('Solicitação registrada. Nossa equipe entrará em contato com você.')
-    } catch (error) {
-      setContactMessage(error instanceof Error ? error.message : 'Não foi possível registrar sua solicitação. Tente novamente.')
-    } finally {
-      setRequestingContact(false)
-    }
-  }
 
   if (loading) return <section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>
   if (errorMessage || !report) return <section className="access-page" aria-labelledby="report-error-title"><h1 id="report-error-title">Relatório indisponível</h1><p className="field-error" role="alert">{errorMessage || 'Não foi possível carregar este relatório.'}</p><a className="button" href="/upload-faturas">Voltar às faturas</a></section>
@@ -168,6 +183,7 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   const warnings = [...report.warnings]
   if (report.months_count > 0 && report.months_count < 12) warnings.unshift('incomplete_invoice_series')
   const uniqueWarnings = [...new Set(warnings)]
+  const customerWarnings = uniqueWarnings.filter((warning) => !reportTexts.internal_warnings.includes(warning))
   const reserveValues = report.r_values.filter((value) => value.source === 'fallback' && value.ratio !== null && value.ratio !== '')
   const demandUnavailable = uniqueWarnings.includes('demand_savings_unavailable_pending_section_9_limits')
     || uniqueWarnings.includes('demand_optimization_unavailable_pending_section_9_limits')
@@ -181,11 +197,10 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
 
   return <section className="report-page" aria-labelledby="report-title">
     <div className="report-heading">
-      <div><p className="section-eyebrow">Análise concluída · Protocolo {simulationId}</p><h1 id="report-title">Seu relatório de energia</h1><p className="access-intro">Resultados calculados para {report.months_count} {report.months_count === 1 ? 'fatura' : 'faturas'}.</p></div>
-      <div className="report-actions"><a className="button button--secondary" href="/minhas-simulacoes">Minhas simulações</a><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button><button className="button" type="button" disabled={requestingContact || contactRequested} onClick={requestContact}>{requestingContact ? 'Enviando…' : contactRequested ? 'Contato solicitado' : 'Solicitar contato comercial'}</button></div>
+      <div><p className="section-eyebrow">Análise concluída · Protocolo {simulationId}</p><h1 id="report-title">Seu relatório de energia</h1><p className="access-intro">Resultados calculados para {report.months_count} {report.months_count === 1 ? 'fatura' : 'faturas'}.</p><CompanyContactDetails /></div>
+      <div className="report-actions"><a className="button button--secondary" href="/minhas-simulacoes">Minhas simulações</a><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button></div>
     </div>
     {pdfMessage && <p className="form-success" role="status">{pdfMessage}</p>}
-    {contactMessage && <p className={contactRequested ? 'form-success' : 'field-error'} role={contactRequested ? 'status' : 'alert'}>{contactMessage}</p>}
 
     <section className="report-highlights" aria-label="Indicadores principais">
       <article className="report-highlight"><span>Economia mensal média</span><strong>{amount(report.total_monthly_savings)}</strong></article>
@@ -201,13 +216,13 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
       {report.recommended_modality && <div><dt>Modalidade recomendada</dt><dd>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</dd></div>}
     </dl></section>
 
-    {uniqueWarnings.length > 0 && <section className="report-warnings" aria-labelledby="warnings-title"><h2 id="warnings-title">Avisos da análise</h2><ul>{uniqueWarnings.map((warning) => <li key={warning}>{warningText[warning] ?? reportTexts.fallback_warning}</li>)}</ul></section>}
+    {customerWarnings.length > 0 && <section className="report-warnings" aria-labelledby="warnings-title"><h2 id="warnings-title">Avisos da análise</h2><ul>{customerWarnings.map((warning) => <li key={warning}>{warningText[warning] ?? reportTexts.fallback_warning}</li>)}</ul></section>}
     {reserveValues.length > 0 && <section className="report-ratio" aria-label="Reserva da demanda ociosa"><h2>Reserva aplicada à demanda ociosa</h2><p>Foi usada a proporção r = {decimal.format(Number(reserveValues[0].ratio) * 100)}% nos períodos em que a fatura não indicou essa proporção.</p></section>}
 
     <section className="report-charts" aria-label="Gráficos do relatório">
       {demandSlots.map(({ key, label }) => {
         const points = demandData.filter((point) => point.timeSlot === key)
-        return <article className="report-chart" key={key}><h2>Demanda {label.toLowerCase()}: registrada × contratada × ótima</h2>{points.length ? <div className="chart-container" data-testid={`demand-chart-${key}`} aria-label={`Gráfico de demanda ${label.toLowerCase()} em kW`}><ResponsiveContainer width="100%" height={280}><LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis unit=" kW" tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => value == null ? '—' : `${decimal.format(Number(value))} kW`} /><Legend /><Line type="monotone" dataKey="measured" name="Registrada" stroke="#0b8f6a" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="contracted" name="Contratada" stroke="#2764c5" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="optimal" name="Ótima" stroke="#b86d13" strokeWidth={2} connectNulls /></LineChart></ResponsiveContainer></div> : <p className="chart-empty">A série de demanda não está disponível neste relatório.</p>}</article>
+        return <article className="report-chart" key={key}><h2>Demanda {label.toLowerCase()}: registrada × contratada × ótima</h2>{points.length ? <div className="chart-container" data-testid={`demand-chart-${key}`} aria-label={`Gráfico de demanda ${label.toLowerCase()} em kW`}><ResponsiveContainer width="100%" height={280}><LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis unit=" kW" tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => value == null ? '—' : `${decimal.format(Number(value))} kW`} /><Legend /><Line type="monotone" dataKey="measured" name="Registrada" stroke="#0b8f6a" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="contracted" name="Contratada" stroke="#2764c5" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="contractedTolerance" name="Contratada + 5%" stroke="#dc2626" strokeWidth={2} strokeDasharray="6 4" dot={false} /><Line type="monotone" dataKey="optimal" name="Ótima" stroke="#b86d13" strokeWidth={2} connectNulls /><Line type="monotone" dataKey="optimalTolerance" name="Ótima + 5%" stroke="#a855f7" strokeWidth={2} strokeDasharray="6 4" dot={false} /></LineChart></ResponsiveContainer></div> : <p className="chart-empty">A série de demanda não está disponível neste relatório.</p>}{points.length > 0 && <p className="report-chart-note">As linhas tracejadas indicam +5% sobre a demanda contratada e sobre a ótima simulada, para comparar a medição com o limite de tolerância de cada cenário.</p>}</article>
       })}
       <article className="report-chart"><h2>Economia com reativos por mês</h2>{reactiveData.length ? <div className="chart-container" data-testid="reactive-chart" aria-label="Gráfico mensal da economia com reativos"><ResponsiveContainer width="100%" height={280}><BarChart data={reactiveData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis tickFormatter={(value) => `R$ ${decimal.format(Number(value))}`} tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => amount(String(value ?? ''))} /><Bar dataKey="value" name="Economia mensal" fill="#0b8f6a" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div> : <p className="chart-empty">A série de reativos não está disponível neste relatório.</p>}</article>
       <article className="report-chart"><h2>Comparação entre Azul e Verde</h2>{modalityData.length ? <div className="chart-container" data-testid="modality-chart" aria-label="Comparação dos custos da modalidade Azul e Verde"><ResponsiveContainer width="100%" height={280}><BarChart data={modalityData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="month" tick={{ fill: 'var(--text)', fontSize: 11 }} /><YAxis tickFormatter={(value) => `R$ ${decimal.format(Number(value))}`} tick={{ fill: 'var(--text)', fontSize: 11 }} /><Tooltip formatter={(value) => amount(String(value ?? ''))} /><Legend /><Bar dataKey="Azul" fill="#2764c5" /><Bar dataKey="Verde" fill="#0b8f6a" /></BarChart></ResponsiveContainer></div> : <p className="chart-empty">A comparação não está disponível sem tarifas válidas e dados suficientes para as duas modalidades.</p>}</article>

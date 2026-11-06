@@ -197,6 +197,7 @@ export function LoginPage() {
         window.dispatchEvent(new PopStateEvent('popstate'))
         return
       }
+      void apiRequest('/simulations?page=1', {}, { notifyGlobalError: false, cacheTtlMs: 60_000 }).catch(() => undefined)
       setSignedIn(true)
     } catch (error) {
       if (error instanceof ApiError && error.errors?.totp_code) {

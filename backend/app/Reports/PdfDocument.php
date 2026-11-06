@@ -17,7 +17,7 @@ final class PdfDocument
     /** @var list<list<string>> */
     private array $pages = [];
 
-    public function __construct(private readonly string $protocol)
+    public function __construct(private readonly string $protocol, private readonly string $contact = '')
     {
         $this->newPage();
     }
@@ -25,11 +25,17 @@ final class PdfDocument
     public function newPage(): void
     {
         $this->pages[] = [];
-        $this->y = 64.0;
-        $this->rectangle(self::MARGIN, 29, 8, 8, '#0b8f6a');
-        $this->textAt(56, 25, 11, 'ENERDIAG', '#0b8f6a', true);
+        $this->pages[array_key_last($this->pages)][] = 'q 40 0 0 40 42 782 cm /CompanyLogo Do Q';
+        $this->textAt(92, 25, 12, 'ENERDIAG', '#0b8f6a', true);
         $label = 'Protocolo '.$this->protocol;
         $this->textAt(self::WIDTH - self::MARGIN - $this->textWidth($label, 9), 27, 9, $label, '#64748b');
+        $contactLines = $this->contact === '' ? [] : $this->wrap($this->contact, self::CONTENT_WIDTH - 50, 8);
+        foreach ($contactLines as $index => $line) {
+            $this->textAt(92, 44 + $index * 12, 8, $line, '#475569');
+        }
+        $bottom = max(70, 50 + count($contactLines) * 12);
+        $this->line(self::MARGIN, $bottom, self::WIDTH - self::MARGIN, $bottom, '#dbe5e0', 0.5);
+        $this->y = $bottom + 20;
     }
 
     public function ensureSpace(float $height): void
@@ -196,9 +202,9 @@ final class PdfDocument
         $this->pages[array_key_last($this->pages)][] = 'q '.$this->color($color).' rg '.self::number($x).' '.self::number(self::HEIGHT - $top - $height).' '.self::number($width).' '.self::number($height).' re f Q';
     }
 
-    public function line(float $x1, float $y1, float $x2, float $y2, string $color, float $width = 1): void
+    public function line(float $x1, float $y1, float $x2, float $y2, string $color, float $width = 1, bool $dashed = false): void
     {
-        $this->pages[array_key_last($this->pages)][] = 'q '.$this->color($color).' RG '.self::number($width).' w '.self::number($x1).' '.self::number(self::HEIGHT - $y1).' m '.self::number($x2).' '.self::number(self::HEIGHT - $y2).' l S Q';
+        $this->pages[array_key_last($this->pages)][] = 'q '.$this->color($color).' RG '.self::number($width).' w '.($dashed ? '[6 4] 0 d ' : '').self::number($x1).' '.self::number(self::HEIGHT - $y1).' m '.self::number($x2).' '.self::number(self::HEIGHT - $y2).' l S Q';
     }
 
     private function color(string $hex): string
@@ -218,6 +224,7 @@ final class PdfDocument
             2 => '',
             3 => '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
             4 => '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+            5 => $this->logoObject(),
         ];
         $kids = [];
         foreach ($this->pages as $index => $commands) {
@@ -228,7 +235,7 @@ final class PdfDocument
             $pageId = count($objects) + 1;
             $streamId = $pageId + 1;
             $kids[] = $pageId.' 0 R';
-            $objects[$pageId] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '.$streamId.' 0 R >>';
+            $objects[$pageId] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /CompanyLogo 5 0 R >> >> /Contents '.$streamId.' 0 R >>';
             $objects[$streamId] = '<< /Length '.strlen($stream)." >>\nstream\n".$stream.'endstream';
         }
         $objects[2] = '<< /Type /Pages /Kids ['.implode(' ', $kids).'] /Count '.count($kids).' >>';
@@ -245,5 +252,24 @@ final class PdfDocument
         }
 
         return $pdf.'trailer'."\n<< /Size ".count($offsets)." /Root 1 0 R >>\nstartxref\n".$xrefOffset."\n%%EOF";
+    }
+
+    private function logoObject(): string
+    {
+        $png = file_get_contents(resource_path('enerdiag-logo.png'));
+        $header = unpack('Nwidth/Nheight/Cdepth/Ctype/Ccompression/Cfilter/Cinterlace', substr($png, 16, 13));
+        if (substr($png, 0, 8) !== "\x89PNG\r\n\x1a\n" || $header['depth'] !== 8 || $header['type'] !== 2 || $header['interlace'] !== 0) {
+            throw new \RuntimeException('The report logo must be a non-interlaced 8-bit RGB PNG.');
+        }
+        $data = '';
+        for ($offset = 8; $offset + 12 <= strlen($png);) {
+            $length = unpack('N', substr($png, $offset, 4))[1];
+            if (substr($png, $offset + 4, 4) === 'IDAT') {
+                $data .= substr($png, $offset + 8, $length);
+            }
+            $offset += 12 + $length;
+        }
+
+        return '<< /Type /XObject /Subtype /Image /Width '.$header['width'].' /Height '.$header['height'].' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /DecodeParms << /Predictor 15 /Colors 3 /BitsPerComponent 8 /Columns '.$header['width'].' >> /Length '.strlen($data)." >>\nstream\n".$data."\nendstream";
     }
 }

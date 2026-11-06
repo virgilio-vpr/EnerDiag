@@ -36,7 +36,7 @@ Versão 1.7 · 30/10/2026 · Fonte da verdade do projeto (o docx v1.1 está obso
 | D5 | Projeção anual com **tarifas vigentes**; o histórico pago aparece como referência. |
 | D6 | Com 1 a 11 faturas: média dos N meses × 12, com aviso de avaliação inicial baseada em histórico incompleto. |
 | D7 | Token Sanctum guardado **em memória** no React; recarregar a página exige novo login. Futuro: cookie httpOnly. |
-| D8 | **Demanda ociosa:** a proporção `r` vem da própria fatura. Na ENEL SP, a Lei Estadual 16.886/18 isenta o ICMS sobre a parcela não utilizada da demanda: (1) pela tributação: `r` = 1 − alíquota de ICMS das linhas normais de demanda, quando a linha ociosa traz ICMS 0%; (2) pelo preço unitário, se a linha o trouxer (ociosa ÷ normal); (3) reserva de 18% (`r` = 0,82), com aviso. Meses com Dm < Dc sem linha ociosa indicam cobrança integral (`r` = 1). A associação das duas linhas de mesmo rótulo aos postos ponta e fora de ponta é feita por matching determinístico pelo valor esperado (RC-1a), neutralizando inversões da ordem física da fatura. A tolerância de 5% e o multiplicador 2× sobre o excedente da contratada são nacionais (REN 1000/2021, Art. 298 a 301). |
+| D8 | **Demanda ociosa:** a proporção `r` vem da própria fatura. Na ENEL SP, a Lei Estadual 16.886/18 isenta o ICMS sobre a parcela não utilizada da demanda: (1) pela tributação: `r` = 1 − alíquota de ICMS das linhas normais de demanda, quando a linha ociosa traz ICMS 0%; (2) pelo preço unitário, se a linha o trouxer (ociosa ÷ normal); (3) reserva de 18% (`r` = 0,82), com aviso. Meses com Dm < Dc sem linha ociosa indicam cobrança integral (`r` = 1). A associação das duas linhas de mesmo rótulo aos postos ponta e fora de ponta é feita por matching determinístico pelo valor esperado (RC-1a), neutralizando inversões da ordem física da fatura. A tolerância de 5% e o multiplicador 2× sobre o excedente da contratada são nacionais (REN 1000/2021, Art. 294 e 301). |
 | D9 | Distribuidora sem leitor: aviso de indisponibilidade e registro do lead. |
 | D10 | React + TypeScript + Vite. |
 | D11 | A conta só é excluída a pedido do titular (LGPD). Contato comercial solicitado fica em `users.contact_requested_at` e não é apagado com a simulação. |
@@ -308,9 +308,9 @@ Ref: RN-7, §9
 |---|---|
 | Dm ≤ Dc | `Dm·T + (Dc − Dm)·T·r` |
 | Dc < Dm ≤ 1,05·Dc | `Dm·T` (tarifa normal, sem multa) |
-| Dm > 1,05·Dc | `Dc·T + (Dm − Dc)·2·T` |
+| Dm > 1,05·Dc | `Dm·T + (Dm − Dc)·2·T` |
 
-Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 140·T. Com `r` = 1: Dm 80 → 100·T.
+Exemplos (Dc = 100 kW, `r` = 0,82): Dm 80 → 96,4·T; Dm 105 → 105·T; Dm 120 → 160·T. Com `r` = 1: Dm 80 → 100·T. Acima da tolerância, a cobrança normal pela demanda medida é acrescida da ultrapassagem sobre todo o excedente da contratada (REN 1000/2021, arts. 294 e 301).
 
 **RC-1a Proporção da demanda ociosa (`r`).** As linhas de demanda ociosa (“DEMANDA LEI ESTADUAL 16.886/18” na ENEL SP) podem vir sem quantidade e sem preço unitário, só com valor, PIS/COFINS e ICMS 0%. `r` é obtido, por mês e posto, na seguinte ordem:
 1. **Pela tributação (fonte principal):** `r` = 1 − alíquota de ICMS das linhas normais de demanda do mesmo mês, quando a linha ociosa traz base de ICMS e alíquota 0%. Confirmação: o PIS/COFINS% da linha ociosa deve ser ≈ PIS/COFINS% das linhas normais ÷ (1 − ICMS) (fixture ENEL: 4,49% ÷ 0,82 ≈ 5,48%), com tolerância de 0,02 ponto percentual; sem confirmação dentro da tolerância, avisar.
@@ -401,7 +401,7 @@ Padrões: JSON; erro em formato único (`message`, `code`, `errors`); códigos H
 
 Itens regulatórios conferidos em `docs/REN 1000.pdf` e dados da fatura ENEL conferidos em `docs/Enel Hesap Agos.pdf` (agosto de 2025):
 
-- [x] Artigos da REN 1000/2021 conferidos: Art. 298 e 299 (ultrapassagem de demanda: tolerância de 5% sobre a contratada como gatilho, cobrança sobre todo o excedente da contratada `(Dm − Dc) × 2 × T`); Art. 300 e 301 (reativos excedentes: fator de potência de referência 0,92 indutivo/capacitivo; UFER cobrado pela tarifa de consumo ativo TE e UFDR pela tarifa de demanda).
+- [x] Artigos da REN 1000/2021 conferidos: Art. 294 e 301 (faturamento normal e ultrapassagem de demanda: tolerância de 5% sobre a contratada como gatilho, cobrança sobre todo o excedente da contratada `(Dm − Dc) × 2 × T`); Art. 302 a 304 (reativos excedentes: fator de potência de referência 0,92 indutivo/capacitivo; UFER cobrado pela tarifa de consumo ativo TE e UFDR pela tarifa de demanda).
 - [x] Fundamentação fiscal da demanda ociosa ENEL SP: Lei Estadual nº 16.886/2018 isenta o ICMS sobre `(Dc − Dm)`, resultando em `r = 1 − alíquota ICMS = 0,82` na fatura de referência (comprovada pelos valores R$ 1.845,32 Fora de Ponta e R$ 3.603,28 Ponta). O PIS/COFINS por kW permanece idêntico ao da demanda medida. O matching determinístico por menor erro quadrático em relação a `V_esperado` resolve a inversão da ordem física das linhas na fatura ENEL. Para outras distribuidoras, aplicar a regra específica declarada pelo leitor (fora de SP, cobrança costuma ser integral com `r = 1`).
 - [x] Fator de calibração tributária `k` comprovado: `k = Preço com tributos ÷ Tarifa unit ≈ 1,29021` em todos os itens tributados da fatura de referência, equivalendo a `1 ÷ (1 − 18% − 4,4935%)`.
 - [ ] Confirmar o formato do conjunto de dados abertos da ANEEL (nome, colunas, vigência) e o mapeamento de subgrupo, modalidade e posto para os do sistema; confirmar que a “Tarifa unit” da fatura ENEL (sem tributos) coincide com a tarifa de aplicação da ANEEL; confirmar que a TE é igual nas duas modalidades nas tabelas da ENEL SP; outros layouts de fatura podem não trazer a tarifa sem tributos nem o ICMS por item.

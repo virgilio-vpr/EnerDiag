@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 import { InvoiceImportTable, type ImportedInvoice } from '../components/InvoiceImportTable'
+import { CompanyContactDetails } from '../components/CompanyContactDetails'
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024
 const MAX_FILES = 12
@@ -67,7 +68,7 @@ export function InvoiceUploadPage() {
     let mounted = true
     Promise.all([
       apiRequest<{ data: Account }>('/me', {}, { notifyGlobalError: false }),
-      apiRequest<{ data: Distributor[] }>('/distributors', {}, { notifyGlobalError: false }),
+      apiRequest<{ data: Distributor[] }>('/distributors', {}, { notifyGlobalError: false, cacheTtlMs: 300_000 }),
     ]).then(async ([userResponse, distributorResponse]) => {
       if (!mounted) return
       const profile = userResponse.data.profile
@@ -306,6 +307,7 @@ export function InvoiceUploadPage() {
     return <section className="access-page" aria-labelledby="queued-title">
       <p className="section-eyebrow">Acompanhamento da análise</p>
       <h1 id="queued-title">{queuedSimulation.status === 'completed' ? 'Sua análise está pronta' : queuedSimulation.status === 'failed' ? 'A análise precisa de atenção' : queuedSimulation.status === 'queued' ? 'Aguardando cálculo' : 'Calculando seu relatório'}</h1>
+      <CompanyContactDetails />
       <p className={queuedSimulation.status === 'failed' ? 'field-error' : 'form-success'} role={queuedSimulation.status === 'failed' ? 'alert' : 'status'}>{statusMessage[queuedSimulation.status]}</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
       {queuedSimulation.status === 'completed' && <a className="button" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</a>}
@@ -323,6 +325,7 @@ export function InvoiceUploadPage() {
     <section className="upload-page" aria-labelledby="upload-title">
       <p className="section-eyebrow">Análise da sua empresa</p>
       <h1 id="upload-title">Envie suas faturas</h1>
+      <CompanyContactDetails />
       <p><a className="text-button" href="/minhas-simulacoes">Voltar para minhas simulações</a></p>
       <p className="access-intro">Envie de 1 a {MAX_FILES} faturas. Você pode selecionar várias de uma vez; cada conta será lida e salva individualmente, em sequência. Organizaremos da mais antiga para a mais recente usando o mês da LEITURA ATUAL, não o mês de emissão. Avisaremos se uma conta ou mês de medição já tiver sido enviado. Você pode simular quando quiser, depois de salvar pelo menos uma fatura.</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}

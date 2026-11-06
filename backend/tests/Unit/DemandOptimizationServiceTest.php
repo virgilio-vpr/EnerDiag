@@ -30,10 +30,10 @@ class DemandOptimizationServiceTest extends TestCase
 
         $result = $service->optimizeBlue($peakMonths, $offPeakMonths, 80, 120);
 
-        $this->assertSame('100.000', $result->slots['peak']->optimalDemand);
-        $this->assertSame('90.000', $result->slots['off_peak']->optimalDemand);
-        $this->assertSame('3364.00', $result->slots['peak']->totalCost);
-        $this->assertSame('3064.00', $result->slots['off_peak']->totalCost);
+        $this->assertSame('115.000', $result->slots['peak']->optimalDemand);
+        $this->assertSame('105.000', $result->slots['off_peak']->optimalDemand);
+        $this->assertSame('3410.00', $result->slots['peak']->totalCost);
+        $this->assertSame('3110.00', $result->slots['off_peak']->totalCost);
     }
 
     public function test_green_optimizes_its_single_demand_series(): void
@@ -48,8 +48,22 @@ class DemandOptimizationServiceTest extends TestCase
         $result = $service->optimizeGreen($months, 80, 120);
 
         $this->assertSame(['unique'], array_keys($result->slots));
-        $this->assertSame('100.000', $result->slots['unique']->optimalDemand);
-        $this->assertSame('3364.00', $result->slots['unique']->totalCost);
+        $this->assertSame('115.000', $result->slots['unique']->optimalDemand);
+        $this->assertSame('3410.00', $result->slots['unique']->totalCost);
+    }
+
+    public function test_occasional_overrun_can_still_minimize_the_full_period_cost(): void
+    {
+        $months = [];
+        for ($month = 1; $month <= 11; $month++) {
+            $months[] = $this->month(sprintf('2025-%02d', $month), '80.000');
+        }
+        $months[] = $this->month('2025-12', '120.000');
+
+        $result = $this->service()->optimizeGreen($months, 70, 120);
+
+        $this->assertSame('80.000', $result->slots['unique']->optimalDemand);
+        $this->assertSame('10800.00', $result->slots['unique']->totalCost);
     }
 
     public function test_blue_requires_minimum_in_at_least_one_slot_not_both(): void

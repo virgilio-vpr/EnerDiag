@@ -43,9 +43,20 @@ class DemandBillingServiceTest extends TestCase
         $result = $service->calculate('2025-08', '100.000', '120.000', '10.00000', '0.820000');
 
         $this->assertSame('overrun', $result->condition);
-        $this->assertSame('1400.00', $result->total);
-        $this->assertSame('1000.00', $result->contractedDemandCharge);
+        $this->assertSame('1600.00', $result->total);
+        $this->assertSame('1200.00', $result->measuredDemandCharge);
+        $this->assertSame('0.00', $result->contractedDemandCharge);
         $this->assertSame('400.00', $result->overrunCharge);
+    }
+
+    public function test_first_increment_above_tolerance_adds_overrun_to_the_entire_measured_charge(): void
+    {
+        $result = $this->service()->calculate('2025-08', '100.000', '105.001', '10.00000', '0.820000');
+
+        $this->assertSame('overrun', $result->condition);
+        $this->assertSame('1050.01', $result->measuredDemandCharge);
+        $this->assertSame('100.02', $result->overrunCharge);
+        $this->assertSame('1150.03', $result->total);
     }
 
     public function test_full_idle_demand_ratio_charges_the_entire_contracted_demand(): void

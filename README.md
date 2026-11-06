@@ -72,6 +72,10 @@ php artisan serve --host=0.0.0.0
 
 A API ficará disponível na porta 8000, com a documentação em `/docs` e o OpenAPI em `/docs.openapi`.
 
+O comando `serve` mantém as dependências em OPcache para reduzir a inicialização das requisições. Os diretórios da aplicação, rotas e configurações ficam fora desse cache, de modo que alterações nesses arquivos aparecem imediatamente. Reinicie a API após instalar ou atualizar dependências com Composer. A primeira requisição após iniciar o servidor aquece o cache e pode levar mais tempo.
+
+No WSL, arquivos em `/mnt/c` exigem acesso ao sistema de arquivos do Windows. Para desenvolvimento com menor latência também na instalação, compilação e testes, prefira manter o projeto no sistema de arquivos Linux, por exemplo `~/projetos/enerdiag`, e abri-lo com o VS Code conectado ao WSL. O PostgreSQL pode continuar no Docker Desktop.
+
 Em outro terminal, mantenha o processamento das simulações ativo:
 
 ```bash

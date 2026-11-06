@@ -50,7 +50,7 @@ export function ProfilePage() {
     let active = true
     Promise.all([
       apiRequest<{ data: Account }>('/me', {}, { notifyGlobalError: false }),
-      apiRequest<{ data: Distributor[] }>('/distributors', {}, { notifyGlobalError: false }),
+      apiRequest<{ data: Distributor[] }>('/distributors', {}, { notifyGlobalError: false, cacheTtlMs: 300_000 }),
     ]).then(([userResponse, distributorResponse]) => {
       if (!active) return
       const user = userResponse.data

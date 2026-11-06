@@ -62,16 +62,16 @@ final class DemandBillingService
             );
         }
 
-        $contractedCharge = $this->money(bcmul($contractedDemand, $unitRate, 10));
+        $measuredCharge = $this->money(bcmul($measuredDemand, $unitRate, 10));
         $excessDemand = bcsub($measuredDemand, $contractedDemand, 3);
         $overrunCharge = $this->money(bcmul(bcmul($excessDemand, $multiplier->value, 10), $unitRate, 10));
 
         return new DemandCostResult(
-            total: bcadd($contractedCharge, $overrunCharge, 2),
+            total: bcadd($measuredCharge, $overrunCharge, 2),
             condition: 'overrun',
-            measuredDemandCharge: $zero,
+            measuredDemandCharge: $measuredCharge,
             idleDemandCharge: $zero,
-            contractedDemandCharge: $contractedCharge,
+            contractedDemandCharge: $zero,
             overrunCharge: $overrunCharge,
         );
     }

@@ -109,7 +109,7 @@ class ProcessSimulationTest extends TestCase
         $this->assertSame(1, Invoice::query()->where('simulation_id', $simulation->id)->count());
         $this->assertGreaterThan(0, InvoiceItem::query()->whereHas('invoice', fn ($query) => $query->where('simulation_id', $simulation->id))->count());
         $report = Report::query()->where('simulation_id', $simulation->id)->firstOrFail();
-        $this->assertSame('1.0', $report->algorithm_version);
+        $this->assertSame('1.1', $report->algorithm_version);
         $this->assertContains('incomplete_invoice_series', $report->warnings);
         $pdfText = (new Parser)->parseContent(app(PdfReportGenerator::class)->generate($report))->getText();
         $this->assertStringContainsString('menos de 12 faturas', preg_replace('/\s+/u', ' ', $pdfText));

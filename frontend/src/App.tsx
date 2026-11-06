@@ -2,23 +2,30 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
-import { InvoiceUploadPage } from './pages/InvoiceUploadPage'
 import { CustomerSimulationsPage } from './pages/CustomerSimulationsPage'
-import { ProfilePage } from './pages/ProfilePage'
 import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './pages/CustomerAccessPage'
 import { getAuthToken, getAuthenticatedUser } from './services/api/client'
 import { ProtectedRoute } from './routes/ProtectedRoute'
-import { AdminDashboardPage } from './pages/AdminDashboardPage'
-import { AdminCustomerDetailPage, AdminCustomersPage, AdminSimulationDetailPage, AdminSimulationsPage } from './pages/AdminDataPages'
-import { AdminReportDetailPage, AdminReportsPage } from './pages/AdminReportPages'
-import { AdminParametersPage, AdminTariffsPage } from './pages/AdminTariffPages'
-import { AdminLeadsPage } from './pages/AdminLeadsPage'
-import { AdminQuotationItemsPage } from './pages/AdminQuotationItemsPage'
-import { AdminQuotationsPage } from './pages/AdminQuotationsPage'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
+import companyContact from '../../backend/resources/company-contact.json'
+import { loadSimulationReport } from './pages/reportLoader'
 
-const SimulationReportPage = lazy(() => import('./pages/SimulationReportPage').then(({ SimulationReportPage: page }) => ({ default: page })))
+const SimulationReportPage = lazy(loadSimulationReport)
+const InvoiceUploadPage = lazy(() => import('./pages/InvoiceUploadPage').then((module) => ({ default: module.InvoiceUploadPage })))
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage').then((module) => ({ default: module.AdminDashboardPage })))
+const AdminCustomerDetailPage = lazy(() => import('./pages/AdminDataPages').then((module) => ({ default: module.AdminCustomerDetailPage })))
+const AdminCustomersPage = lazy(() => import('./pages/AdminDataPages').then((module) => ({ default: module.AdminCustomersPage })))
+const AdminSimulationDetailPage = lazy(() => import('./pages/AdminDataPages').then((module) => ({ default: module.AdminSimulationDetailPage })))
+const AdminSimulationsPage = lazy(() => import('./pages/AdminDataPages').then((module) => ({ default: module.AdminSimulationsPage })))
+const AdminReportDetailPage = lazy(() => import('./pages/AdminReportPages').then((module) => ({ default: module.AdminReportDetailPage })))
+const AdminReportsPage = lazy(() => import('./pages/AdminReportPages').then((module) => ({ default: module.AdminReportsPage })))
+const AdminParametersPage = lazy(() => import('./pages/AdminTariffPages').then((module) => ({ default: module.AdminParametersPage })))
+const AdminTariffsPage = lazy(() => import('./pages/AdminTariffPages').then((module) => ({ default: module.AdminTariffsPage })))
+const AdminLeadsPage = lazy(() => import('./pages/AdminLeadsPage').then((module) => ({ default: module.AdminLeadsPage })))
+const AdminQuotationItemsPage = lazy(() => import('./pages/AdminQuotationItemsPage').then((module) => ({ default: module.AdminQuotationItemsPage })))
+const AdminQuotationsPage = lazy(() => import('./pages/AdminQuotationsPage').then((module) => ({ default: module.AdminQuotationsPage })))
 
 function App() {
   const { theme, toggleTheme } = useTheme()
@@ -85,7 +92,8 @@ function App() {
         </button>
       </header>
       <main>
-        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/admin/customers' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomersPage /></ProtectedRoute> : adminCustomerMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomerDetailPage customerId={adminCustomerMatch[1]} /></ProtectedRoute> : pathname === '/admin/simulations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationsPage /></ProtectedRoute> : adminSimulationMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationDetailPage simulationId={adminSimulationMatch[1]} /></ProtectedRoute> : pathname === '/admin/reports' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportsPage /></ProtectedRoute> : adminReportMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportDetailPage simulationId={adminReportMatch[1]} /></ProtectedRoute> : pathname === '/admin/tariffs' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminTariffsPage /></ProtectedRoute> : pathname === '/admin/parameters' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminParametersPage /></ProtectedRoute> : pathname === '/admin/leads' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminLeadsPage /></ProtectedRoute> : pathname === '/admin/quotation-items' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationItemsPage /></ProtectedRoute> : pathname === '/admin/quotations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationsPage /></ProtectedRoute> : pathname === '/minhas-simulacoes' ? <CustomerSimulationsPage /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
+        <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando página…</p></section>}>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/admin/customers' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomersPage /></ProtectedRoute> : adminCustomerMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomerDetailPage customerId={adminCustomerMatch[1]} /></ProtectedRoute> : pathname === '/admin/simulations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationsPage /></ProtectedRoute> : adminSimulationMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationDetailPage simulationId={adminSimulationMatch[1]} /></ProtectedRoute> : pathname === '/admin/reports' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportsPage /></ProtectedRoute> : adminReportMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportDetailPage simulationId={adminReportMatch[1]} /></ProtectedRoute> : pathname === '/admin/tariffs' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminTariffsPage /></ProtectedRoute> : pathname === '/admin/parameters' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminParametersPage /></ProtectedRoute> : pathname === '/admin/leads' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminLeadsPage /></ProtectedRoute> : pathname === '/admin/quotation-items' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationItemsPage /></ProtectedRoute> : pathname === '/admin/quotations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationsPage /></ProtectedRoute> : pathname === '/minhas-simulacoes' ? <CustomerSimulationsPage /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage key={reportMatch[1]} simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-copy">
               <p className="hero-eyebrow">Inteligência para sua energia</p>
@@ -168,18 +176,19 @@ function App() {
               <p className="contact-demo-note">Canais fictícios para demonstração.</p>
             </div>
             <div className="contact-options">
-              <a className="contact-card contact-card--email" href="mailto:contato@enerdiag.example">
-                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></svg><span className="contact-card__content"><span className="contact-card__label">E-mail</span><strong>contato@enerdiag.example</strong></span>
+              <a className="contact-card contact-card--email" href={`mailto:${companyContact.email}`}>
+                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></svg><span className="contact-card__content"><span className="contact-card__label">E-mail</span><strong>{companyContact.email}</strong></span>
               </a>
-              <a className="contact-card contact-card--phone" href="tel:+5511000000000">
-                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7.2 3.5h2.6l1.3 4.2-1.8 1.7a15.1 15.1 0 0 0 5.3 5.3l1.7-1.8 4.2 1.3v2.6a2 2 0 0 1-2.1 2A15.9 15.9 0 0 1 5.2 5.6a2 2 0 0 1 2-2.1Z" /></svg><span className="contact-card__content"><span className="contact-card__label">Telefone</span><strong>+55 (11) 00000-0000</strong></span>
+              <a className="contact-card contact-card--phone" href={`tel:+${companyContact.phone.replace(/\D/g, '')}`}>
+                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7.2 3.5h2.6l1.3 4.2-1.8 1.7a15.1 15.1 0 0 0 5.3 5.3l1.7-1.8 4.2 1.3v2.6a2 2 0 0 1-2.1 2A15.9 15.9 0 0 1 5.2 5.6a2 2 0 0 1 2-2.1Z" /></svg><span className="contact-card__content"><span className="contact-card__label">Telefone</span><strong>{companyContact.phone}</strong></span>
               </a>
-              <a className="contact-card contact-card--whatsapp" href="https://wa.me/5511000000000" target="_blank" rel="noopener noreferrer">
-                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.2 11.5a8.2 8.2 0 0 1-12.1 7.2L4 20l1.3-4A8.2 8.2 0 1 1 20.2 11.5Z" /><path d="M9 8.5c.4 2.7 2.1 4.4 4.8 4.8l1-1.1 2 .6v1.3a1 1 0 0 1-1.1 1 9 9 0 0 1-7.5-7.5 1 1 0 0 1 1-1.1h1.3l.6 2L9 8.5Z" /></svg><span className="contact-card__content"><span className="contact-card__label">WhatsApp</span><strong>+55 (11) 00000-0000</strong></span>
+              <a className="contact-card contact-card--whatsapp" href={`https://wa.me/${companyContact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                <svg className="contact-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.2 11.5a8.2 8.2 0 0 1-12.1 7.2L4 20l1.3-4A8.2 8.2 0 1 1 20.2 11.5Z" /><path d="M9 8.5c.4 2.7 2.1 4.4 4.8 4.8l1-1.1 2 .6v1.3a1 1 0 0 1-1.1 1 9 9 0 0 1-7.5-7.5 1 1 0 0 1 1-1.1h1.3l.6 2L9 8.5Z" /></svg><span className="contact-card__content"><span className="contact-card__label">WhatsApp</span><strong>{companyContact.whatsapp}</strong></span>
               </a>
             </div>
           </section>
         </> : <section className="access-page"><h1>Página não encontrada</h1><a href="/">Voltar ao início</a></section>}
+      </Suspense>
       </main>
       <footer className="app-footer"><span>Eficiência energética para sua empresa</span>{isLandingPage && <a href="#contato">Contato</a>}<a href={isLandingPage ? '/register' : '/'}>{isLandingPage ? 'Começar análise' : 'Página inicial'}</a></footer>
     </div>

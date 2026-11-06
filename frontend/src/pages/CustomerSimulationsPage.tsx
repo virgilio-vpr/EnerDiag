@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, getAuthToken } from '../services/api/client'
+import { CompanyContactDetails } from '../components/CompanyContactDetails'
+import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
+import { loadSimulationReport } from './reportLoader'
 
 type Simulation = {
   id: number
@@ -18,10 +20,10 @@ function navigate(path: string) {
 }
 
 export function CustomerSimulationsPage() {
-  const [result, setResult] = useState<SimulationList | null>(null)
+  const [result, setResult] = useState<SimulationList | null>(() => getCachedApiResponse<SimulationList>('/simulations?page=1') ?? null)
   const [page, setPage] = useState(1)
   const [reload, setReload] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !getCachedApiResponse('/simulations?page=1'))
   const [busy, setBusy] = useState<number | null>(null)
   const [confirmation, setConfirmation] = useState<number | null>(null)
   const [error, setError] = useState('')
@@ -35,12 +37,17 @@ export function CustomerSimulationsPage() {
     }
     let active = true
     setLoading(true)
-    apiRequest<SimulationList>(`/simulations?page=${page}`, {}, { notifyGlobalError: false })
+    apiRequest<SimulationList>(`/simulations?page=${page}`, {}, { notifyGlobalError: false, cacheTtlMs: 60_000, forceRefresh: true })
       .then((response) => { if (active) setResult(response) })
       .catch((failure: unknown) => { if (active) setError(failure instanceof Error ? failure.message : 'Não foi possível carregar suas simulações.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [page, reload])
+
+  function preloadReport(id: number) {
+    void loadSimulationReport().catch(() => undefined)
+    void apiRequest(`/simulations/${id}/report`, { cache: 'no-store' }, { notifyGlobalError: false, cacheTtlMs: 60_000 }).catch(() => undefined)
+  }
 
   async function removeSimulation(id: number) {
     if (busy !== null) return
@@ -88,7 +95,7 @@ export function CustomerSimulationsPage() {
   const toRemove = Math.max(1, total - limit + 1)
   const canCreate = result?.meta.can_create === true && !loading && busy === null
   return <section className="simulations-page" aria-labelledby="simulations-title">
-    <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p></div>
+    <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p><CompanyContactDetails /></div>
       <div className="simulation-card-actions">{canCreate ? <a className="button" href="/upload-faturas?new=1">Nova simulação</a> : <button className="button" disabled type="button">Nova simulação</button>}<button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => setReload((value) => value + 1)}>Atualizar</button></div>
     </div>
     {error && <p className="field-error" role="alert">{error}</p>}
@@ -102,7 +109,7 @@ export function CustomerSimulationsPage() {
         {simulation.status === 'completed' && <div><dt>Economia mensal estimada</dt><dd>{simulation.total_monthly_savings === null ? '—' : Number(simulation.total_monthly_savings).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</dd></div>}
       </dl>
       <div className="simulation-card-actions">
-        {simulation.status === 'completed' && <a className="button button--secondary" href={`/simulations/${simulation.id}/report`}>Ver relatório</a>}
+        {simulation.status === 'completed' && <a className="button button--secondary" href={`/simulations/${simulation.id}/report`} onPointerEnter={() => preloadReport(simulation.id)} onFocus={() => preloadReport(simulation.id)}>Ver relatório</a>}
         {simulation.status === 'draft' && <a className="button button--secondary" href={`/upload-faturas?import=${simulation.id}`}>Continuar envio</a>}
         {(simulation.status === 'queued' || simulation.status === 'failed') && simulation.invoice_count > 0 && <button className="button button--secondary" type="button" disabled={busy !== null || loading} onClick={() => calculate(simulation.id)}>{busy === simulation.id ? 'Calculando…' : 'Calcular agora'}</button>}
         {simulation.status === 'processing' && <a className="button button--secondary" href={`/upload-faturas?import=${simulation.id}`}>Acompanhar</a>}

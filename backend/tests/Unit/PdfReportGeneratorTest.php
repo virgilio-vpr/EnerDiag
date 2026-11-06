@@ -10,6 +10,20 @@ use Tests\TestCase;
 
 class PdfReportGeneratorTest extends TestCase
 {
+    public function test_customer_warnings_exclude_internal_tax_diagnostics_without_removing_saved_warnings(): void
+    {
+        $warnings = ['no_migration_savings', 'idle_demand_pis_cofins_inconsistent', 'tax_calibration_factor_divergence', 'demand_invoice_reconciliation_mismatch'];
+        $report = $this->report();
+        $report->forceFill(['warnings' => $warnings]);
+        $text = $this->text(app(PdfReportGenerator::class)->generate($report));
+
+        $this->assertStringContainsString('A análise não encontrou economia na migração entre modalidades.', $text);
+        $this->assertStringContainsString('o relatório considera o valor faturado nesses meses.', $text);
+        $this->assertStringNotContainsString('Os componentes de PIS e COFINS', $text);
+        $this->assertStringNotContainsString('divergência de calibração tributária', $text);
+        $this->assertSame($warnings, $report->warnings);
+    }
+
     public function test_the_pdf_contains_the_same_indicators_series_warnings_and_recommendations_as_the_report(): void
     {
         $report = $this->report();
@@ -22,7 +36,7 @@ class PdfReportGeneratorTest extends TestCase
             'R$ 30,33', 'R$ 363,96', 'R$ 40,44', 'R$ 485,28', 'Modalidade recomendada: Verde',
             'Avisos da análise', 'Reserva aplicada à demanda ociosa', 'r = 82%',
             'Demanda ponta: registrada × contratada × ótima', 'Demanda fora de ponta: registrada × contratada × ótima',
-            'Registrada (kW)', 'Contratada (kW)', 'Ótima (kW)', '01/2026', '02/2026', '250,125', '338', '270',
+            'Registrada (kW)', 'Contratada + 5%', 'Ótima + 5%', '01/2026', '02/2026', '250,125', '338', '270', '354,9', '390,6', '283,5',
             'Economia com reativos por mês', 'Comparação entre Azul e Verde', 'R$ 9.000,00', 'R$ 8.000,00',
             'Próximos passos', 'Conferir o contrato (ponta) e a demanda', 'sem alterar os valores.',
         ] as $expected) {
@@ -33,6 +47,11 @@ class PdfReportGeneratorTest extends TestCase
         $this->assertStringContainsString('A análise identificou um ponto que merece atenção.', $text);
         $this->assertStringContainsString('demanda \\\\ sem alterar os valores.', $pdf);
         $this->assertSame($pdf, app(PdfReportGenerator::class)->generate($report));
+        $this->assertStringContainsString('[6 4] 0 d', $pdf);
+        $this->assertStringContainsString('/Subtype /Image', $pdf);
+        $this->assertStringContainsString('contato@enerdiag.example', $text);
+        $this->assertStringContainsString('Telefone: +55 (11) 00000-0000', $text);
+        $this->assertStringContainsString('WhatsApp: +55 (11) 00000-0000', $text);
     }
 
     public function test_unavailable_components_and_missing_chart_values_are_not_represented_as_zero(): void
@@ -48,7 +67,7 @@ class PdfReportGeneratorTest extends TestCase
         $text = $this->text(app(PdfReportGenerator::class)->generate($report));
         $this->assertStringContainsString('Demanda Indisponível Indisponível', $text);
         $this->assertStringContainsString('Migração de modalidade Indisponível Indisponível', $text);
-        $this->assertStringContainsString('01/2026 — 0 —', $text);
+        $this->assertStringContainsString('01/2026 — 0 0 — —', $text);
         $this->assertStringContainsString('A série de reativos não está disponível neste relatório.', $text);
         $this->assertStringContainsString('A comparação não está disponível sem tarifas válidas', $text);
         $this->assertStringNotContainsString('Reserva aplicada à demanda ociosa', $text);
@@ -73,6 +92,7 @@ class PdfReportGeneratorTest extends TestCase
         $this->assertStringContainsString('FIM DA CONFERÊNCIA DO RELATÓRIO', $text);
         foreach ($pages as $index => $page) {
             $this->assertStringContainsString('Página '.($index + 1).' de '.count($pages), $this->normalize($page->getText()));
+            $this->assertStringContainsString('contato@enerdiag.example', $this->normalize($page->getText()));
         }
         preg_match_all('/1 0 0 1 (-?\d+\.\d+) (-?\d+\.\d+) Tm/', $pdf, $positions, PREG_SET_ORDER);
         foreach ($positions as $position) {
@@ -81,6 +101,23 @@ class PdfReportGeneratorTest extends TestCase
             $this->assertGreaterThanOrEqual(0, (float) $position[2]);
             $this->assertLessThanOrEqual(842, (float) $position[2]);
         }
+    }
+
+    public function test_tolerance_follows_each_month_and_preserves_unavailable_demands(): void
+    {
+        $report = $this->report();
+        $report->forceFill([
+            'optimal_demand_peak' => null,
+            'chart_series' => ['demand' => [
+                ['reference_month' => '2026-01', 'time_slot' => 'peak', 'measured' => '250.125', 'contracted' => '338.000', 'optimal' => '290.000'],
+                ['reference_month' => '2026-02', 'time_slot' => 'peak', 'measured' => '300.000', 'contracted' => '400.000', 'optimal' => '300.000'],
+                ['reference_month' => '2026-03', 'time_slot' => 'peak', 'measured' => null, 'contracted' => null, 'optimal' => null],
+            ]],
+        ]);
+        $text = $this->text(app(PdfReportGenerator::class)->generate($report));
+        $this->assertStringContainsString('01/2026 250,125 338 354,9 290 304,5', $text);
+        $this->assertStringContainsString('02/2026 300 400 420 300 315', $text);
+        $this->assertStringContainsString('03/2026 — — — — —', $text);
     }
 
     private function text(string $pdf): string
