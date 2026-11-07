@@ -58,7 +58,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             $invoices,
         );
         $ratios = $this->idleDemandRatioService->resolve($demandMonths, true);
-        $demandOptimization = $this->reportDemandOptimizationService->calculate($invoices, $demandMonths, $ratios);
+        $demandOptimization = $this->reportDemandOptimizationService->calculate($invoices, $demandMonths, $ratios, $simulation->user?->profile?->distributor_id);
         $migration = $this->reportTariffMigrationService->compare($simulation, $invoices, $demandMonths, $ratios);
         $migrationMonthly = $migration->savings !== null && count($invoices) > 0
             ? bcadd(bcdiv($migration->savings, (string) count($invoices), 8), '0.005', 2)
@@ -74,7 +74,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             $warnings[] = 'no_savings_on_migration';
         }
         if ($migration->available) {
-            $chartSeries['modality'] = [['reference_month' => 'Período', 'blue' => $migration->blueCost, 'green' => $migration->greenCost]];
+            $chartSeries['modality'] = [['reference_month' => 'Período', 'blue' => $migration->blueCost, 'green' => $migration->greenCost, 'tariff_reference_date' => today()->toDateString(), 'cost_scope' => 'regulated_supply']];
         }
         if ($demandOptimization['parameter_id'] !== null) {
             $regulatoryParameterIds[] = $demandOptimization['parameter_id'];
@@ -181,6 +181,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                     'measured' => $measured[$slot] ?? null,
                     'optimal' => $demandOptimization['optimal'][$slot] ?? null,
                     'overrun_tolerance' => $tolerance?->value,
+                    ...($demandOptimization['comparison'][$invoice->referenceMonth][$slot] ?? []),
                 ];
             }
         }
@@ -216,8 +217,8 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
                 'r_values' => $rValues,
                 'k_values' => $kValues,
             ],
-            algorithmVersion: '1.1',
-            tariffVersionIds: $migration->tariffVersionIds,
+            algorithmVersion: '1.4',
+            tariffVersionIds: array_values(array_unique(array_merge($demandOptimization['tariff_ids'], $migration->tariffVersionIds))),
             regulatoryParameterVersionIds: array_values(array_unique($regulatoryParameterIds)),
         );
     }

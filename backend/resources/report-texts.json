@@ -1,6 +1,5 @@
 {
   "warnings": {
-    "free_market_invoice": "O período inclui faturas do mercado livre (energia ACL). Confira as condições de fornecimento ao interpretar a análise.",
     "invoice_billing_total_mismatch": "A soma dos itens lidos difere do total de uma fatura. Os dados desse documento precisam de revisão.",
     "incomplete_invoice_series": "Esta avaliação inicial considera menos de 12 faturas. A projeção anual usa a média dos meses enviados e pode não refletir as variações de um ciclo anual completo.",
     "tariff_unavailable_using_historical_value": "Não há tarifa vigente para todos os períodos. Onde necessário, foi usado o valor histórico da fatura como referência.",
@@ -10,23 +9,31 @@
     "idle_demand_ratio_unavailable": "Não foi possível determinar a proporção aplicável à demanda ociosa em todos os períodos.",
     "idle_demand_pis_cofins_inconsistent": "Os componentes de PIS e COFINS da demanda ociosa divergem do valor normal da fatura.",
     "idle_demand_post_matching_unresolved": "Não foi possível associar com segurança as linhas de demanda ociosa aos postos tarifários.",
-    "demand_invoice_reconciliation_mismatch": "O valor calculado de demanda diverge do valor registrado em uma ou mais faturas; o relatório considera o valor faturado nesses meses.",
+    "demand_invoice_reconciliation_mismatch": "Algumas cobranças de demanda nas faturas precisam de conferência. Antes de alterar a demanda contratada, confirme esses valores com a distribuidora.",
     "demand_invoice_reconciliation_unavailable": "Não foi possível comparar todos os valores de demanda calculados com as faturas.",
-    "migration_unavailable": "A comparação entre as modalidades Azul e Verde está indisponível por falta de tarifa ou dado necessário.",
-    "tariff_migration_unavailable_pending_section_9_rules": "A comparação entre Azul e Verde ficará disponível quando os critérios regulatórios pendentes forem definidos.",
+    "migration_unavailable": "Ainda não foi possível indicar se o plano Azul ou Verde custa menos. Precisamos completar os dados de consumo ou atualizar as tarifas da distribuidora para concluir essa comparação.",
+    "tariff_migration_unavailable_pending_section_9_rules": "Ainda não foi possível indicar se o plano Azul ou Verde custa menos. Precisamos completar os dados de consumo ou atualizar as tarifas da distribuidora para concluir essa comparação.",
     "demand_optimization_unavailable_pending_section_9_limits": "A demanda ótima não foi calculada porque os limites regulatórios ainda não estão definidos.",
     "demand_optimization_unavailable": "Não foi possível calcular a demanda ótima: faltam dados da fatura ou parâmetros regulatórios necessários.",
     "demand_savings_unavailable_pending_section_9_limits": "A economia com otimização da demanda ainda não está disponível.",
-    "no_migration_savings": "A análise não encontrou economia na migração entre modalidades.",
-    "no_savings_on_migration": "A análise não encontrou economia na migração entre modalidades.",
+    "no_migration_savings": "Com os dados analisados, trocar entre os planos Azul e Verde não reduz os custos.",
+    "no_savings_on_migration": "Com os dados analisados, trocar entre os planos Azul e Verde não reduz os custos.",
     "average_total_paid_zero": "Não foi possível calcular o percentual porque o total médio pago nas faturas é zero.",
     "tax_calibration_factor_divergence": "As tarifas identificadas nas faturas apresentam divergência de calibração tributária.",
     "invoice_aneel_tariff_rate_mismatch": "A tarifa identificada na fatura diverge da referência usada na calibração.",
     "tax_calibration_factor_unavailable": "Não foi possível validar a conversão entre tarifas com e sem tributos em todos os períodos."
   },
   "fallback_warning": "A análise identificou um ponto que merece atenção.",
+  "demand_comparison_note": "Na comparação de demanda, o contrato atual e o simulado usam as mesmas tarifas da fatura de {month}. A mudança de tarifa ao longo do histórico não é contabilizada como economia da redução de demanda.",
   "internal_warnings": [
     "idle_demand_pis_cofins_inconsistent",
-    "tax_calibration_factor_divergence"
-  ]
+    "tax_calibration_factor_divergence",
+    "free_market_invoice"
+  ],
+  "demand_reference_note": "Na comparação de demanda, o contrato atual e o simulado usam a mesma tarifa de referência por posto. As bandeiras tarifárias não compõem a tarifa de demanda.",
+  "demand_reference_sources": {
+    "registered_tariff": "Tarifa vigente cadastrada, com tributos",
+    "series_maximum": "Maior tarifa unitária com tributos da série"
+  },
+  "modality_reference_note": "Os planos Azul e Verde são comparados com as tarifas da distribuidora para demanda e consumo de energia, incluindo os tributos e usando a mesma referência tarifária nos dois planos."
 }

@@ -1,3 +1,5 @@
+import { modalityLabel, timeSlotLabel, componentLabel, formatDecimal, formatDate } from '../services/presentation'
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { ApiError, apiRequest } from '../services/api/client'
 
@@ -54,7 +56,7 @@ function formError(error: unknown, fallback: string) {
 
 function AdminToolFrame({ title, children }: { title: string; children: ReactNode }) {
   return <section className="admin-page" aria-labelledby="admin-tool-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-tool-title">{title}</h1>
     <nav className="admin-subnav" aria-label="Tarifas e parâmetros"><a href="/admin/tariffs">Tarifas e importação ANEEL</a><a href="/admin/parameters">Parâmetros regulatórios</a></nav>
@@ -64,9 +66,9 @@ function AdminToolFrame({ title, children }: { title: string; children: ReactNod
 
 function Pagination({ meta, onPage }: { meta: PageMeta; onPage: (page: number) => void }) {
   return <nav className="admin-pagination" aria-label="Paginação">
-    <button className="button button--secondary" type="button" disabled={meta.current_page <= 1} onClick={() => onPage(meta.current_page - 1)}>Anterior</button>
+    <NavigationButton direction="back" type="button" disabled={meta.current_page <= 1} onClick={() => onPage(meta.current_page - 1)}>Anterior</NavigationButton>
     <span>Página {meta.current_page} de {meta.last_page} · {meta.total} registros</span>
-    <button className="button button--secondary" type="button" disabled={meta.current_page >= meta.last_page} onClick={() => onPage(meta.current_page + 1)}>Próxima</button>
+    <NavigationButton direction="forward" type="button" disabled={meta.current_page >= meta.last_page} onClick={() => onPage(meta.current_page + 1)}>Próxima</NavigationButton>
   </nav>
 }
 
@@ -147,13 +149,13 @@ function PendingTariffImports({ onApproved, distributors }: { onApproved: () => 
     {error && <p className="field-error" role="alert">{error}</p>}
     {notice && <p className="form-success" role="status">{notice}</p>}
     {imports.map((item) => <div key={item.id}><p>Importação #{item.id} · {item.source_reference}</p><button className="text-button" type="button" disabled={busy} onClick={() => void openReview(item.id)}>Revisar importação #{item.id}</button></div>)}
-    {lastPage > 1 && <nav aria-label="Páginas de importações pendentes"><button type="button" disabled={busy || page <= 1} onClick={() => void load(page - 1)}>Anterior</button><span>{page} de {lastPage}</span><button type="button" disabled={busy || page >= lastPage} onClick={() => void load(page + 1)}>Próxima</button></nav>}
+    {lastPage > 1 && <nav className="admin-pagination" aria-label="Páginas de importações pendentes"><NavigationButton direction="back" type="button" disabled={busy || page <= 1} onClick={() => void load(page - 1)}>Anterior</NavigationButton><span>{page} de {lastPage}</span><NavigationButton direction="forward" type="button" disabled={busy || page >= lastPage} onClick={() => void load(page + 1)}>Próxima</NavigationButton></nav>}
     {review && <div>
       <h3>Revisão da importação #{review.id}</h3>
       <p>{review.source_reference} · Valores sem tributos</p>
       <a href={review.source_url} target="_blank" rel="noreferrer">Consultar fonte oficial</a>
       <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Distribuidora</th><th>Subgrupo / modalidade</th><th>Posto / componente</th><th>Valor sem tributos</th><th>Vigência</th></tr></thead><tbody>
-        {review.pending_tariffs?.map((tariff, index) => <tr key={index}><td>{distributors.find((item) => item.id === tariff.distributor_id)?.name ?? `Distribuidora #${tariff.distributor_id}`}</td><td>{tariff.subgroup} · {tariff.tariff_modality === 'blue' ? 'Azul' : 'Verde'}</td><td>{({ peak: 'Ponta', off_peak: 'Fora de ponta', single: 'Única' } as Record<string, string>)[tariff.time_slot]} · {({ demand: 'Demanda', energy_te: 'Energia TE', energy_tusd: 'Energia TUSD' } as Record<string, string>)[tariff.component]}</td><td>{tariff.rate}</td><td>{tariff.valid_from} – {tariff.valid_to ?? 'sem término'}</td></tr>)}
+        {review.pending_tariffs?.map((tariff, index) => <tr key={index}><td>{distributors.find((item) => item.id === tariff.distributor_id)?.name ?? `Distribuidora #${tariff.distributor_id}`}</td><td>{tariff.subgroup} · {modalityLabel(tariff.tariff_modality)}</td><td>{timeSlotLabel(tariff.time_slot)} · {componentLabel(tariff.component)}</td><td>{formatDecimal(tariff.rate, 5)}</td><td>{formatDate(tariff.valid_from)} – {formatDate(tariff.valid_to, 'sem término')}</td></tr>)}
       </tbody></table></div>
       {review.status === 'pending' && <><label><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />Conferi os valores, as vigências e a origem das tarifas.</label><button className="button" type="button" disabled={busy || !confirmed} onClick={() => void approve()}>Aprovar e ativar tarifas</button></>}
     </div>}
@@ -262,11 +264,11 @@ export function AdminTariffsPage() {
         <thead><tr><th>Distribuidora</th><th>Subgrupo / modalidade</th><th>Posto / componente</th><th>Tarifa</th><th>Base tributária</th><th>Origem</th><th>Vigência</th><th>Ações</th></tr></thead>
         <tbody>{tariffs.data.map((tariff) => <tr key={tariff.id}>
           <td>{tariff.distributor?.name ?? distributors.find((item) => item.id === tariff.distributor_id)?.name ?? `#${tariff.distributor_id}`}</td>
-          <td>{tariff.subgroup} · {tariff.tariff_modality === 'blue' ? 'Azul' : 'Verde'}</td>
-          <td>{({ peak: 'Ponta', off_peak: 'Fora de ponta', single: 'Única' } as Record<string, string>)[tariff.time_slot]} · {({ demand: 'Demanda', energy_te: 'Energia TE', energy_tusd: 'Energia TUSD' } as Record<string, string>)[tariff.component]}</td><td>{tariff.rate}</td>
+          <td>{tariff.subgroup} · {modalityLabel(tariff.tariff_modality)}</td>
+          <td>{timeSlotLabel(tariff.time_slot)} · {componentLabel(tariff.component)}</td><td>{formatDecimal(tariff.rate, 5)}</td>
           <td>{tariff.includes_taxes ? 'Com tributos' : 'Sem tributos'}</td>
           <td>{tariff.source === 'aneel_import' ? 'ANEEL' : 'Manual'}{tariff.source_reference ? <span>{tariff.source_reference}</span> : null}</td>
-          <td>{tariff.valid_from} – {tariff.valid_to ?? 'atual'}</td>
+          <td>{formatDate(tariff.valid_from)} – {formatDate(tariff.valid_to, 'sem término')}</td>
           <td><button className="text-button admin-inline-button" type="button" onClick={() => startNewVersion(tariff)}>Criar nova versão</button></td>
         </tr>)}</tbody>
       </table></div>
@@ -344,8 +346,8 @@ export function AdminParametersPage() {
       <div className="admin-table-wrap"><table className="admin-table">
         <thead><tr><th>Parâmetro</th><th>Valor</th><th>Vigência</th></tr></thead>
         <tbody>{parameters.data.map((parameter) => <tr key={parameter.id}>
-          <td>{parameterLabels[parameter.key] ?? parameter.key}<span>{parameter.key}</span></td>
-          <td>{parameter.value}</td><td>{parameter.valid_from} – {parameter.valid_to ?? 'atual'}</td>
+          <td>{parameterLabels[parameter.key] ?? 'Parâmetro não identificado'}</td>
+          <td>{formatDecimal(parameter.value, 5)}</td><td>{formatDate(parameter.valid_from)} – {formatDate(parameter.valid_to, 'sem término')}</td>
         </tr>)}</tbody>
       </table></div>
       <Pagination meta={parameters.meta} onPage={setPage} />

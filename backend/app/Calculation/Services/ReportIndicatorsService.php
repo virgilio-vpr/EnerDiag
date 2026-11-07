@@ -12,7 +12,7 @@ final class ReportIndicatorsService
 
     public const string PERCENTAGE_LABEL = '% do valor médio pago no período';
 
-    public const string PERCENTAGE_OBSERVATION = 'A economia usa tarifas atuais e o valor pago usa as tarifas históricas.';
+    public const string PERCENTAGE_OBSERVATION = 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.';
 
     /** @param list<ReportIndicatorMonthData> $months */
     public function calculate(array $months): ReportIndicatorsResult

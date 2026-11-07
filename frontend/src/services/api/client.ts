@@ -25,6 +25,22 @@ export class ApiError extends Error {
 
 let authToken: string | null = null
 let authenticatedUser: AuthenticatedUser | null = null
+const authListeners = new Set<() => void>()
+let authSession: Readonly<{ token: string | null; user: AuthenticatedUser | null }> = { token: authToken, user: authenticatedUser }
+
+function notifyAuthChange() {
+  authSession = { token: authToken, user: authenticatedUser }
+  for (const listener of authListeners) listener()
+}
+
+export function subscribeAuthChanges(listener: () => void) {
+  authListeners.add(listener)
+  return () => { authListeners.delete(listener) }
+}
+
+export function getAuthSession() {
+  return authSession
+}
 let responseGeneration = 0
 const responses = new Map<string, { value: unknown; expiresAt: number }>()
 const pendingReads = new Map<string, Promise<unknown>>()
@@ -60,8 +76,10 @@ const errorMessages: Record<number, string> = {
 
 export function setAuthToken(token: string | null) {
   clearResponses()
+  const changed = authToken !== token || (token === null && authenticatedUser !== null)
   authToken = token
   if (token === null) authenticatedUser = null
+  if (changed) notifyAuthChange()
 }
 
 export function getAuthToken() {
@@ -69,7 +87,9 @@ export function getAuthToken() {
 }
 
 export function setAuthenticatedUser(user: AuthenticatedUser | null) {
+  if (authenticatedUser === user) return
   authenticatedUser = user
+  notifyAuthChange()
 }
 
 export function getAuthenticatedUser() {

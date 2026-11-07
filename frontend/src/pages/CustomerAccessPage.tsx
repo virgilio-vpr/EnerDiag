@@ -1,3 +1,4 @@
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useState, type FormEvent } from 'react'
 import { ApiError, apiRequest, setAuthToken, setAuthenticatedUser } from '../services/api/client'
 
@@ -164,7 +165,7 @@ export function VerifyEmailPage({ email: initialEmail }: { email: string }) {
         <button className="button access-submit" type="submit" disabled={busyAction !== null}>{busyAction === 'verify' ? 'Confirmando…' : 'Confirmar e-mail'}</button>
       </form>
       <button className="text-button" type="button" onClick={resend} disabled={busyAction !== null}>{busyAction === 'resend' ? 'Enviando…' : 'Reenviar código'}</button>
-      <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
+      <p className="access-switch"><NavigationLink direction="back" href="/login">Voltar para entrar</NavigationLink></p>
     </section>
   )
 }
@@ -218,7 +219,7 @@ export function LoginPage() {
   }
 
   if (signedIn) {
-    return <section className="access-page" aria-labelledby="login-success-title"><p className="section-eyebrow">Acesso confirmado</p><h1 id="login-success-title">Você entrou na sua conta</h1><p className="form-success" role="status">Sua sessão está ativa neste dispositivo.</p><button className="button access-submit" type="button" onClick={() => { window.history.pushState({}, '', '/minhas-simulacoes'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Continuar para minhas simulações</button></section>
+    return <section className="access-page" aria-labelledby="login-success-title"><p className="section-eyebrow">Acesso confirmado</p><h1 id="login-success-title">Você entrou na sua conta</h1><p className="form-success" role="status">Sua sessão está ativa neste dispositivo.</p><NavigationButton variant="primary" className="access-submit" onClick={() => { window.history.pushState({}, '', '/minhas-simulacoes'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Continuar para minhas simulações</NavigationButton></section>
   }
 
   return (
@@ -275,7 +276,7 @@ export function ForgotPasswordPage() {
         {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
         <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Enviando…' : 'Enviar instruções'}</button>
       </form>
-      <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
+      <p className="access-switch"><NavigationLink direction="back" href="/login">Voltar para entrar</NavigationLink></p>
     </section>
   )
 }
@@ -330,7 +331,7 @@ export function ResetPasswordPage({ email: initialEmail, token }: { email: strin
         {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
         <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Salvando…' : 'Redefinir senha'}</button>
       </form>
-      <p className="access-switch"><a href="/login">Voltar para entrar</a></p>
+      <p className="access-switch"><NavigationLink direction="back" href="/login">Voltar para entrar</NavigationLink></p>
     </section>
   )
 }

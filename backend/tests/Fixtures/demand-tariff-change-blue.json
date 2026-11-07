@@ -1,0 +1,230 @@
+[
+  {
+    "month": "2025-10",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "257.880",
+        "rate": "37.99620",
+        "normal_amount": "9798.46",
+        "idle_amount": "2496.28"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "323.400",
+        "rate": "22.09743",
+        "normal_amount": "7146.31",
+        "idle_amount": "880.60"
+      }
+    }
+  },
+  {
+    "month": "2025-11",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "265.440",
+        "rate": "37.98405",
+        "normal_amount": "10082.51",
+        "idle_amount": "2260.01"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "330.120",
+        "rate": "22.09035",
+        "normal_amount": "7292.48",
+        "idle_amount": "758.61"
+      }
+    }
+  },
+  {
+    "month": "2025-12",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "258.720",
+        "rate": "37.95578",
+        "normal_amount": "9819.92",
+        "idle_amount": "2467.48"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "312.480",
+        "rate": "22.07396",
+        "normal_amount": "6897.67",
+        "idle_amount": "1077.34"
+      }
+    }
+  },
+  {
+    "month": "2026-01",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "301.560",
+        "rate": "37.57269",
+        "normal_amount": "11330.42",
+        "idle_amount": "1122.69"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "355.320",
+        "rate": "21.85115",
+        "normal_amount": "7764.15",
+        "idle_amount": "298.84"
+      }
+    }
+  },
+  {
+    "month": "2026-02",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "283.920",
+        "rate": "38.03663",
+        "normal_amount": "10799.37",
+        "idle_amount": "1686.75"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "319.200",
+        "rate": "22.12094",
+        "normal_amount": "7061.02",
+        "idle_amount": "957.74"
+      }
+    }
+  },
+  {
+    "month": "2026-03",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "298.200",
+        "rate": "37.59636",
+        "normal_amount": "11211.25",
+        "idle_amount": "1226.99"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "335.160",
+        "rate": "21.86489",
+        "normal_amount": "7328.26",
+        "idle_amount": "660.50"
+      }
+    }
+  },
+  {
+    "month": "2026-04",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "255.360",
+        "rate": "37.56479",
+        "normal_amount": "9592.56",
+        "idle_amount": "2545.56"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "305.760",
+        "rate": "21.84651",
+        "normal_amount": "6679.81",
+        "idle_amount": "1186.62"
+      }
+    }
+  },
+  {
+    "month": "2026-05",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "254.520",
+        "rate": "38.13402",
+        "normal_amount": "9705.87",
+        "idle_amount": "2610.40"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "313.320",
+        "rate": "22.17761",
+        "normal_amount": "6948.69",
+        "idle_amount": "1067.12"
+      }
+    }
+  },
+  {
+    "month": "2026-06",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "213.360",
+        "rate": "37.36050",
+        "normal_amount": "7971.25",
+        "idle_amount": "3818.42"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "272.160",
+        "rate": "21.72774",
+        "normal_amount": "5913.43",
+        "idle_amount": "1778.82"
+      }
+    }
+  },
+  {
+    "month": "2026-07",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "228.480",
+        "rate": "40.51689",
+        "normal_amount": "9257.30",
+        "idle_amount": "3638.66"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "274.680",
+        "rate": "24.23136",
+        "normal_amount": "6655.87",
+        "idle_amount": "1933.70"
+      }
+    }
+  },
+  {
+    "month": "2026-08",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "252.000",
+        "rate": "20.45393",
+        "normal_amount": "5154.40",
+        "idle_amount": "1442.41"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "304.080",
+        "rate": "12.26589",
+        "normal_amount": "3729.84",
+        "idle_amount": "683.12"
+      }
+    }
+  },
+  {
+    "month": "2026-09",
+    "slots": {
+      "peak": {
+        "contracted": "338.000",
+        "measured": "247.800",
+        "rate": "20.49077",
+        "normal_amount": "5077.63",
+        "idle_amount": "1515.57"
+      },
+      "off_peak": {
+        "contracted": "372.000",
+        "measured": "306.600",
+        "rate": "12.28793",
+        "normal_amount": "3767.51",
+        "idle_amount": "658.96"
+      }
+    }
+  }
+]

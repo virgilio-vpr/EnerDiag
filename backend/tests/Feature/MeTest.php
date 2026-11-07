@@ -107,6 +107,28 @@ class MeTest extends TestCase
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
     }
 
+    public function test_admin_cannot_delete_own_account_and_keeps_access(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('admin-self-deletion-test')->plainTextToken;
+
+        $this->withToken($token)->deleteJson('/api/v1/me')->assertForbidden();
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'role' => 'admin']);
+        $this->assertSame(1, $admin->tokens()->count());
+        $this->withToken($token)->getJson('/api/v1/me')->assertOk()->assertJsonPath('data.role', 'admin');
+    }
+
+    public function test_admin_can_update_personal_data_without_a_customer_profile(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('admin-profile-update')->plainTextToken;
+
+        $this->withToken($token)->putJson('/api/v1/me', ['name' => 'Administrador atualizado', 'phone' => '11999999999'])
+            ->assertOk()->assertJsonPath('data.name', 'Administrador atualizado')->assertJsonPath('data.profile', null);
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'role' => 'admin', 'name' => 'Administrador atualizado']);
+    }
+
     /**
      * @return array{User, string}
      */

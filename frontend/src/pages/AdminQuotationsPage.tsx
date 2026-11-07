@@ -1,3 +1,5 @@
+import { unitLabel } from '../services/presentation'
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 
@@ -157,7 +159,7 @@ export function AdminQuotationsPage() {
   }
 
   return <section className="admin-page" aria-labelledby="admin-quotations-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-quotations-title">Orçamentos</h1>
     <p className="access-intro">Prepare a proposta, confira a prévia e libere o envio ao cliente após registrar a responsabilidade técnica e a ART.</p>
@@ -177,7 +179,7 @@ export function AdminQuotationsPage() {
       <div className="admin-table-wrap"><table className="admin-table">
         <thead><tr><th>Item</th><th>Valor unitário</th><th>Quantidade</th></tr></thead>
         <tbody>{baseItems.map((item) => <tr key={item.id}>
-          <td>{item.name} <span>({item.unit})</span></td>
+          <td>{item.name} <span>({unitLabel(item.unit)})</span></td>
           <td>{currency(item.unit_price)}</td>
           <td><label className="admin-quantity-label"><span className="visually-hidden">Quantidade de {item.name}</span><input type="number" min="0.001" max="100000" step="0.001" value={quantities[item.id] ?? ''} onChange={(event) => setQuantities((current) => ({ ...current, [item.id]: event.target.value }))} /></label></td>
         </tr>)}</tbody>
@@ -200,11 +202,11 @@ export function AdminQuotationsPage() {
     </form>}
 
     <section aria-labelledby="admin-quotation-list-title">
-      <h2 id="admin-quotation-list-title">Propostas e status</h2>
+      <h2 id="admin-quotation-list-title">Propostas e situação</h2>
       {quotations && (quotations.data.length === 0
         ? <p>Nenhum orçamento criado.</p>
         : <div className="admin-table-wrap"><table className="admin-table">
-          <thead><tr><th>Orçamento</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Orçamento</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Situação</th><th>Ações</th></tr></thead>
           <tbody>{quotations.data.map((quotation) => <tr key={quotation.id}>
             <td>{quotation.quote_number}</td>
             <td><strong>{quotation.company_name ?? quotation.customer_name}</strong><span>{quotation.customer_email}</span></td>
@@ -218,9 +220,9 @@ export function AdminQuotationsPage() {
           </tr>)}</tbody>
         </table></div>)}
       {quotations && <nav className="admin-pagination" aria-label="Paginação de orçamentos">
-        <button className="button button--secondary" type="button" disabled={quotations.meta.current_page <= 1} onClick={() => setQuotationPage((current) => current - 1)}>Anterior</button>
+        <NavigationButton direction="back" type="button" disabled={quotations.meta.current_page <= 1} onClick={() => setQuotationPage((current) => current - 1)}>Anterior</NavigationButton>
         <span>Página {quotations.meta.current_page} de {quotations.meta.last_page} · {quotations.meta.total} orçamentos</span>
-        <button className="button button--secondary" type="button" disabled={quotations.meta.current_page >= quotations.meta.last_page} onClick={() => setQuotationPage((current) => current + 1)}>Próxima</button>
+        <NavigationButton direction="forward" type="button" disabled={quotations.meta.current_page >= quotations.meta.last_page} onClick={() => setQuotationPage((current) => current + 1)}>Próxima</NavigationButton>
       </nav>}
     </section>
   </section>

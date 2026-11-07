@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { AdminAccountAccess } from '../components/AdminAccountAccess'
 import { ApiError, apiRequest, getAuthToken, setAuthToken } from '../services/api/client'
 
 type Distributor = { id: number; name: string; state: string }
 type Account = {
+  role?: 'customer' | 'admin'
   name: string
   email: string
   phone: string | null
@@ -83,13 +85,15 @@ export function ProfilePage() {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim() || null,
-          company_name: companyName.trim(),
-          cnpj: cnpj.trim() || null,
-          distributor_id: distributorId ? Number(distributorId) : null,
-          transformer_power_kva: transformerPower.trim() || null,
-          address_details: address.trim() || null,
-          substation_same_address: sameSubstationAddress,
-          substation_address: sameSubstationAddress ? null : substationAddress.trim(),
+          ...(account?.role === 'admin' ? {} : {
+            company_name: companyName.trim(),
+            cnpj: cnpj.trim() || null,
+            distributor_id: distributorId ? Number(distributorId) : null,
+            transformer_power_kva: transformerPower.trim() || null,
+            address_details: address.trim() || null,
+            substation_same_address: sameSubstationAddress,
+            substation_address: sameSubstationAddress ? null : substationAddress.trim(),
+          }),
         }),
       }, { notifyGlobalError: false })
       setAccount(response.data)
@@ -106,6 +110,7 @@ export function ProfilePage() {
   }
 
   async function deleteAccount() {
+    if (account?.role === 'admin') return
     setErrorMessage('')
     setDeleting(true)
     try {
@@ -125,7 +130,7 @@ export function ProfilePage() {
   return <section className="profile-page" aria-labelledby="profile-title">
     <p className="section-eyebrow">Sua conta EnerDiag</p>
     <h1 id="profile-title">Meu perfil</h1>
-    <p className="access-intro">Atualize seus dados e as informações da unidade consumidora.</p>
+    <p className="access-intro">{account.role === 'admin' ? 'Atualize seus dados pessoais e de acesso à administração.' : 'Atualize seus dados e as informações da unidade consumidora.'}</p>
     {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
     {successMessage && <p className="form-success" role="status">{successMessage}</p>}
 
@@ -134,9 +139,9 @@ export function ProfilePage() {
         <label>Nome do responsável<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} required maxLength={255} /></label>
         <label>E-mail<input type="email" value={account.email} readOnly aria-describedby="profile-email-note" /></label>
         <label>Telefone<input autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={30} /></label>
-      </div><p id="profile-email-note" className="password-hint">O e-mail de acesso não pode ser alterado por esta tela.</p></fieldset>
+      </div><p id="profile-email-note" className="password-hint">{account.role === 'admin' ? 'Para alterar o e-mail de acesso, use as opções abaixo.' : 'O e-mail de acesso não pode ser alterado por esta tela.'}</p></fieldset>
 
-      <fieldset><legend>Dados da empresa</legend><div className="profile-grid">
+      {account.role !== 'admin' && <fieldset><legend>Dados da empresa</legend><div className="profile-grid">
         <label>Nome da empresa<input autoComplete="organization" value={companyName} onChange={(event) => setCompanyName(event.target.value)} required maxLength={255} /></label>
         <label>CNPJ<input value={cnpj} onChange={(event) => setCnpj(event.target.value)} maxLength={18} /></label>
         <label>Distribuidora<select value={distributorId} onChange={(event) => setDistributorId(event.target.value)}><option value="">Não informada</option>{distributors.map((distributor) => <option key={distributor.id} value={distributor.id}>{distributor.name} · {distributor.state}</option>)}</select></label>
@@ -145,11 +150,13 @@ export function ProfilePage() {
         <label className="profile-wide">Endereço da unidade consumidora<textarea rows={3} value={address} onChange={(event) => setAddress(event.target.value)} maxLength={5000} /></label>
         <label className="consent-control"><input type="checkbox" checked={sameSubstationAddress} onChange={(event) => setSameSubstationAddress(event.target.checked)} /><span>O endereço da subestação é o mesmo da unidade consumidora.</span></label>
         {!sameSubstationAddress && <label className="profile-wide">Endereço da subestação<textarea rows={3} value={substationAddress} onChange={(event) => setSubstationAddress(event.target.value)} maxLength={5000} required /></label>}
-      </fieldset>
+      </fieldset>}
       <button className="button access-submit" type="submit" disabled={saving}>{saving ? 'Salvando…' : 'Salvar alterações'}</button>
     </form>
 
-    <section className="delete-account" aria-labelledby="delete-account-title">
+    {account.role === 'admin' && <AdminAccountAccess onEmailChanged={(email) => setAccount((current) => current ? { ...current, email } : current)} />}
+
+    {account.role !== 'admin' && <section className="delete-account" aria-labelledby="delete-account-title">
       <h2 id="delete-account-title">Excluir conta e dados</h2>
       <p>A exclusão remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.</p>
       {!confirmDeletion ? <button className="delete-button" type="button" onClick={() => setConfirmDeletion(true)}>Excluir minha conta</button> : <div className="delete-confirmation" role="alertdialog" aria-labelledby="delete-confirmation-title" aria-describedby="delete-confirmation-description">
@@ -157,6 +164,6 @@ export function ProfilePage() {
         <p id="delete-confirmation-description">Sua conta e os dados relacionados serão excluídos permanentemente. Você será desconectado.</p>
         <div><button className="delete-button" type="button" disabled={deleting} onClick={deleteAccount}>{deleting ? 'Excluindo…' : 'Confirmar exclusão'}</button><button className="text-button" type="button" disabled={deleting} onClick={() => setConfirmDeletion(false)}>Manter minha conta</button></div>
       </div>}
-    </section>
+    </section>}
   </section>
 }

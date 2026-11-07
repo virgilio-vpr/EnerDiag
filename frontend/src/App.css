@@ -21,6 +21,8 @@
 .app-header > .theme-toggle { order: 1; margin-left: auto; }
 .header-login, .app-footer a { color: var(--text-h); font-size: 0.9rem; font-weight: 650; text-decoration: none; }
 .header-login:hover, .app-footer a:hover { color: var(--accent); }
+.header-logout { min-height: 2.75rem; padding: 0.25rem; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+.header-logout:disabled { opacity: 0.65; cursor: wait; }
 .button {
   display: inline-flex;
   align-items: center;
@@ -386,9 +388,8 @@
 .admin-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .admin-card h2 { margin: 0; color: var(--text-h); font-size: 1.1rem; }
 .admin-card p { margin: 0; color: var(--text); font-size: 0.9rem; line-height: 1.55; }
-.admin-card span { margin-top: 0.25rem; color: var(--accent); font-weight: 700; }
-.admin-back-link { justify-self: start; color: var(--accent); font-weight: 700; text-decoration: none; }
-.admin-back-link:focus-visible, .admin-table a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.admin-card > span { margin-top: 0.25rem; color: var(--accent); font-weight: 700; }
+.admin-table a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .admin-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 0.85rem; background: var(--code-bg); }
 .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
 .admin-table th, .admin-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
@@ -507,3 +508,51 @@
 
 .button, .text-button, .delete-button { font-family: var(--heading); }
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
+
+
+.navigation-control.button {
+  justify-self: start;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  padding: 0.55rem 0.85rem;
+  gap: 0.65rem;
+  border-radius: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  text-align: center;
+  vertical-align: middle;
+}
+:root .navigation-control:not(.navigation-control--primary) {
+  color: var(--accent);
+  background: var(--code-bg);
+  border-color: var(--accent-border);
+  box-shadow: 0 2px 6px var(--glow-primary);
+}
+:root .navigation-control:not(.navigation-control--primary):not(:disabled):hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  box-shadow: 0 5px 14px var(--glow-primary);
+}
+.navigation-control.navigation-control--primary { min-height: 3.2rem; padding: 0.75rem 1.3rem; font-size: 0.95rem; }
+.navigation-control__icon { display: inline-grid; place-items: center; width: 1.65rem; height: 1.65rem; flex: 0 0 auto; border-radius: 0.45rem; background: var(--accent-bg); }
+.navigation-control--primary .navigation-control__icon { background: rgb(255 255 255 / 15%); }
+.navigation-control__icon svg { width: 1rem; height: 1rem; transition: transform 160ms ease; }
+.navigation-control__label { min-width: 0; overflow-wrap: anywhere; }
+.navigation-control--forward:not(:disabled):hover .navigation-control__icon svg,
+.admin-card:hover .navigation-control__icon svg { transform: translateX(2px); }
+.navigation-control--back:not(:disabled):hover .navigation-control__icon svg { transform: translateX(-2px); }
+.navigation-control:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.navigation-control:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; box-shadow: none; }
+.admin-card > .admin-card-action { display: inline-flex; align-items: center; justify-self: start; gap: 0.65rem; margin-top: 0.4rem; padding: 0.4rem 0.65rem; border: 1px solid var(--accent-border); border-radius: 0.65rem; background: var(--accent-bg); font-size: 0.86rem; }
+.admin-card-action .navigation-control__icon { margin: 0; background: var(--code-bg); }
+@media (prefers-reduced-motion: reduce) {
+  .navigation-control, .navigation-control__icon svg { transition: none; }
+  .navigation-control:hover, .navigation-control:hover .navigation-control__icon svg,
+  .admin-card:hover .navigation-control__icon svg { transform: none; }
+}
+
+.admin-account-access { display: grid; gap: 1.25rem; }
+.admin-account-access > h2, .admin-account-access > p { margin: 0; }

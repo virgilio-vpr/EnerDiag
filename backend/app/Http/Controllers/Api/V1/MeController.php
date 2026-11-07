@@ -88,6 +88,8 @@ class MeController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        abort_if($user->role === 'admin', 403, 'Contas de administrador não podem ser excluídas pelo perfil.');
+
         DB::transaction(function () use ($user): void {
             $user->tokens()->delete();
             Password::deleteToken($user);

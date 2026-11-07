@@ -56,6 +56,47 @@ afterEach(() => {
 })
 
 describe('simulation report', () => {
+  it('explains the common tariff reference used for demand comparisons', async () => {
+    setAuthToken('customer-token')
+    const referencedReport = { ...report, chart_series: { ...report.chart_series, demand: report.chart_series.demand.map((point) => ({ ...point, tariff_reference_month: '2026-09' })) } }
+    setupFetch({}, referencedReport)
+    render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByText(/o contrato atual e o simulado usam as mesmas tarifas da fatura/)).toHaveTextContent('set.')
+    expect(screen.getByText(/A mudança de tarifa ao longo do histórico/)).toBeInTheDocument()
+  })
+
+  it('identifies reference rates per slot without the removed migration explanation', async () => {
+    setAuthToken('customer-token')
+    setupFetch({}, { ...report, warnings: ['free_market_invoice'], chart_series: { ...report.chart_series, demand: report.chart_series.demand.map((point) => ({
+      ...point, tariff_reference_source: point.time_slot === 'peak' ? 'series_maximum' : 'registered_tariff',
+      tariff_reference_month: point.time_slot === 'peak' ? '2026-07' : '2026-11',
+      reference_tariff: point.time_slot === 'peak' ? '40.51689' : '24.23136',
+    })) } })
+    render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByText(/Ponta: 40,51689 R\$\/kW/)).toHaveTextContent('Maior tarifa unitária com tributos da série')
+    expect(screen.getByText(/Fora de ponta: 24,23136 R\$\/kW/)).toHaveTextContent('Tarifa vigente cadastrada, com tributos')
+    expect(screen.getByText(/As bandeiras tarifárias não compõem a tarifa de demanda/)).toBeInTheDocument()
+    expect(screen.queryByText(/não a condição atual do contrato/)).not.toBeInTheDocument()
+  })
+
+  it('explains warnings in business language and keeps all scenarios in regulated supply', async () => {
+    setAuthToken('customer-token')
+    const scopedReport = { ...report, warnings: ['migration_unavailable', 'demand_invoice_reconciliation_mismatch', 'free_market_invoice'], chart_series: {
+      ...report.chart_series, modality: [{ reference_month: 'Período', blue: '1200.20', green: '196.80', tariff_reference_date: '2026-11-06' }],
+    } }
+    setupFetch({}, scopedReport)
+    render(<SimulationReportPage simulationId="12" />)
+
+    expect(await screen.findByText(/Precisamos completar os dados de consumo ou atualizar as tarifas/)).toBeInTheDocument()
+    expect(screen.getByText(/confirme esses valores com a distribuidora/)).toBeInTheDocument()
+    expect(screen.queryByText(/mercado livre/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Os planos Azul e Verde são comparados com as tarifas da distribuidora/)).toBeInTheDocument()
+    expect(screen.queryByText(/recálculo histórico/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/energia ACL/)).not.toBeInTheDocument()
+  })
+
   it('reloads a recalculated report when the customer returns to the tab', async () => {
     setAuthToken('customer-token')
     const fetchMock = setupFetch()
@@ -82,8 +123,8 @@ describe('simulation report', () => {
     ] })
     render(<SimulationReportPage simulationId="12" />)
 
-    expect(await screen.findByText('A análise não encontrou economia na migração entre modalidades.')).toBeInTheDocument()
-    expect(screen.getByText(/o relatório considera o valor faturado nesses meses/)).toBeInTheDocument()
+    expect(await screen.findByText('Com os dados analisados, trocar entre os planos Azul e Verde não reduz os custos.')).toBeInTheDocument()
+    expect(screen.getByText(/Antes de alterar a demanda contratada/)).toBeInTheDocument()
     expect(screen.queryByText(/Os componentes de PIS e COFINS/)).not.toBeInTheDocument()
     expect(screen.queryByText(/divergência de calibração tributária/)).not.toBeInTheDocument()
   })
@@ -104,16 +145,16 @@ describe('simulation report', () => {
     expect(await screen.findByRole('heading', { name: 'Seu relatório de energia' })).toBeInTheDocument()
     expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument()
     expect(screen.getByText('12,5%')).toBeInTheDocument()
-    expect(screen.getByText('A economia usa tarifas atuais e o valor pago usa as tarifas históricas.')).toBeInTheDocument()
+    expect(screen.getByText('A economia usa tarifas de referência; o valor pago usa as tarifas históricas.')).toBeInTheDocument()
     expect(screen.getByText(/menos de 12 faturas/)).toBeInTheDocument()
     expect(screen.getByText(/tarifa vigente para todos os períodos/)).toBeInTheDocument()
     expect(screen.getByText(/r = 82%/)).toBeInTheDocument()
-    expect(screen.getByText(/diverge do valor registrado/)).toBeInTheDocument()
+    expect(screen.getByText(/Algumas cobranças de demanda nas faturas precisam de conferência/)).toBeInTheDocument()
     expect(screen.getByTestId('demand-chart-peak')).toBeInTheDocument()
     expect(screen.getByTestId('demand-chart-off_peak')).toBeInTheDocument()
     expect(screen.getByTestId('reactive-chart')).toBeInTheDocument()
     expect(screen.getByText(/Comparação entre Azul e Verde/)).toBeInTheDocument()
-    expect(screen.getByText(/critérios regulatórios pendentes forem definidos/)).toBeInTheDocument()
+    expect(screen.getByText(/Precisamos completar os dados de consumo ou atualizar as tarifas/)).toBeInTheDocument()
     expect(screen.getByText('Confira as condições antes de alterar a demanda contratada.')).toBeInTheDocument()
   })
 

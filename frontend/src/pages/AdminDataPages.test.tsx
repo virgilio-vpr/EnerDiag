@@ -48,7 +48,7 @@ describe('admin customer and simulation pages', () => {
 
     expect(await screen.findByText('ana@example.com')).toBeInTheDocument()
     expect(screen.getByText('12345678000199')).toBeInTheDocument()
-    expect(screen.getByText('500.00 kVA')).toBeInTheDocument()
+    expect(screen.getByText('500,00 kVA')).toBeInTheDocument()
   })
 
   it('lists simulations with pagination and opens the extracted-data detail', async () => {
@@ -75,6 +75,10 @@ describe('admin customer and simulation pages', () => {
 
     expect(await screen.findByText('Faturas e itens extraídos')).toBeInTheDocument()
     expect(screen.getByText('ENERGIA ATIVA FORA PONTA')).toBeInTheDocument()
+    expect(screen.getByText('Consumo ativo (TUSD)')).toBeInTheDocument()
+    expect(screen.getByText('Fora de ponta')).toBeInTheDocument()
+    expect(screen.getByText('1.000,000 kWh')).toBeInTheDocument()
+    expect(screen.getByText(/0,50000/)).toBeInTheDocument()
     expect(screen.getByText(/14\.500,00/)).toBeInTheDocument()
     expect(screen.queryByText(/secret-invoice\.pdf/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /pdf|download/i })).not.toBeInTheDocument()

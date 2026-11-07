@@ -1,3 +1,4 @@
+import { NavigationLink } from '../components/NavigationControl'
 import { getHttpErrorMessage } from '../services/api/client'
 
 type ErrorPageProps = {
@@ -17,7 +18,7 @@ export function ErrorPage({ status, message, returnForecast }: ErrorPageProps) {
       {status === 503 && (
         <p role="status">Previsão de retorno: {returnForecast ?? 'ainda não informada.'}</p>
       )}
-      <a href="/">Voltar ao início</a>
+      <NavigationLink direction="back" href="/">Voltar ao início</NavigationLink>
     </main>
   )
 }

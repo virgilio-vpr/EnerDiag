@@ -1,3 +1,5 @@
+import { unitLabel } from '../services/presentation'
+import { NavigationLink } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, apiRequest } from '../services/api/client'
 
@@ -98,7 +100,7 @@ export function AdminQuotationItemsPage() {
   }
 
   return <section className="admin-page" aria-labelledby="admin-quotation-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-quotation-title">Orçamento</h1>
     <p className="access-intro">Atualize os custos de referência usados na preparação de orçamentos.</p>
@@ -112,7 +114,7 @@ export function AdminQuotationItemsPage() {
         <thead><tr><th>Item</th><th>Unidade</th><th>Valor unitário</th><th>Ação</th></tr></thead>
         <tbody>{items.map((item) => <tr key={item.id}>
           <td><strong>{item.name}</strong>{item.description && <span>{item.description}</span>}</td>
-          <td>{item.unit}</td>
+          <td>{unitLabel(item.unit)}</td>
           <td>{formatPrice(item.unit_price)}</td>
           <td><button className="text-button admin-inline-button" type="button" onClick={() => startEditing(item)}>Editar</button></td>
         </tr>)}</tbody>
@@ -121,9 +123,9 @@ export function AdminQuotationItemsPage() {
     <form className="admin-data-form" onSubmit={saveItem}>
       <h2>{editingId === null ? 'Adicionar item' : 'Editar item'}</h2>
       <div className="admin-form-grid">
-        <label>Identificador<input required maxLength={255} pattern="[A-Za-z0-9_-]+" value={form.item_key} onChange={(event) => changeField('item_key', event.target.value)} placeholder="consulting_hour" /></label>
+        <label>Identificador<input required maxLength={255} pattern="[A-Za-z0-9_-]+" value={form.item_key} onChange={(event) => changeField('item_key', event.target.value)} placeholder="Ex.: hora_consultoria" /></label>
         <label>Nome<input required maxLength={255} value={form.name} onChange={(event) => changeField('name', event.target.value)} /></label>
-        <label>Unidade<input required maxLength={30} value={form.unit} onChange={(event) => changeField('unit', event.target.value)} placeholder="hour" /></label>
+        <label>Unidade<input required maxLength={30} value={form.unit} onChange={(event) => changeField('unit', event.target.value)} placeholder="Ex.: hora ou unidade" /></label>
         <label>Valor unitário (R$)<input required type="number" min="0.01" step="0.01" value={form.unit_price} onChange={(event) => changeField('unit_price', event.target.value)} /></label>
         <label>Descrição<textarea value={form.description ?? ''} onChange={(event) => changeField('description', event.target.value)} rows={3} /></label>
       </div>

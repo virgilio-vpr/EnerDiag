@@ -149,7 +149,7 @@ class ProcessSimulation implements ShouldQueue
                 'regulatory_parameter_version_ids' => $calculated->regulatoryParameterVersionIds,
                 'explanatory_texts' => [
                     'percentage' => '% do valor médio pago no período',
-                    'percentage_observation' => 'A economia usa tarifas atuais e o valor pago usa as tarifas históricas.',
+                    'percentage_observation' => 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.',
                 ],
                 'recommendations' => [],
             ];

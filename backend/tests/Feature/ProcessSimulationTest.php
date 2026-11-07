@@ -67,13 +67,15 @@ class ProcessSimulationTest extends TestCase
         $report = $simulation->report()->firstOrFail();
         $this->assertSame('276.000', $report->optimal_demand_peak);
         $this->assertSame('348.000', $report->optimal_demand_off_peak);
-        $this->assertSame('1926.80', $report->demand_savings_monthly);
+        $this->assertSame('1925.10', $report->demand_savings_monthly);
         $this->assertNotContains('demand_optimization_unavailable', $report->warnings);
         $this->assertSame([], $report->recommendations);
         $this->assertContains('minimum_contracted_demand', RegulatoryParameter::query()->whereIn('id', $report->regulatory_parameter_version_ids)->pluck('key')->all());
         foreach ($report->chart_series['demand'] as $point) {
             $this->assertSame($point['time_slot'] === 'peak' ? $report->optimal_demand_peak : $report->optimal_demand_off_peak, $point['optimal']);
             $this->assertSame('0.05000', $point['overrun_tolerance']);
+            $this->assertSame('2025-01', $point['tariff_reference_month']);
+            $this->assertSame($point['time_slot'] === 'peak' ? '37.04511' : '21.90079', $point['reference_tariff']);
         }
         $this->assertDatabaseHas('invoice_items', ['amount' => '48427.71', 'unit_price_taxed' => '0.32136']);
         $this->assertDatabaseHas('invoice_items', ['amount' => '50934.67', 'unit_price_taxed' => '0.32129']);
@@ -109,7 +111,7 @@ class ProcessSimulationTest extends TestCase
         $this->assertSame(1, Invoice::query()->where('simulation_id', $simulation->id)->count());
         $this->assertGreaterThan(0, InvoiceItem::query()->whereHas('invoice', fn ($query) => $query->where('simulation_id', $simulation->id))->count());
         $report = Report::query()->where('simulation_id', $simulation->id)->firstOrFail();
-        $this->assertSame('1.1', $report->algorithm_version);
+        $this->assertSame('1.4', $report->algorithm_version);
         $this->assertContains('incomplete_invoice_series', $report->warnings);
         $pdfText = (new Parser)->parseContent(app(PdfReportGenerator::class)->generate($report))->getText();
         $this->assertStringContainsString('menos de 12 faturas', preg_replace('/\s+/u', ' ', $pdfText));
@@ -128,7 +130,20 @@ class ProcessSimulationTest extends TestCase
             Tariff::query()->create([
                 'distributor_id' => $distributorId, 'subgroup' => 'A4', 'tariff_modality' => 'green',
                 'time_slot' => $slot, 'component' => $component, 'rate' => $rate,
-                'includes_taxes' => false, 'source' => 'aneel_import', 'valid_from' => '2025-01-01',
+                'includes_taxes' => false, 'source' => 'aneel_import', 'valid_from' => today()->startOfYear()->toDateString(), 'valid_to' => today()->endOfYear()->toDateString(),
+            ]);
+        }
+        foreach ([
+            ['blue', 'peak', 'demand', '28.84000'], ['blue', 'off_peak', 'demand', '17.05000'],
+            ['blue', 'peak', 'energy_tusd', '0.09184'], ['blue', 'off_peak', 'energy_tusd', '0.09184'],
+            ['blue', 'peak', 'energy_te', '0.38642'], ['blue', 'off_peak', 'energy_te', '0.25018'],
+            ['green', 'peak', 'energy_te', '0.38642'], ['green', 'off_peak', 'energy_te', '0.25018'],
+        ] as [$modality, $slot, $component, $rate]) {
+            Tariff::query()->create([
+                'distributor_id' => $distributorId, 'subgroup' => 'A4', 'tariff_modality' => $modality,
+                'time_slot' => $slot, 'component' => $component, 'rate' => $rate,
+                'includes_taxes' => false, 'source' => 'aneel_import',
+                'valid_from' => today()->startOfYear()->toDateString(), 'valid_to' => today()->endOfYear()->toDateString(),
             ]);
         }
         $this->app->instance(InvoiceReaderResolver::class, new InvoiceReaderResolver([new EnelInvoiceReader]));
@@ -143,7 +158,7 @@ class ProcessSimulationTest extends TestCase
         $this->assertSame('green', $report->recommended_modality);
         $this->assertGreaterThan(0, bccomp($report->migration_savings_monthly, '0', 2));
         $this->assertNotContains('migration_unavailable', $report->warnings);
-        $this->assertCount(3, $report->tariff_version_ids);
+        $this->assertCount(11, $report->tariff_version_ids);
         $this->assertArrayHasKey('modality', $report->chart_series);
     }
 

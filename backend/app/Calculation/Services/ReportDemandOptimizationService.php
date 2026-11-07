@@ -15,16 +15,17 @@ final class ReportDemandOptimizationService
         private readonly RegulatoryParameterService $parameters,
         private readonly DemandOptimizationService $optimization,
         private readonly DemandBillingService $billing,
+        private readonly DemandReferenceTariffService $referenceTariffs,
     ) {}
 
     /**
      * @param  list<ExtractedInvoiceData>  $invoices
      * @param  list<DemandMonthData>  $months
-     * @return array{optimal: array<string, string>, savings: array<string, string>, parameter_id: ?int, warnings: list<string>}
+     * @return array{optimal: array<string, string>, savings: array<string, string>, comparison: array<string, array<string, array<string, string>>>, parameter_id: ?int, tariff_ids: list<int>, warnings: list<string>}
      */
-    public function calculate(array $invoices, array $months, IdleDemandRatioResolution $ratios): array
+    public function calculate(array $invoices, array $months, IdleDemandRatioResolution $ratios, ?int $distributorId = null): array
     {
-        $unavailable = ['optimal' => [], 'savings' => [], 'parameter_id' => null, 'warnings' => [self::UNAVAILABLE_WARNING]];
+        $unavailable = ['optimal' => [], 'savings' => [], 'comparison' => [], 'parameter_id' => null, 'tariff_ids' => [], 'warnings' => [self::UNAVAILABLE_WARNING]];
         if ($invoices === [] || count($invoices) !== count($months)) {
             return $unavailable;
         }
@@ -45,7 +46,18 @@ final class ReportDemandOptimizationService
             return $unavailable;
         }
 
-        $lastMonth = $months[array_key_last($months)];
+        $references = [];
+        $tariffIds = [];
+        foreach ($slots as $slot) {
+            $reference = $this->referenceTariffs->resolve($distributorId, $invoices, $months, $slot);
+            if ($reference === null) {
+                return $unavailable;
+            }
+            $references[$slot] = $reference;
+            if (isset($reference['reference_tariff_id'])) {
+                $tariffIds[] = (int) $reference['reference_tariff_id'];
+            }
+        }
         $series = array_fill_keys($slots, []);
         $maximum = $minimum;
         foreach ($months as $index => $month) {
@@ -55,7 +67,7 @@ final class ReportDemandOptimizationService
             foreach ($slots as $slot) {
                 $measured = $month->measuredDemandByTimeSlot[$slot] ?? null;
                 $contracted = $month->contractedDemandByTimeSlot[$slot] ?? null;
-                $rate = $lastMonth->normalDemandItemsByTimeSlot[$slot]->unitPriceTaxed ?? null;
+                $rate = $references[$slot]['reference_tariff'];
                 $ratio = $ratios->forMonthAndTimeSlot($month->referenceMonth, $slot)?->ratio;
                 if ($measured === null || $contracted === null || $rate === null || $ratio === null
                     || bccomp($measured, '0', 3) < 0 || bccomp($rate, '0', 5) <= 0
@@ -79,30 +91,40 @@ final class ReportDemandOptimizationService
         }
 
         $savings = [];
+        $comparison = [];
         $total = '0.00';
         foreach ($invoices as $index => $invoice) {
-            $actual = '0.00';
-            foreach ($invoice->items as $item) {
-                if (in_array($item->itemType, ['measured_demand', 'idle_demand', 'demand_overrun'], true)) {
-                    $actual = bcadd($actual, $item->amount, 2);
-                }
-            }
+            $currentContractCost = '0.00';
             $simulated = '0.00';
             foreach ($slots as $slot) {
                 $month = $series[$slot][$index];
+                $current = $this->billing->calculate($month->referenceMonth, $months[$index]->contractedDemandByTimeSlot[$slot], $month->measuredDemand, $month->unitRate, $month->idleDemandRatio);
                 $cost = $this->billing->calculate($month->referenceMonth, $optimal[$slot], $month->measuredDemand, $month->unitRate, $month->idleDemandRatio);
-                if ($cost->total === null) {
+                if ($current->total === null || $cost->total === null) {
                     return $unavailable;
                 }
+                $historical = '0.00';
+                foreach ($invoice->items as $item) {
+                    if ($item->timeSlot === $slot && in_array($item->itemType, ['measured_demand', 'idle_demand', 'demand_overrun'], true)) {
+                        $historical = bcadd($historical, $item->amount, 2);
+                    }
+                }
+                $comparison[$invoice->referenceMonth][$slot] = [
+                    ...$references[$slot],
+                    'current_contract_cost' => $current->total,
+                    'optimal_contract_cost' => $cost->total,
+                    'historical_invoiced_cost' => $historical,
+                ];
+                $currentContractCost = bcadd($currentContractCost, $current->total, 2);
                 $simulated = bcadd($simulated, $cost->total, 2);
             }
-            $savings[$invoice->referenceMonth] = bcsub($actual, $simulated, 2);
+            $savings[$invoice->referenceMonth] = bcsub($currentContractCost, $simulated, 2);
             $total = bcadd($total, $savings[$invoice->referenceMonth], 2);
         }
         if (bccomp($total, '0', 2) < 0) {
             $savings = array_fill_keys(array_keys($savings), '0.00');
         }
 
-        return ['optimal' => $optimal, 'savings' => $savings, 'parameter_id' => $parameter->id, 'warnings' => []];
+        return ['optimal' => $optimal, 'savings' => $savings, 'comparison' => $comparison, 'parameter_id' => $parameter->id, 'tariff_ids' => array_values(array_unique($tariffIds)), 'warnings' => []];
     }
 }

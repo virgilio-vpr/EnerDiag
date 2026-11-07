@@ -1,3 +1,5 @@
+import { simulationStatusLabel } from '../services/presentation'
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState } from 'react'
 import { CompanyContactDetails } from '../components/CompanyContactDetails'
 import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
@@ -12,7 +14,6 @@ type Simulation = {
   created_at: string | null
 }
 type SimulationList = { data: Simulation[]; meta: { total: number; limit: number; can_create: boolean; current_page: number; last_page: number } }
-const labels: Record<Simulation['status'], string> = { draft: 'Envio de faturas', queued: 'Aguardando cálculo', processing: 'Calculando', completed: 'Concluída', failed: 'Precisa de atenção' }
 
 function navigate(path: string) {
   window.history.pushState({}, '', path)
@@ -96,7 +97,7 @@ export function CustomerSimulationsPage() {
   const canCreate = result?.meta.can_create === true && !loading && busy === null
   return <section className="simulations-page" aria-labelledby="simulations-title">
     <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p><CompanyContactDetails /></div>
-      <div className="simulation-card-actions">{canCreate ? <a className="button" href="/upload-faturas?new=1">Nova simulação</a> : <button className="button" disabled type="button">Nova simulação</button>}<button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => setReload((value) => value + 1)}>Atualizar</button></div>
+      <div className="simulation-card-actions">{canCreate ? <NavigationLink variant="primary" href="/upload-faturas?new=1">Nova simulação</NavigationLink> : <button className="button" disabled type="button">Nova simulação</button>}<button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => setReload((value) => value + 1)}>Atualizar</button></div>
     </div>
     {error && <p className="field-error" role="alert">{error}</p>}
     {notice && <p className="form-success" role="status">{notice}</p>}
@@ -104,19 +105,19 @@ export function CustomerSimulationsPage() {
     {total >= limit && <p className="simulation-limit-message">Exclua {toRemove} {toRemove === 1 ? 'simulação' : 'simulações'} para iniciar uma nova. A exclusão remove as faturas lidas e o relatório dessa análise.</p>}
     {result?.data.length === 0 && <p className="simulation-empty">Você ainda não tem simulações. Clique em Nova simulação para enviar suas faturas.</p>}
     <div className="simulation-cards">{result?.data.map((simulation) => <article className="simulation-card" key={simulation.id} aria-labelledby={`simulation-${simulation.id}`}>
-      <div className="simulation-card-heading"><h2 id={`simulation-${simulation.id}`}>Simulação nº {simulation.id}</h2><span className={`simulation-status simulation-status--${simulation.status}`}>{labels[simulation.status]}</span></div>
+      <div className="simulation-card-heading"><h2 id={`simulation-${simulation.id}`}>Simulação nº {simulation.id}</h2><span className={`simulation-status simulation-status--${simulation.status}`}>{simulationStatusLabel(simulation.status)}</span></div>
       <dl><div><dt>Faturas</dt><dd>{simulation.months_count || simulation.invoice_count}</dd></div><div><dt>Criada em</dt><dd>{simulation.created_at ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(simulation.created_at)) : '—'}</dd></div>
         {simulation.status === 'completed' && <div><dt>Economia mensal estimada</dt><dd>{simulation.total_monthly_savings === null ? '—' : Number(simulation.total_monthly_savings).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</dd></div>}
       </dl>
       <div className="simulation-card-actions">
-        {simulation.status === 'completed' && <a className="button button--secondary" href={`/simulations/${simulation.id}/report`} onPointerEnter={() => preloadReport(simulation.id)} onFocus={() => preloadReport(simulation.id)}>Ver relatório</a>}
-        {simulation.status === 'draft' && <a className="button button--secondary" href={`/upload-faturas?import=${simulation.id}`}>Continuar envio</a>}
+        {simulation.status === 'completed' && <NavigationLink href={`/simulations/${simulation.id}/report`} onPointerEnter={() => preloadReport(simulation.id)} onFocus={() => preloadReport(simulation.id)}>Ver relatório</NavigationLink>}
+        {simulation.status === 'draft' && <NavigationLink href={`/upload-faturas?import=${simulation.id}`}>Continuar envio</NavigationLink>}
         {(simulation.status === 'queued' || simulation.status === 'failed') && simulation.invoice_count > 0 && <button className="button button--secondary" type="button" disabled={busy !== null || loading} onClick={() => calculate(simulation.id)}>{busy === simulation.id ? 'Calculando…' : 'Calcular agora'}</button>}
-        {simulation.status === 'processing' && <a className="button button--secondary" href={`/upload-faturas?import=${simulation.id}`}>Acompanhar</a>}
+        {simulation.status === 'processing' && <NavigationLink href={`/upload-faturas?import=${simulation.id}`}>Acompanhar</NavigationLink>}
         <button className="text-button" type="button" disabled={busy !== null || loading} onClick={() => setConfirmation(simulation.id)} aria-label={`Excluir simulação nº ${simulation.id}`}>Excluir</button>
       </div>
       {confirmation === simulation.id && <div className="simulation-delete-confirmation" role="group" aria-label={`Confirmar exclusão da simulação nº ${simulation.id}`}><p>Excluir a simulação nº {simulation.id}, suas faturas lidas e seu relatório?</p><button className="button button--secondary" type="button" disabled={busy !== null} onClick={() => removeSimulation(simulation.id)}>{busy === simulation.id ? 'Excluindo…' : 'Confirmar exclusão'}</button><button className="text-button" type="button" disabled={busy !== null} onClick={() => setConfirmation(null)}>Cancelar</button></div>}
     </article>)}</div>
-    {result && result.meta.last_page > 1 && <nav className="simulation-pagination" aria-label="Páginas de simulações"><button className="text-button" type="button" disabled={page <= 1 || loading || busy !== null} onClick={() => setPage(page - 1)}>Anterior</button><span>Página {page} de {result.meta.last_page}</span><button className="text-button" type="button" disabled={page >= result.meta.last_page || loading || busy !== null} onClick={() => setPage(page + 1)}>Próxima</button></nav>}
+    {result && result.meta.last_page > 1 && <nav className="simulation-pagination" aria-label="Páginas de simulações"><NavigationButton direction="back" type="button" disabled={page <= 1 || loading || busy !== null} onClick={() => setPage(page - 1)}>Anterior</NavigationButton><span>Página {page} de {result.meta.last_page}</span><NavigationButton direction="forward" type="button" disabled={page >= result.meta.last_page || loading || busy !== null} onClick={() => setPage(page + 1)}>Próxima</NavigationButton></nav>}
   </section>
 }

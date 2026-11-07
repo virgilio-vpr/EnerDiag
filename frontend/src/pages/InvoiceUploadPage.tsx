@@ -1,3 +1,4 @@
+import { NavigationLink } from '../components/NavigationControl'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 import { InvoiceImportTable, type ImportedInvoice } from '../components/InvoiceImportTable'
@@ -310,10 +311,10 @@ export function InvoiceUploadPage() {
       <CompanyContactDetails />
       <p className={queuedSimulation.status === 'failed' ? 'field-error' : 'form-success'} role={queuedSimulation.status === 'failed' ? 'alert' : 'status'}>{statusMessage[queuedSimulation.status]}</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
-      {queuedSimulation.status === 'completed' && <a className="button" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</a>}
+      {queuedSimulation.status === 'completed' && <NavigationLink variant="primary" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</NavigationLink>}
       {(queuedSimulation.status === 'queued' || queuedSimulation.status === 'failed') && <button className="button" type="button" disabled={submitting} onClick={() => calculateSimulation(queuedSimulation.id)}>{queuedSimulation.status === 'failed' ? 'Tentar novamente' : 'Calcular agora'}</button>}
       {queuedSimulation.status === 'processing' && !submitting && <button className="button button--secondary" type="button" onClick={() => calculateSimulation(queuedSimulation.id)}>Retomar cálculo</button>}
-      <p><a className="text-button" href="/minhas-simulacoes">Voltar para minhas simulações</a></p>
+      <p><NavigationLink direction="back" href="/minhas-simulacoes">Voltar para minhas simulações</NavigationLink></p>
       {processingErrors.length > 0 && <div className="processing-errors"><h2>Faturas que precisam de atenção</h2><ul>{processingErrors.map((fileError, index) => {
         const details = Object.values(fileError.errors).flatMap((value) => Array.isArray(value) ? value : [value]).filter(Boolean)
         return <li key={fileError.file + index}><strong>{fileError.file}</strong><span>{details.join(' ') || 'Não foi possível concluir o processamento.'}</span></li>
@@ -326,7 +327,7 @@ export function InvoiceUploadPage() {
       <p className="section-eyebrow">Análise da sua empresa</p>
       <h1 id="upload-title">Envie suas faturas</h1>
       <CompanyContactDetails />
-      <p><a className="text-button" href="/minhas-simulacoes">Voltar para minhas simulações</a></p>
+      <p><NavigationLink direction="back" href="/minhas-simulacoes">Voltar para minhas simulações</NavigationLink></p>
       <p className="access-intro">Envie de 1 a {MAX_FILES} faturas. Você pode selecionar várias de uma vez; cada conta será lida e salva individualmente, em sequência. Organizaremos da mais antiga para a mais recente usando o mês da LEITURA ATUAL, não o mês de emissão. Avisaremos se uma conta ou mês de medição já tiver sido enviado. Você pode simular quando quiser, depois de salvar pelo menos uma fatura.</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
       {notice && <p className="form-success" role="status">{notice}</p>}

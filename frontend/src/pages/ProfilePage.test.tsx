@@ -95,3 +95,70 @@ describe('customer profile', () => {
     expect(fetchMock.mock.calls.some(([url, options]) => url === '/api/v1/me' && options?.method === 'DELETE')).toBe(true)
   })
 })
+
+it('protects the administrator profile and saves only personal fields', async () => {
+  setAuthToken('admin-token')
+  const admin = { ...account, role: 'admin', profile: null }
+  const fetchMock = setupFetch({ 'GET /api/v1/me': jsonResponse(200, { data: admin }), 'PUT /api/v1/me': jsonResponse(200, { data: admin }) })
+  render(<ProfilePage />)
+  await screen.findByRole('heading', { name: 'Dados de acesso' })
+  expect(screen.queryByRole('button', { name: 'Excluir minha conta' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Nome da empresa')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+  await screen.findByText('Seu perfil foi atualizado.')
+  const call = fetchMock.mock.calls.find(([, options]) => options?.method === 'PUT')
+  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ name: account.name, phone: account.phone })
+})
+
+it('keeps the old administrator email until the confirmation code is accepted', async () => {
+  setAuthToken('admin-token')
+  const fetchMock = setupFetch({
+    'GET /api/v1/me': jsonResponse(200, { data: { ...account, role: 'admin', profile: null } }),
+    'POST /api/v1/me/email-change': jsonResponse(200, { message: 'Código enviado.' }),
+    'POST /api/v1/me/email-change/confirm': jsonResponse(200, { email: 'novo@example.com', message: 'E-mail atualizado.' }),
+  })
+  render(<ProfilePage />)
+  fireEvent.change(await screen.findByLabelText('Novo e-mail'), { target: { value: 'novo@example.com' } })
+  fireEvent.change(screen.getByLabelText('Senha atual para alterar o e-mail'), { target: { value: 'OriginalAdminPassword2026!' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar código de confirmação' }))
+  const codeInput = await screen.findByLabelText('Código enviado para novo@example.com')
+  expect(screen.getByLabelText('E-mail')).toHaveValue(account.email)
+  fireEvent.change(codeInput, { target: { value: '123456' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar novo e-mail' }))
+  await screen.findByText('E-mail atualizado.')
+  expect(screen.getByLabelText('E-mail')).toHaveValue('novo@example.com')
+  const call = fetchMock.mock.calls.find(([url]) => url === '/api/v1/me/email-change/confirm')
+  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ code: '123456' })
+})
+
+it('submits administrator password changes and clears password inputs', async () => {
+  setAuthToken('admin-token')
+  const fetchMock = setupFetch({
+    'GET /api/v1/me': jsonResponse(200, { data: { ...account, role: 'admin', profile: null } }),
+    'PUT /api/v1/me/password': jsonResponse(200, { message: 'Senha atualizada.' }),
+  })
+  render(<ProfilePage />)
+  fireEvent.change(await screen.findByLabelText('Senha atual', { exact: true }), { target: { value: 'OriginalAdminPassword2026!' } })
+  fireEvent.change(screen.getByLabelText('Nova senha', { exact: true }), { target: { value: 'UpdatedAdminPassword2026!' } })
+  fireEvent.change(screen.getByLabelText('Confirmar nova senha'), { target: { value: 'UpdatedAdminPassword2026!' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar nova senha' }))
+  await screen.findByText('Senha atualizada.')
+  expect(screen.getByLabelText('Nova senha', { exact: true })).toHaveValue('')
+  const call = fetchMock.mock.calls.find(([url]) => url === '/api/v1/me/password')
+  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ current_password: 'OriginalAdminPassword2026!', password: 'UpdatedAdminPassword2026!', password_confirmation: 'UpdatedAdminPassword2026!' })
+})
+
+it('shows access validation errors without changing the administrator email', async () => {
+  setAuthToken('admin-token')
+  setupFetch({
+    'GET /api/v1/me': jsonResponse(200, { data: { ...account, role: 'admin', profile: null } }),
+    'POST /api/v1/me/email-change': jsonResponse(422, { message: 'Dados inválidos.', errors: { current_password: ['A senha atual está incorreta.'] } }),
+  })
+  render(<ProfilePage />)
+  fireEvent.change(await screen.findByLabelText('Novo e-mail'), { target: { value: 'novo@example.com' } })
+  fireEvent.change(screen.getByLabelText('Senha atual para alterar o e-mail'), { target: { value: 'incorreta' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar código de confirmação' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('A senha atual está incorreta.')
+  expect(screen.getByLabelText('E-mail')).toHaveValue(account.email)
+  expect(screen.queryByRole('button', { name: 'Confirmar novo e-mail' })).not.toBeInTheDocument()
+})

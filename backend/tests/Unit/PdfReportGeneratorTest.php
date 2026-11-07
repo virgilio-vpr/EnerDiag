@@ -17,8 +17,8 @@ class PdfReportGeneratorTest extends TestCase
         $report->forceFill(['warnings' => $warnings]);
         $text = $this->text(app(PdfReportGenerator::class)->generate($report));
 
-        $this->assertStringContainsString('A análise não encontrou economia na migração entre modalidades.', $text);
-        $this->assertStringContainsString('o relatório considera o valor faturado nesses meses.', $text);
+        $this->assertStringContainsString('Com os dados analisados, trocar entre os planos Azul e Verde não reduz os custos.', $text);
+        $this->assertStringContainsString('Antes de alterar a demanda contratada, confirme esses valores com a distribuidora.', $text);
         $this->assertStringNotContainsString('Os componentes de PIS e COFINS', $text);
         $this->assertStringNotContainsString('divergência de calibração tributária', $text);
         $this->assertSame($warnings, $report->warnings);
@@ -42,7 +42,7 @@ class PdfReportGeneratorTest extends TestCase
         ] as $expected) {
             $this->assertStringContainsString($expected, $text);
         }
-        $this->assertStringContainsString('O período inclui faturas do mercado livre (energia ACL).', $text);
+        $this->assertStringNotContainsString('mercado livre', $text);
         $this->assertStringNotContainsString('free_market_invoice', $text);
         $this->assertStringContainsString('A análise identificou um ponto que merece atenção.', $text);
         $this->assertStringContainsString('demanda \\\\ sem alterar os valores.', $pdf);
@@ -52,6 +52,38 @@ class PdfReportGeneratorTest extends TestCase
         $this->assertStringContainsString('contato@enerdiag.example', $text);
         $this->assertStringContainsString('Telefone: +55 (11) 00000-0000', $text);
         $this->assertStringContainsString('WhatsApp: +55 (11) 00000-0000', $text);
+        $this->assertStringContainsString('mesmas tarifas da fatura de 02/2026', $text);
+    }
+
+    public function test_pdf_identifies_each_reference_rate_without_the_removed_migration_explanation(): void
+    {
+        $report = $this->report();
+        $report->forceFill([
+            'warnings' => ['free_market_invoice'],
+            'chart_series' => ['demand' => [
+                ['reference_month' => '2026-09', 'time_slot' => 'peak', 'tariff_reference_source' => 'series_maximum', 'tariff_reference_month' => '2026-07', 'reference_tariff' => '40.51689'],
+                ['reference_month' => '2026-09', 'time_slot' => 'off_peak', 'tariff_reference_source' => 'registered_tariff', 'tariff_reference_month' => '2026-11', 'reference_tariff' => '24.23136'],
+            ]],
+        ]);
+        $text = $this->text(app(PdfReportGenerator::class)->generate($report));
+        $this->assertStringContainsString('40,51689 R$/kW', $text);
+        $this->assertStringContainsString('Maior tarifa unitária com tributos da série · 07/2026', $text);
+        $this->assertStringContainsString('Tarifa vigente cadastrada, com tributos · 11/2026', $text);
+        $this->assertStringContainsString('As bandeiras tarifárias não compõem a tarifa de demanda.', $text);
+        $this->assertStringNotContainsString('não a condição atual do contrato.', $text);
+    }
+
+    public function test_pdf_explains_the_regulated_supply_comparison_without_mentioning_other_contracts(): void
+    {
+        $report = $this->report();
+        $series = $report->chart_series;
+        $series['modality'][0]['tariff_reference_date'] = '2026-11-06';
+        $report->forceFill(['chart_series' => $series]);
+        $text = $this->text(app(PdfReportGenerator::class)->generate($report));
+
+        $this->assertStringContainsString('Os planos Azul e Verde são comparados com as tarifas da distribuidora', $text);
+        $this->assertStringContainsString('incluindo os tributos', $text);
+        $this->assertStringNotContainsString('mercado livre', $text);
     }
 
     public function test_unavailable_components_and_missing_chart_values_are_not_represented_as_zero(): void
@@ -145,7 +177,7 @@ class PdfReportGeneratorTest extends TestCase
             'recommendations' => ['Conferir o contrato (ponta) e a demanda \\ sem alterar os valores.'],
             'chart_series' => [
                 'demand' => [
-                    ['reference_month' => '2026-01', 'time_slot' => 'peak', 'measured' => '250.125', 'contracted' => '338.000'],
+                    ['reference_month' => '2026-01', 'time_slot' => 'peak', 'measured' => '250.125', 'contracted' => '338.000', 'tariff_reference_month' => '2026-02'],
                     ['reference_month' => '2026-02', 'time_slot' => 'peak', 'measured' => '260.000', 'contracted' => '338.000'],
                     ['reference_month' => '2026-01', 'time_slot' => 'off_peak', 'measured' => '300.000', 'contracted' => '372.000'],
                     ['reference_month' => '2026-02', 'time_slot' => 'off_peak', 'measured' => '310.000', 'contracted' => '372.000'],

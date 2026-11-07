@@ -23,7 +23,7 @@ class ReportIndicatorsServiceTest extends TestCase
         $this->assertSame('2000.00', $result->averageTotalPaid);
         $this->assertSame('12.17', $result->savingsPercentage);
         $this->assertSame('% do valor médio pago no período', $result->percentageLabel);
-        $this->assertSame('A economia usa tarifas atuais e o valor pago usa as tarifas históricas.', $result->percentageObservation);
+        $this->assertSame('A economia usa tarifas de referência; o valor pago usa as tarifas históricas.', $result->percentageObservation);
         $this->assertSame([
             ['reference_month' => '2025-01', 'value' => '100.000'],
             ['reference_month' => '2025-02', 'value' => '200.000'],

@@ -38,6 +38,7 @@ final class ReportTariffMigrationService
         $min = (int) $minimum->value;
         $maximum = $min;
         $migrationMonths = [];
+        $referenceFactor = $this->calibration->calculateFactor($latest)->factor;
         foreach ($invoices as $index => $invoice) {
             if ($invoice->tariffModality !== 'blue' || $invoice->subgroup !== $latest->subgroup) {
                 return $unavailable;
@@ -78,10 +79,10 @@ final class ReportTariffMigrationService
                 ['peak' => $peakRate, 'off_peak' => $offPeakRate],
                 $consumption,
                 $energy,
-                $this->calibration->calculateFactor($invoice)->factor,
+                $referenceFactor,
             );
         }
 
-        return $this->migration->compare($distributorId, $latest->subgroup, 'blue', $migrationMonths, $min, $maximum, true);
+        return $this->migration->compare($distributorId, $latest->subgroup, 'blue', $migrationMonths, $min, $maximum, true, today()->toDateString());
     }
 }

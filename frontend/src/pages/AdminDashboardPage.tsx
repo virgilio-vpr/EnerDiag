@@ -1,9 +1,11 @@
+import { NavigationArrow } from '../components/NavigationControl'
+
 const adminSections = [
   { href: '/admin/customers', title: 'Clientes e contatos', description: 'Consulte clientes, solicitações de contato e dados cadastrais.' },
   { href: '/admin/simulations', title: 'Simulações', description: 'Acompanhe simulações e os dados extraídos das faturas.' },
   { href: '/admin/reports', title: 'Relatórios', description: 'Revise textos, reenvie relatórios e solicite recálculos.' },
   { href: '/admin/tariffs', title: 'Tarifas e parâmetros', description: 'Gerencie tarifas, importações da ANEEL e parâmetros regulatórios.' },
-  { href: '/admin/leads', title: 'Leads e contatos', description: 'Acompanhe interessados e pedidos de contato comercial.' },
+  { href: '/admin/leads', title: 'Interessados e contatos', description: 'Acompanhe interessados e pedidos de contato comercial.' },
   { href: '/admin/quotations', title: 'Orçamentos', description: 'Prepare propostas, revise o PDF e libere o envio ao cliente.' },
   { href: '/admin/quotation-items', title: 'Itens de orçamento', description: 'Atualize os custos unitários usados nas propostas.' },
 ]
@@ -19,7 +21,7 @@ export function AdminDashboardPage() {
           <a className="admin-card" href={section.href} key={section.href}>
             <h2>{section.title}</h2>
             <p>{section.description}</p>
-            <span aria-hidden="true">Abrir →</span>
+            <span className="admin-card-action" aria-hidden="true">Abrir<NavigationArrow /></span>
           </a>
         ))}
       </nav>

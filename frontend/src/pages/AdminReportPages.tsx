@@ -1,3 +1,5 @@
+import { simulationStatusLabel, modalityLabel, adminWarningTexts, formatDecimal } from '../services/presentation'
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { ApiError, apiRequest } from '../services/api/client'
 
@@ -51,7 +53,7 @@ function textList(value: string[] | Record<string, string> | null | undefined) {
 
 function ReportFrame({ title, children }: { title: string; children: ReactNode }) {
   return <section className="admin-page" aria-labelledby="admin-report-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-report-title">{title}</h1>
     {children}
@@ -83,18 +85,18 @@ export function AdminReportsPage() {
     {error && <p className="field-error" role="alert">{error}</p>}
     {result && <>
       {result.data.length === 0 ? <p>Nenhum relatório encontrado.</p> : <div className="admin-table-wrap"><table className="admin-table">
-        <thead><tr><th>Simulação</th><th>Cliente</th><th>Status</th><th>Meses</th><th>Economia mensal</th><th>Ações</th></tr></thead>
+        <thead><tr><th>Simulação</th><th>Cliente</th><th>Situação</th><th>Meses</th><th>Economia mensal</th><th>Ações</th></tr></thead>
         <tbody>{result.data.map((simulation) => <tr key={simulation.id}>
           <td>#{simulation.id}</td>
           <td>{simulation.customer ? <><strong>{simulation.customer.name}</strong><span>{simulation.customer.email}</span></> : '—'}</td>
-          <td>{simulation.status}</td><td>{simulation.months_count ?? '—'}</td><td>{money(simulation.total_monthly_savings)}</td>
-          <td><a href={`/admin/reports/${simulation.id}`}>Abrir relatório</a></td>
+          <td>{simulationStatusLabel(simulation.status)}</td><td>{simulation.months_count ?? '—'}</td><td>{money(simulation.total_monthly_savings)}</td>
+          <td><NavigationLink href={`/admin/reports/${simulation.id}`}>Abrir relatório</NavigationLink></td>
         </tr>)}</tbody>
       </table></div>}
       <nav className="admin-pagination" aria-label="Paginação">
-        <button className="button button--secondary" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button>
+        <NavigationButton direction="back" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</NavigationButton>
         <span>Página {result.meta.current_page} de {result.meta.last_page} · {result.meta.total} registros</span>
-        <button className="button button--secondary" type="button" disabled={page >= result.meta.last_page} onClick={() => setPage(page + 1)}>Próxima</button>
+        <NavigationButton direction="forward" type="button" disabled={page >= result.meta.last_page} onClick={() => setPage(page + 1)}>Próxima</NavigationButton>
       </nav>
     </>}
   </ReportFrame>
@@ -182,21 +184,21 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
     {!simulation && !error && <p role="status">Carregando relatório…</p>}
     {simulation && !report && <p>Esta simulação ainda não possui relatório.</p>}
     {simulation && report && <>
-      <p className="access-intro">Simulação #{simulation.id} · {simulation.customer?.name ?? 'Cliente não identificado'} · Status: {simulation.status}</p>
+      <p className="access-intro">Simulação #{simulation.id} · {simulation.customer?.name ?? 'Cliente não identificado'} · Situação: {simulationStatusLabel(simulation.status)}</p>
       <section className="admin-report-results" aria-labelledby="admin-report-results-title">
         <h2 id="admin-report-results-title">Resultados calculados (somente leitura)</h2>
         <dl className="admin-details">
           <div><dt>Economia mensal</dt><dd>{money(report.total_monthly_savings)}</dd></div>
           <div><dt>Economia anual</dt><dd>{money(report.total_yearly_savings)}</dd></div>
-          <div><dt>Percentual do valor médio pago</dt><dd>{report.savings_percentage === null ? '—' : `${report.savings_percentage}%`}</dd></div>
-          <div><dt>Modalidade recomendada</dt><dd>{report.recommended_modality ?? '—'}</dd></div>
+          <div><dt>Percentual do valor médio pago</dt><dd>{report.savings_percentage === null ? '—' : `${formatDecimal(report.savings_percentage, 2)}%`}</dd></div>
+          <div><dt>Modalidade recomendada</dt><dd>{modalityLabel(report.recommended_modality)}</dd></div>
           <div><dt>Economia mensal por demanda</dt><dd>{money(report.demand_savings_monthly)}</dd></div>
           <div><dt>Economia mensal por ultrapassagem</dt><dd>{money(report.overrun_savings_monthly)}</dd></div>
           <div><dt>Economia mensal por reativos</dt><dd>{money(report.reactive_savings_monthly)}</dd></div>
-          <div><dt>Economia mensal por migração</dt><dd>{money(report.migration_savings_monthly)}</dd></div>
+          <div><dt>Economia mensal por troca entre Azul e Verde</dt><dd>{money(report.migration_savings_monthly)}</dd></div>
           <div><dt>Versão do algoritmo</dt><dd>{report.algorithm_version ?? '—'}</dd></div>
         </dl>
-        {textList(report.warnings).length > 0 && <div className="admin-report-warnings"><h3>Avisos</h3><ul>{textList(report.warnings).map((warning, index) => <li key={`${index}-${warning}`}>{warning}</li>)}</ul></div>}
+        {adminWarningTexts(textList(report.warnings)).length > 0 && <div className="admin-report-warnings"><h3>Avisos</h3><ul>{adminWarningTexts(textList(report.warnings)).map((warning, index) => <li key={`${index}-${warning}`}>{warning}</li>)}</ul></div>}
       </section>
 
       <form className="admin-report-form" onSubmit={saveText}>

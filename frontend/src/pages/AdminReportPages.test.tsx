@@ -86,3 +86,16 @@ describe('admin report management', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/admin/simulations/13/recalculate', expect.objectContaining({ method: 'POST' }))
   })
 })
+
+it('translates analysis warnings while preserving written observations', async () => {
+  const data = reportData()
+  data.report.warnings = ['no_savings_on_migration', 'idle_demand_pis_cofins_inconsistent', 'tax_calibration_factor_divergence', 'demand_invoice_reconciliation_mismatch', 'free_market_invoice', 'unknown_analysis_warning', 'Observação escrita pelo responsável.']
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data })))
+  render(<AdminReportDetailPage simulationId="13" />)
+  expect(await screen.findByText('Observação escrita pelo responsável.')).toBeInTheDocument()
+  expect(screen.getByText('Há uma observação da análise que precisa de conferência.')).toBeInTheDocument()
+  expect(screen.getByText('Verde')).toBeInTheDocument()
+  expect(screen.queryByText('idle_demand_pis_cofins_inconsistent')).not.toBeInTheDocument()
+  expect(screen.queryByText('free_market_invoice')).not.toBeInTheDocument()
+  expect(screen.queryByText('unknown_analysis_warning')).not.toBeInTheDocument()
+})

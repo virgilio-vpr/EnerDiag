@@ -4,4 +4,4 @@
 
 <p><strong>{{ $verificationCode }}</strong></p>
 
-<p>O código expira em 15 minutos. Se você não solicitou este cadastro, ignore esta mensagem.</p>
+<p>O código expira em 15 minutos. Se você não solicitou este código, ignore esta mensagem.</p>

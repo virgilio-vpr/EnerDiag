@@ -1,10 +1,11 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { NavigationLink } from './components/NavigationControl'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
 import { ApiErrorHandler } from './components/ApiErrorHandler'
 import { CustomerSimulationsPage } from './pages/CustomerSimulationsPage'
 import { ForgotPasswordPage, LoginPage, RegistrationPage, ResetPasswordPage, VerifyEmailPage } from './pages/CustomerAccessPage'
-import { getAuthToken, getAuthenticatedUser } from './services/api/client'
+import { ApiError, apiRequest, getAuthSession, getAuthenticatedUser, setAuthToken, subscribeAuthChanges } from './services/api/client'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import energyIllustration from './assets/energy-efficiency.png'
 import './App.css'
@@ -30,6 +31,30 @@ const AdminQuotationsPage = lazy(() => import('./pages/AdminQuotationsPage').the
 function App() {
   const { theme, toggleTheme } = useTheme()
   const viewport = useViewport()
+  const session = useSyncExternalStore(subscribeAuthChanges, getAuthSession)
+  const [signingOut, setSigningOut] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
+  const [logoutRevision, setLogoutRevision] = useState(0)
+
+  async function logout() {
+    if (signingOut) return
+    setSigningOut(true)
+    setLogoutError('')
+    try {
+      await apiRequest('/auth/logout', { method: 'POST', signal: AbortSignal.timeout(10000) }, { notifyGlobalError: false })
+    } catch (error) {
+      if (!(error instanceof ApiError && error.status === 401)) {
+        setLogoutError('Não foi possível encerrar a sessão. Tente sair novamente.')
+        return
+      }
+    } finally {
+      setSigningOut(false)
+    }
+    setAuthToken(null)
+    setLogoutRevision((revision) => revision + 1)
+    window.history.replaceState({}, '', '/login')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }
   const [pathname, setPathname] = useState(window.location.pathname)
 
   useEffect(() => {
@@ -58,7 +83,7 @@ function App() {
   const adminCustomerMatch = pathname.match(/^\/admin\/customers\/(\d+)$/)
   const adminSimulationMatch = pathname.match(/^\/admin\/simulations\/(\d+)$/)
   const adminReportMatch = pathname.match(/^\/admin\/reports\/(\d+)$/)
-  const isAuthenticated = Boolean(getAuthToken())
+  const isAuthenticated = Boolean(session.token)
 
   return (
     <div className="app-shell" data-testid="app-shell" data-viewport={viewport}>
@@ -71,7 +96,7 @@ function App() {
           <span className="brand-name">Ener<span>Diag</span></span>
         </a>
         <nav className="header-actions" aria-label="Acesso">
-          {isAuthenticated ? <><a className="header-login" href="/minhas-simulacoes">Minhas simulações</a><a className="header-login" href="/perfil">Meu perfil</a></> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}
+          {isAuthenticated ? <><a className="header-login" href={session.user?.role === 'admin' ? '/admin' : '/minhas-simulacoes'}>{session.user?.role === 'admin' ? 'Painel administrativo' : 'Minhas simulações'}</a><a className="header-login" href="/perfil">Meu perfil</a><button className="header-login header-logout" type="button" disabled={signingOut} onClick={() => void logout()}>{signingOut ? 'Saindo…' : 'Sair'}</button></> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}
         </nav>
         <button
           type="button"
@@ -91,15 +116,16 @@ function App() {
           </svg>
         </button>
       </header>
+      {logoutError && <p className="form-errors" role="alert">{logoutError}</p>}
       <main>
         <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando página…</p></section>}>
-        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/admin/customers' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomersPage /></ProtectedRoute> : adminCustomerMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomerDetailPage customerId={adminCustomerMatch[1]} /></ProtectedRoute> : pathname === '/admin/simulations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationsPage /></ProtectedRoute> : adminSimulationMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationDetailPage simulationId={adminSimulationMatch[1]} /></ProtectedRoute> : pathname === '/admin/reports' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportsPage /></ProtectedRoute> : adminReportMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportDetailPage simulationId={adminReportMatch[1]} /></ProtectedRoute> : pathname === '/admin/tariffs' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminTariffsPage /></ProtectedRoute> : pathname === '/admin/parameters' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminParametersPage /></ProtectedRoute> : pathname === '/admin/leads' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminLeadsPage /></ProtectedRoute> : pathname === '/admin/quotation-items' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationItemsPage /></ProtectedRoute> : pathname === '/admin/quotations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationsPage /></ProtectedRoute> : pathname === '/minhas-simulacoes' ? <CustomerSimulationsPage /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage key={reportMatch[1]} simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
+        {pathname === '/register' ? <RegistrationPage /> : pathname === '/verify-email' ? <VerifyEmailPage email={new URLSearchParams(window.location.search).get('email') ?? ''} /> : pathname === '/login' ? <LoginPage key={logoutRevision} /> : pathname === '/forgot-password' ? <ForgotPasswordPage /> : pathname === '/reset-password' ? <ResetPasswordPage email={new URLSearchParams(window.location.search).get('email') ?? ''} token={new URLSearchParams(window.location.search).get('token') ?? ''} /> : pathname === '/admin' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminDashboardPage /></ProtectedRoute> : pathname === '/admin/customers' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomersPage /></ProtectedRoute> : adminCustomerMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminCustomerDetailPage customerId={adminCustomerMatch[1]} /></ProtectedRoute> : pathname === '/admin/simulations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationsPage /></ProtectedRoute> : adminSimulationMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminSimulationDetailPage simulationId={adminSimulationMatch[1]} /></ProtectedRoute> : pathname === '/admin/reports' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportsPage /></ProtectedRoute> : adminReportMatch ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminReportDetailPage simulationId={adminReportMatch[1]} /></ProtectedRoute> : pathname === '/admin/tariffs' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminTariffsPage /></ProtectedRoute> : pathname === '/admin/parameters' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminParametersPage /></ProtectedRoute> : pathname === '/admin/leads' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminLeadsPage /></ProtectedRoute> : pathname === '/admin/quotation-items' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationItemsPage /></ProtectedRoute> : pathname === '/admin/quotations' ? <ProtectedRoute user={getAuthenticatedUser()} requiredRole="admin"><AdminQuotationsPage /></ProtectedRoute> : pathname === '/minhas-simulacoes' ? <CustomerSimulationsPage /> : pathname === '/upload-faturas' ? <InvoiceUploadPage /> : pathname === '/perfil' ? <ProfilePage /> : reportMatch ? <Suspense fallback={<section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>}><SimulationReportPage key={reportMatch[1]} simulationId={reportMatch[1]} /></Suspense> : isLandingPage ? <>
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-copy">
               <p className="hero-eyebrow">Inteligência para sua energia</p>
               <h1 id="hero-title">Sua energia pode trabalhar melhor pela sua empresa.</h1>
               <p className="hero-description">Descubra oportunidades de economia na sua conta de energia com uma análise clara e totalmente gratuita do consumo e da demanda da sua empresa.</p>
-              <a className="button" href="/register">Começar minha análise gratuita <span aria-hidden="true">→</span></a>
+              <NavigationLink variant="primary" href="/register">Começar minha análise gratuita</NavigationLink>
               <p className="hero-note">Análise guiada para empresas do Grupo A - Modalidades Azul e Verde</p>
             </div>
             <div className="hero-artwork">
@@ -165,7 +191,7 @@ function App() {
           <section className="closing-cta" aria-labelledby="closing-title">
             <p className="section-eyebrow">O próximo passo começa aqui</p>
             <h2 id="closing-title">Faça sua energia render mais.</h2>
-            <a className="button" href="/register">Criar minha conta <span aria-hidden="true">→</span></a>
+            <NavigationLink variant="primary" href="/register">Criar minha conta</NavigationLink>
           </section>
 
           <section className="landing-section contact-section" id="contato" aria-labelledby="contact-title">
@@ -187,7 +213,7 @@ function App() {
               </a>
             </div>
           </section>
-        </> : <section className="access-page"><h1>Página não encontrada</h1><a href="/">Voltar ao início</a></section>}
+        </> : <section className="access-page"><h1>Página não encontrada</h1><NavigationLink direction="back" href="/">Voltar ao início</NavigationLink></section>}
       </Suspense>
       </main>
       <footer className="app-footer"><span>Eficiência energética para sua empresa</span>{isLandingPage && <a href="#contato">Contato</a>}<a href={isLandingPage ? '/register' : '/'}>{isLandingPage ? 'Começar análise' : 'Página inicial'}</a></footer>

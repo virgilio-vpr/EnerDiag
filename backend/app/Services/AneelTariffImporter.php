@@ -192,6 +192,13 @@ final class AneelTariffImporter
     private function mapRow(array $row): ?array
     {
         $subgroup = strtoupper($row['DscSubGrupo']);
+        if (! in_array($subgroup, ['A4', 'AS'], true)) {
+            return null;
+        }
+        $distributor = $this->findDistributor($row['SigAgente']);
+        if ($distributor === null) {
+            return null;
+        }
         $modality = $this->normalized($row['DscModalidadeTarifaria']);
         $timeSlot = $this->mapTimeSlot($row['NomPostoTarifario']);
         $unit = $this->normalized($row['DscUnidadeTerciaria']);
@@ -201,15 +208,9 @@ final class AneelTariffImporter
             || ! in_array($this->normalized($row['DscDetalhe'] ?? ''), ['', 'nao se aplica'], true)
             || ! in_array($this->normalized($row['DscClasse'] ?? ''), ['', 'nao se aplica'], true)
             || ! in_array($this->normalized($row['DscSubClasse'] ?? ''), ['', 'nao se aplica'], true)
-            || ! in_array($subgroup, ['A4', 'AS'], true)
             || ! in_array($modality, ['horaria azul', 'horaria verde', 'azul', 'verde'], true)
             || $timeSlot === null
             || ($agent !== '' && ! in_array($this->normalized($agent), ['', 'nao se aplica', 'na'], true))) {
-            return null;
-        }
-
-        $distributor = $this->findDistributor($row['SigAgente']);
-        if ($distributor === null) {
             return null;
         }
 

@@ -1,3 +1,4 @@
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, apiRequest } from '../services/api/client'
 
@@ -36,7 +37,7 @@ export function AdminLeadsPage() {
     if (appliedSearch) query.set('search', appliedSearch)
     apiRequest<{ data: AdminLead[]; meta: PageMeta }>(`/admin/leads?${query.toString()}`)
       .then((response) => { if (active) setResult(response) })
-      .catch((reason: unknown) => { if (active) setError(reason instanceof ApiError ? reason.message : 'Não foi possível carregar os leads e contatos.') })
+      .catch((reason: unknown) => { if (active) setError(reason instanceof ApiError ? reason.message : 'Não foi possível carregar os interessados e contatos.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [page, appliedType, appliedSearch])
@@ -49,9 +50,9 @@ export function AdminLeadsPage() {
   }
 
   return <section className="admin-page" aria-labelledby="admin-leads-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
-    <h1 id="admin-leads-title">Leads e pedidos de contato</h1>
+    <h1 id="admin-leads-title">Interessados e pedidos de contato</h1>
     <p className="access-intro">Acompanhe os interessados em distribuidoras não atendidas e os clientes que solicitaram contato.</p>
 
     <form className="admin-lead-filters" onSubmit={applyFilters}>
@@ -62,7 +63,7 @@ export function AdminLeadsPage() {
       <button className="button" type="submit">Aplicar filtros</button>
     </form>
 
-    {loading && <p role="status">Carregando leads e contatos…</p>}
+    {loading && <p role="status">Carregando interessados e contatos…</p>}
     {error && <p className="field-error" role="alert">{error}</p>}
     {result && <>
       {result.data.length === 0 ? <p>Nenhum registro encontrado com esses filtros.</p> : <div className="admin-table-wrap"><table className="admin-table">
@@ -76,9 +77,9 @@ export function AdminLeadsPage() {
         </tr>)}</tbody>
       </table></div>}
       <nav className="admin-pagination" aria-label="Paginação">
-        <button className="button button--secondary" type="button" disabled={result.meta.current_page <= 1} onClick={() => setPage((current) => current - 1)}>Anterior</button>
+        <NavigationButton direction="back" type="button" disabled={result.meta.current_page <= 1} onClick={() => setPage((current) => current - 1)}>Anterior</NavigationButton>
         <span>Página {result.meta.current_page} de {result.meta.last_page} · {result.meta.total} registros</span>
-        <button className="button button--secondary" type="button" disabled={result.meta.current_page >= result.meta.last_page} onClick={() => setPage((current) => current + 1)}>Próxima</button>
+        <NavigationButton direction="forward" type="button" disabled={result.meta.current_page >= result.meta.last_page} onClick={() => setPage((current) => current + 1)}>Próxima</NavigationButton>
       </nav>
     </>}
   </section>

@@ -77,6 +77,49 @@ class TariffMigrationServiceTest extends TestCase
         $this->assertContains(TariffMigrationService::MIGRATION_UNAVAILABLE_WARNING, $result->warnings);
     }
 
+    public function test_current_reference_tariffs_supply_te_for_the_regulated_scenario_even_when_source_invoices_lack_it(): void
+    {
+        $distributor = $this->distributor();
+        $month = $this->month(greenMeasured: '80.000');
+        $aclMonth = new TariffMigrationMonthData($month->referenceMonth, $month->measuredDemandByModality,
+            $month->idleDemandRatioByModality, $month->currentDemandRatesByTimeSlot,
+            $month->consumptionKwhByTimeSlot, [], $month->calibrationFactor);
+        foreach ([
+            ['blue', 'peak', 'demand', '5.00000'], ['blue', 'off_peak', 'demand', '1.00000'],
+            ['green', 'single', 'demand', '1.00000'],
+            ['blue', 'peak', 'energy_tusd', '0.05000'], ['blue', 'off_peak', 'energy_tusd', '0.05000'],
+            ['green', 'peak', 'energy_tusd', '1.00000'], ['green', 'off_peak', 'energy_tusd', '1.00000'],
+            ['blue', 'peak', 'energy_te', '0.05000'], ['blue', 'off_peak', 'energy_te', '0.05000'],
+            ['green', 'peak', 'energy_te', '0.05000'], ['green', 'off_peak', 'energy_te', '0.05000'],
+        ] as [$modality, $slot, $component, $rate]) {
+            Tariff::create([
+                'distributor_id' => $distributor->id, 'subgroup' => 'A4', 'tariff_modality' => $modality,
+                'time_slot' => $slot, 'component' => $component, 'rate' => $rate, 'includes_taxes' => false,
+                'source' => 'aneel_import', 'valid_from' => '2026-01-01', 'valid_to' => '2026-12-31',
+            ]);
+        }
+
+        $result = $this->service()->compare($distributor->id, 'A4', 'blue', [$aclMonth], 100, 100, false, '2026-11-06');
+
+        $this->assertTrue($result->available);
+        $this->assertSame('1200.40', $result->blueCost);
+        $this->assertSame('197.00', $result->greenCost);
+        $this->assertSame('1003.40', $result->savings);
+        $this->assertSame('green', $result->selectedModality);
+        $this->assertCount(11, $result->tariffVersionIds);
+    }
+
+    public function test_reference_comparison_requires_homologated_rates_for_the_current_modality_too(): void
+    {
+        $distributor = $this->distributor();
+        $this->greenTariffs($distributor, '1.00000', '0.05000', '1.00000', '1.00000');
+        Tariff::query()->update(['valid_to' => '2026-12-31']);
+        $result = $this->service()->compare($distributor->id, 'A4', 'blue', [$this->month()], 100, 100, false, '2026-11-06');
+
+        $this->assertFalse($result->available);
+        $this->assertContains(TariffService::MISSING_TARIFF_WARNING, $result->warnings);
+    }
+
     private function service(): TariffMigrationService
     {
         RegulatoryParameter::create(['key' => 'overrun_tolerance', 'value' => '0.05000', 'state' => null, 'valid_from' => '2025-01-01']);

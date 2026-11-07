@@ -1,3 +1,5 @@
+import reportTexts from '../../../backend/resources/report-texts.json'
+
 export type ImportedInvoiceItem = {
   id: number
   item_type: string
@@ -25,7 +27,6 @@ export type ImportedInvoice = {
 }
 
 const warningMessages: Record<string, string> = {
-  free_market_invoice: 'Fatura do mercado livre (energia ACL).',
   idle_demand_post_matching_unresolved: 'Há demanda ociosa cujo posto precisa ser conferido.',
   invoice_billing_total_mismatch: 'A soma dos itens lidos difere do total. Revise esta fatura antes de simular.',
 }
@@ -43,7 +44,7 @@ function slotLabel(slot: string) {
 }
 
 export function InvoiceImportTable({ invoices, onRemove, disabled = false }: { invoices: ImportedInvoice[]; onRemove?: (id: number) => void; disabled?: boolean }) {
-  const ordered = [...invoices].sort((left, right) => left.reference_month.localeCompare(right.reference_month))
+  const ordered = [...invoices].sort((left, right) => left.reference_month.localeCompare(right.reference_month)).map((invoice) => ({ ...invoice, warnings: invoice.warnings.filter((warning) => !reportTexts.internal_warnings.includes(warning)) }))
   if (ordered.length === 0) return <p>Nenhuma fatura salva. Selecione os PDFs para começar a leitura.</p>
 
   return <section className="invoice-review" aria-labelledby="invoice-review-title">
@@ -69,7 +70,7 @@ export function InvoiceImportTable({ invoices, onRemove, disabled = false }: { i
           <caption>Dados extraídos de {monthLabel(invoice.reference_month)}</caption>
           <thead><tr><th scope="col">Descrição</th><th scope="col">Posto</th><th scope="col">Quantidade</th><th scope="col">Unidade</th><th scope="col">Preço com tributos (R$)</th><th scope="col">Tarifa sem tributos (R$)</th><th scope="col">Valor (R$)</th><th scope="col">PIS/COFINS (R$)</th><th scope="col">Base ICMS (R$)</th><th scope="col">ICMS (%)</th><th scope="col">ICMS (R$)</th></tr></thead>
           <tbody>{invoice.items.map((item) => <tr key={item.id} className={item.item_type === 'idle_demand' ? 'invoice-idle-row' : undefined}>
-            <th scope="row">{item.source_label ?? 'Item da fatura'}</th><td>{slotLabel(item.time_slot)}</td><td>{decimal(item.quantity, 3)}</td><td>{item.unit ?? '—'}</td><td>{decimal(item.unit_price_taxed, 5)}</td><td>{decimal(item.tariff_rate, 5)}</td><td>{decimal(item.amount)}</td><td>{decimal(item.pis_cofins_amount)}</td><td>{decimal(item.icms_base)}</td><td>{decimal(String(Number(item.icms_rate) * 100))}</td><td>{decimal(item.icms_amount)}</td>
+            <th scope="row">{item.source_label && /\bACL\b|mercado\s+livre/i.test(item.source_label) ? 'Ajuste de energia' : item.source_label ?? 'Item da fatura'}</th><td>{slotLabel(item.time_slot)}</td><td>{decimal(item.quantity, 3)}</td><td>{item.unit ?? '—'}</td><td>{decimal(item.unit_price_taxed, 5)}</td><td>{decimal(item.tariff_rate, 5)}</td><td>{decimal(item.amount)}</td><td>{decimal(item.pis_cofins_amount)}</td><td>{decimal(item.icms_base)}</td><td>{decimal(String(Number(item.icms_rate) * 100))}</td><td>{decimal(item.icms_amount)}</td>
           </tr>)}</tbody>
         </table>
       </div>

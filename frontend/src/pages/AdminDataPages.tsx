@@ -1,3 +1,5 @@
+import { simulationStatusLabel, modalityLabel, invoiceItemLabel, timeSlotLabel, unitLabel, invoiceSourceLabel, formatDecimal, formatUnitPrice, formatReferenceMonth } from '../services/presentation'
+import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type ReactNode } from 'react'
 import { apiRequest, ApiError } from '../services/api/client'
 
@@ -64,7 +66,7 @@ function currency(value: string | null | undefined) {
 
 function AdminPageFrame({ title, children }: { title: string; children: ReactNode }) {
   return <section className="admin-page" aria-labelledby="admin-data-title">
-    <a className="admin-back-link" href="/admin">← Painel administrativo</a>
+    <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-data-title">{title}</h1>
     {children}
@@ -73,9 +75,9 @@ function AdminPageFrame({ title, children }: { title: string; children: ReactNod
 
 function Pagination({ meta, onPage }: { meta: PageMeta; onPage: (page: number) => void }) {
   return <nav className="admin-pagination" aria-label="Paginação">
-    <button className="button button--secondary" type="button" onClick={() => onPage(meta.current_page - 1)} disabled={meta.current_page <= 1}>Anterior</button>
+    <NavigationButton direction="back" type="button" onClick={() => onPage(meta.current_page - 1)} disabled={meta.current_page <= 1}>Anterior</NavigationButton>
     <span>Página {meta.current_page} de {meta.last_page} · {meta.total} registros</span>
-    <button className="button button--secondary" type="button" onClick={() => onPage(meta.current_page + 1)} disabled={meta.current_page >= meta.last_page}>Próxima</button>
+    <NavigationButton direction="forward" type="button" onClick={() => onPage(meta.current_page + 1)} disabled={meta.current_page >= meta.last_page}>Próxima</NavigationButton>
   </nav>
 }
 
@@ -115,7 +117,7 @@ export function AdminCustomersPage() {
           <td>{customer.profile?.company_name ?? '—'}</td>
           <td>{customer.phone || '—'}</td>
           <td>{customer.contact_requested_at ? 'Solicitado' : 'Não solicitado'}</td>
-          <td><a href={`/admin/customers/${customer.id}`}>Ver cadastro</a></td>
+          <td><NavigationLink href={`/admin/customers/${customer.id}`}>Ver cadastro</NavigationLink></td>
         </tr>)}</tbody>
       </table></div>}
       <Pagination meta={result.meta} onPage={setPage} />
@@ -143,7 +145,7 @@ export function AdminCustomerDetailPage({ customerId }: { customerId: string }) 
       <div><dt>Telefone</dt><dd>{customer.phone || '—'}</dd></div>
       <div><dt>Empresa</dt><dd>{customer.profile?.company_name ?? '—'}</dd></div>
       <div><dt>CNPJ</dt><dd>{customer.profile?.cnpj ?? '—'}</dd></div>
-      <div><dt>Potência do transformador</dt><dd>{customer.profile?.transformer_power_kva ? `${customer.profile.transformer_power_kva} kVA` : '—'}</dd></div>
+      <div><dt>Potência do transformador</dt><dd>{customer.profile?.transformer_power_kva ? `${formatDecimal(customer.profile.transformer_power_kva, 2)} kVA` : '—'}</dd></div>
       <div><dt>E-mail verificado</dt><dd>{customer.email_verified_at ? 'Sim' : 'Não'}</dd></div>
       <div><dt>Pedido de contato</dt><dd>{customer.contact_requested_at ? 'Solicitado' : 'Não solicitado'}</dd></div>
     </dl>}
@@ -158,14 +160,14 @@ export function AdminSimulationsPage() {
     {error && <p className="field-error" role="alert">{error}</p>}
     {result && <>
       {result.data.length === 0 ? <p>Nenhuma simulação encontrada.</p> : <div className="admin-table-wrap"><table className="admin-table">
-        <thead><tr><th>Simulação</th><th>Cliente</th><th>Status</th><th>Meses</th><th>Economia mensal</th><th>Ações</th></tr></thead>
+        <thead><tr><th>Simulação</th><th>Cliente</th><th>Situação</th><th>Meses</th><th>Economia mensal</th><th>Ações</th></tr></thead>
         <tbody>{result.data.map((simulation) => <tr key={simulation.id}>
           <td>#{simulation.id}</td>
           <td>{simulation.customer ? <><strong>{simulation.customer.name}</strong><span>{simulation.customer.email}</span></> : '—'}</td>
-          <td>{simulation.status}</td>
+          <td>{simulationStatusLabel(simulation.status)}</td>
           <td>{simulation.months_count ?? '—'}</td>
           <td>{currency(simulation.total_monthly_savings)}</td>
-          <td><a href={`/admin/simulations/${simulation.id}`}>Ver dados</a></td>
+          <td><NavigationLink href={`/admin/simulations/${simulation.id}`}>Ver dados</NavigationLink></td>
         </tr>)}</tbody>
       </table></div>}
       <Pagination meta={result.meta} onPage={setPage} />
@@ -191,24 +193,24 @@ export function AdminSimulationDetailPage({ simulationId }: { simulationId: stri
       <dl className="admin-details">
         <div><dt>Simulação</dt><dd>#{simulation.id}</dd></div>
         <div><dt>Cliente</dt><dd>{simulation.customer?.name ?? '—'}{simulation.customer?.email ? ` · ${simulation.customer.email}` : ''}</dd></div>
-        <div><dt>Status</dt><dd>{simulation.status}</dd></div>
+        <div><dt>Situação</dt><dd>{simulationStatusLabel(simulation.status)}</dd></div>
         <div><dt>Faturas</dt><dd>{simulation.invoices.length}</dd></div>
         <div><dt>Economia mensal</dt><dd>{currency(simulation.report?.total_monthly_savings ?? simulation.total_monthly_savings)}</dd></div>
         <div><dt>Economia anual</dt><dd>{currency(simulation.report?.total_yearly_savings ?? simulation.total_yearly_savings)}</dd></div>
-        <div><dt>Modalidade recomendada</dt><dd>{simulation.report?.recommended_modality ?? '—'}</dd></div>
+        <div><dt>Modalidade recomendada</dt><dd>{modalityLabel(simulation.report?.recommended_modality)}</dd></div>
       </dl>
-      {simulation.report && <a className="admin-back-link" href={`/admin/reports/${simulation.id}`}>Abrir e gerenciar relatório →</a>}
+      {simulation.report && <NavigationLink href={`/admin/reports/${simulation.id}`}>Abrir e gerenciar relatório</NavigationLink>}
       <h2 className="admin-section-title">Faturas e itens extraídos</h2>
       {simulation.invoices.length === 0 ? <p>Esta simulação ainda não tem faturas extraídas.</p> : <div className="admin-invoices">
         {simulation.invoices.map((invoice) => <article className="admin-invoice" key={invoice.id}>
-          <h3>{invoice.reference_month} · Unidade {invoice.consumer_unit}</h3>
-          <p>{invoice.subgroup} · Modalidade {invoice.tariff_modality} · Total pago {currency(invoice.total_paid)}</p>
+          <h3>{formatReferenceMonth(invoice.reference_month)} · Unidade {invoice.consumer_unit}</h3>
+          <p>{invoice.subgroup} · Modalidade {modalityLabel(invoice.tariff_modality)} · Total pago {currency(invoice.total_paid)}</p>
           {invoice.items.length === 0 ? <p>Nenhum item extraído.</p> : <div className="admin-table-wrap"><table className="admin-table">
             <thead><tr><th>Item</th><th>Posto</th><th>Quantidade</th><th>Preço unitário</th><th>Valor</th><th>Rótulo da fatura</th></tr></thead>
             <tbody>{invoice.items.map((item) => <tr key={item.id}>
-              <td>{item.tariff_component ?? item.item_type}</td><td>{item.time_slot ?? '—'}</td>
-              <td>{item.quantity === null ? '—' : `${item.quantity}${item.unit ? ` ${item.unit}` : ''}`}</td>
-              <td>{currency(item.unit_price_taxed)}</td><td>{currency(item.amount)}</td><td>{item.source_label ?? '—'}</td>
+              <td>{invoiceItemLabel(item.item_type, item.tariff_component)}</td><td>{timeSlotLabel(item.time_slot)}</td>
+              <td>{item.quantity === null ? '—' : `${formatDecimal(item.quantity, 3)}${item.unit ? ` ${unitLabel(item.unit)}` : ''}`}</td>
+              <td>{formatUnitPrice(item.unit_price_taxed)}</td><td>{currency(item.amount)}</td><td>{invoiceSourceLabel(item.source_label)}</td>
             </tr>)}</tbody>
           </table></div>}
         </article>)}

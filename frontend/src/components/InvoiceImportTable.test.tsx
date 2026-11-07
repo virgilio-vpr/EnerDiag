@@ -8,10 +8,14 @@ describe('invoice review table', () => {
       id: 1, reference_month: '2026-08', consumer_unit: '123456789', total_paid: '42446.32', warnings: ['free_market_invoice'], items: [
         { id: 1, item_type: 'idle_demand', time_slot: 'off_peak', source_label: 'DEMANDA LEI ESTADUAL 16.886/18', quantity: '67.920', unit: 'kW', unit_price_taxed: '10.05771', tariff_rate: '9.52000', amount: '683.12', pis_cofins_amount: '36.53', icms_base: '0.00', icms_rate: '0.0000', icms_amount: '0.00' },
         { id: 2, item_type: 'other_charge', time_slot: 'not_applicable', source_label: 'BENEFÍCIO TARIFÁRIO LÍQUIDO', quantity: null, unit: null, unit_price_taxed: null, tariff_rate: null, amount: '-9410.65', pis_cofins_amount: '-503.46', icms_base: '0.00', icms_rate: '0.0000', icms_amount: '0.00' },
+        { id: 3, item_type: 'other_charge', time_slot: 'not_applicable', source_label: 'DEDUÇÃO ENERGIA ACL KWH', quantity: '100.000', unit: 'kWh', unit_price_taxed: null, tariff_rate: null, amount: '-100.00', pis_cofins_amount: '0.00', icms_base: '0.00', icms_rate: '0.0000', icms_amount: '0.00' },
       ],
     }
     render(<InvoiceImportTable invoices={[invoice]} />)
-    expect(screen.getByText('Fatura do mercado livre (energia ACL).')).toBeInTheDocument()
+    expect(screen.queryByText(/mercado livre|energia ACL/i)).not.toBeInTheDocument()
+    expect(screen.getByText('Sem alertas de leitura.')).toBeInTheDocument()
+    expect(screen.getByText('Ajuste de energia')).toBeInTheDocument()
+    expect(screen.getByText('-100,00')).toBeInTheDocument()
     const idleRow = screen.getByText('DEMANDA LEI ESTADUAL 16.886/18').closest('tr')!
     expect(idleRow).toHaveClass('invoice-idle-row')
     expect(within(idleRow).getByText('67,920')).toBeInTheDocument()

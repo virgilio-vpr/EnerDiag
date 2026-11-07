@@ -32,7 +32,7 @@ class PdfReportGenerator
             ['label' => 'Projeção de economia anual', 'value' => $this->money($report->total_yearly_savings)],
             ['label' => ($report->explanatory_texts['percentage'] ?? '') ?: '% do valor médio pago no período', 'value' => $report->savings_percentage === null ? '—' : $this->decimal($report->savings_percentage).'%'],
         ]);
-        $document->paragraph(($report->explanatory_texts['percentage_observation'] ?? '') ?: 'A economia usa tarifas atuais e o valor pago usa as tarifas históricas.', 9);
+        $document->paragraph(str_replace('A economia usa tarifas atuais e o valor pago usa as tarifas históricas.', 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.', ($report->explanatory_texts['percentage_observation'] ?? '') ?: 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.'), 9);
 
         $demandUnavailable = array_intersect($warnings, ['demand_savings_unavailable_pending_section_9_limits', 'demand_optimization_unavailable_pending_section_9_limits', 'demand_optimization_unavailable']) !== [];
         $migrationUnavailable = array_intersect($warnings, ['migration_unavailable', 'tariff_migration_unavailable_pending_section_9_rules']) !== [];
@@ -42,6 +42,27 @@ class PdfReportGenerator
         }
         $document->heading('Economia por componente');
         $document->table(['Componente', 'Por mês', 'Por ano'], $rows, [211, 150, 150]);
+        $references = [];
+        foreach ($report->chart_series['demand'] ?? [] as $point) {
+            if (! empty($point['tariff_reference_source'])) {
+                $references[$point['time_slot']] = $point;
+            }
+        }
+        if ($references !== []) {
+            $document->paragraph($texts['demand_reference_note'], 9);
+            foreach ($references as $slot => $point) {
+                $label = ['peak' => 'Ponta', 'off_peak' => 'Fora de ponta', 'unique' => 'Única'][$slot] ?? $slot;
+                $source = $texts['demand_reference_sources'][$point['tariff_reference_source']] ?? 'Tarifa de referência';
+                $document->paragraph($label.': '.str_replace('.', ',', $point['reference_tariff']).' R$/kW · '.$source.' · '.$this->monthLabel($point['tariff_reference_month']).'.', 9);
+            }
+        } else {
+            foreach ($report->chart_series['demand'] ?? [] as $point) {
+                if (! empty($point['tariff_reference_month'])) {
+                    $document->paragraph(str_replace('{month}', $this->monthLabel($point['tariff_reference_month']), $texts['demand_comparison_note']), 9);
+                    break;
+                }
+            }
+        }
         if ($report->recommended_modality) {
             $modality = ['blue' => 'Azul', 'green' => 'Verde'][$report->recommended_modality] ?? $report->recommended_modality;
             $document->paragraph('Modalidade recomendada: '.$modality);
@@ -98,6 +119,9 @@ class PdfReportGenerator
         $this->chartSection($document, 'Economia com reativos por mês', $chartSeries['reactive'] ?? [], [
             ['key' => 'value', 'label' => 'Economia mensal', 'color' => '#0b8f6a'],
         ], true, true, 'A série de reativos não está disponível neste relatório.');
+        if (! empty($chartSeries['modality'][0]['tariff_reference_date'])) {
+            $document->paragraph($texts['modality_reference_note'], 9);
+        }
         $this->chartSection($document, 'Comparação entre Azul e Verde', $chartSeries['modality'] ?? $chartSeries['blue_green'] ?? [], [
             ['key' => 'blue', 'label' => 'Azul', 'color' => '#2764c5'],
             ['key' => 'green', 'label' => 'Verde', 'color' => '#0b8f6a'],

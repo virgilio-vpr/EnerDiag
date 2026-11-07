@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\SimulationController as AdminSimulationCon
 use App\Http\Controllers\Api\V1\Admin\TariffController as AdminTariffController;
 use App\Http\Controllers\Api\V1\Admin\TariffImportController as AdminTariffImportController;
 use App\Http\Controllers\Api\V1\Admin\TariffImportReviewController;
+use App\Http\Controllers\Api\V1\AdminAccountAccessController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\DistributorController;
@@ -73,6 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/simulations/{simulationId}/status', [SimulationController::class, 'status'])->whereNumber('simulationId');
     Route::get('/simulations/{simulationId}/report', [SimulationController::class, 'report'])->whereNumber('simulationId');
     Route::get('/simulations/{simulationId}/pdf', [SimulationController::class, 'pdf'])->whereNumber('simulationId');
+    Route::put('/me/password', [AdminAccountAccessController::class, 'updatePassword'])->middleware('throttle:verification_codes');
+    Route::post('/me/email-change', [AdminAccountAccessController::class, 'requestEmailChange'])->middleware('throttle:verification_codes');
+    Route::post('/me/email-change/confirm', [AdminAccountAccessController::class, 'confirmEmailChange'])->middleware('throttle:verification_codes');
     Route::get('/me', [MeController::class, 'show']);
     Route::put('/me', [MeController::class, 'update']);
     Route::delete('/me', [MeController::class, 'destroy']);

@@ -99,7 +99,7 @@ final class TariffCalibrationService
         return $this->convertTariff($otherModalityTe, $factor);
     }
 
-    private function factorFromInvoiceItem(ExtractedInvoiceItemData $item): ?string
+    public function factorFromInvoiceItem(ExtractedInvoiceItemData $item): ?string
     {
         if ($item->unitPriceTaxed !== null && $item->tariffRate !== null
             && bccomp($item->unitPriceTaxed, '0', 5) > 0
