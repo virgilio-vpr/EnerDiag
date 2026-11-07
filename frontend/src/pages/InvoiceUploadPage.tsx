@@ -2,7 +2,6 @@ import { NavigationLink } from '../components/NavigationControl'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
 import { InvoiceImportTable, type ImportedInvoice } from '../components/InvoiceImportTable'
-import { CompanyContactDetails } from '../components/CompanyContactDetails'
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024
 const MAX_FILES = 12
@@ -140,7 +139,8 @@ export function InvoiceUploadPage() {
 
   const selectedDistributor = distributors.find((distributor) => String(distributor.id) === distributorId)
   const hasUnsupportedDistributor = distributorId === 'other'
-  const needsInvoiceReview = importSession?.invoices.some((invoice) => invoice.warnings.includes('invoice_billing_total_mismatch')) ?? false
+  const invoicesNeedingReview = importSession?.invoices.filter((invoice) => invoice.warnings.includes('invoice_billing_total_mismatch')) ?? []
+  const needsInvoiceReview = invoicesNeedingReview.length > 0
 
   async function requestDistributorInterest() {
     setErrorMessage('')
@@ -305,16 +305,17 @@ export function InvoiceUploadPage() {
       completed: 'A análise das suas faturas está concluída.',
       failed: 'Não foi possível concluir a análise.',
     }
-    return <section className="access-page" aria-labelledby="queued-title">
+    return <section className="access-page analysis-status-page" aria-labelledby="queued-title">
       <p className="section-eyebrow">Acompanhamento da análise</p>
       <h1 id="queued-title">{queuedSimulation.status === 'completed' ? 'Sua análise está pronta' : queuedSimulation.status === 'failed' ? 'A análise precisa de atenção' : queuedSimulation.status === 'queued' ? 'Aguardando cálculo' : 'Calculando seu relatório'}</h1>
-      <CompanyContactDetails />
       <p className={queuedSimulation.status === 'failed' ? 'field-error' : 'form-success'} role={queuedSimulation.status === 'failed' ? 'alert' : 'status'}>{statusMessage[queuedSimulation.status]}</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
-      {queuedSimulation.status === 'completed' && <NavigationLink variant="primary" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</NavigationLink>}
-      {(queuedSimulation.status === 'queued' || queuedSimulation.status === 'failed') && <button className="button" type="button" disabled={submitting} onClick={() => calculateSimulation(queuedSimulation.id)}>{queuedSimulation.status === 'failed' ? 'Tentar novamente' : 'Calcular agora'}</button>}
-      {queuedSimulation.status === 'processing' && !submitting && <button className="button button--secondary" type="button" onClick={() => calculateSimulation(queuedSimulation.id)}>Retomar cálculo</button>}
-      <p><NavigationLink direction="back" href="/minhas-simulacoes">Voltar para minhas simulações</NavigationLink></p>
+      <div className="analysis-status-actions">
+        {queuedSimulation.status === 'completed' && <NavigationLink variant="primary" href={`/simulations/${queuedSimulation.id}/report`}>Ver relatório completo</NavigationLink>}
+        {(queuedSimulation.status === 'queued' || queuedSimulation.status === 'failed') && <button className="button" type="button" disabled={submitting} onClick={() => calculateSimulation(queuedSimulation.id)}>{queuedSimulation.status === 'failed' ? 'Tentar novamente' : 'Calcular agora'}</button>}
+        {queuedSimulation.status === 'processing' && !submitting && <button className="button button--secondary" type="button" onClick={() => calculateSimulation(queuedSimulation.id)}>Retomar cálculo</button>}
+        <NavigationLink direction="back" href="/minhas-simulacoes">Voltar para minhas simulações</NavigationLink>
+      </div>
       {processingErrors.length > 0 && <div className="processing-errors"><h2>Faturas que precisam de atenção</h2><ul>{processingErrors.map((fileError, index) => {
         const details = Object.values(fileError.errors).flatMap((value) => Array.isArray(value) ? value : [value]).filter(Boolean)
         return <li key={fileError.file + index}><strong>{fileError.file}</strong><span>{details.join(' ') || 'Não foi possível concluir o processamento.'}</span></li>
@@ -326,7 +327,6 @@ export function InvoiceUploadPage() {
     <section className="upload-page" aria-labelledby="upload-title">
       <p className="section-eyebrow">Análise da sua empresa</p>
       <h1 id="upload-title">Envie suas faturas</h1>
-      <CompanyContactDetails />
       <p><NavigationLink direction="back" href="/minhas-simulacoes">Voltar para minhas simulações</NavigationLink></p>
       <p className="access-intro">Envie de 1 a {MAX_FILES} faturas. Você pode selecionar várias de uma vez; cada conta será lida e salva individualmente, em sequência. Organizaremos da mais antiga para a mais recente usando o mês da LEITURA ATUAL, não o mês de emissão. Avisaremos se uma conta ou mês de medição já tiver sido enviado. Você pode simular quando quiser, depois de salvar pelo menos uma fatura.</p>
       {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
@@ -351,7 +351,7 @@ export function InvoiceUploadPage() {
             <p aria-live="polite">{importSession.invoice_count} de {MAX_FILES} faturas lidas e salvas</p>
             <InvoiceImportTable invoices={importSession.invoices} onRemove={removeInvoice} disabled={submitting} />
             {importSession.invoice_count < MAX_FILES && <label className="upload-field invoice-picker">Selecionar faturas <input type="file" accept="application/pdf,.pdf" multiple disabled={submitting} onChange={uploadInvoice} aria-describedby="invoice-help" /><span id="invoice-help" className="password-hint">Você pode selecionar várias faturas. Cada PDF será enviado, lido e salvo individualmente, em sequência. Até 20 MB por arquivo.</span></label>}
-            {needsInvoiceReview && <p className="field-error" role="alert">Uma fatura tem diferença entre a soma dos itens e o total. A leitura precisa ser revisada antes da simulação.</p>}
+            {needsInvoiceReview && <div className="field-error" role="alert"><p>A soma dos itens lidos ainda não confere com o total nestas faturas:</p><ul>{invoicesNeedingReview.map((invoice) => <li key={invoice.id}>{invoice.reference_month.slice(5, 7)}/{invoice.reference_month.slice(0, 4)}{invoice.source_filename ? ` · ${invoice.source_filename}` : ''}</li>)}</ul><p>Encargos de bandeira tarifária ou outros ajustes podem explicar a diferença. A leitura precisa ser revisada antes da simulação para identificar esses valores.</p></div>}
             <button className="button access-submit" type="button" disabled={submitting || importSession.invoice_count < 1 || needsInvoiceReview} onClick={completeImport}>{submitting ? 'Aguarde…' : importSession.invoice_count < 1 ? 'Envie ao menos uma fatura' : 'Simular relatório'}</button>
           </>}
         </>}

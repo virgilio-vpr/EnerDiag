@@ -90,6 +90,6 @@ final class ReportIndicatorsService
 
     private function roundHalfUp(string $value, int $scale): string
     {
-        return bcadd($value, '0.'.str_repeat('0', $scale).'5', $scale);
+        return bcadd($value, (bccomp($value, '0', $scale + 8) < 0 ? '-' : '').'0.'.str_repeat('0', $scale).'5', $scale);
     }
 }

@@ -45,6 +45,43 @@ class ReportDemandOptimizationServiceTest extends TestCase
         $this->assertSame($historicalCost, $comparison['historical_invoiced_cost']);
     }
 
+    public function test_unchanged_blue_and_green_contracts_have_zero_demand_savings_even_with_a_higher_july_reference_tariff(): void
+    {
+        foreach (['blue' => ['peak' => '338.000', 'off_peak' => '372.000'], 'green' => ['unique' => '372.000']] as $modality => $contracts) {
+            $invoices = [];
+            foreach (['2026-03' => '10.00000', '2026-04' => '11.00000', '2026-05' => '12.00000', '2026-06' => '13.00000', '2026-07' => '20.00000'] as $month => $rate) {
+                $slots = [];
+                foreach ($contracts as $slot => $contract) {
+                    $slots[$slot] = ['contracted' => $contract, 'measured' => '250.000', 'rate' => $rate];
+                }
+                $invoices[] = $this->invoice($month, $modality, $slots);
+            }
+            $result = $this->calculate($invoices, null, $contracts);
+            $this->assertSame([], $result['warnings']);
+            foreach ($result['savings'] as $saving) {
+                $this->assertSame('0.00', $saving);
+            }
+            foreach ($result['comparison'] as $slots) {
+                foreach ($slots as $comparison) {
+                    $this->assertSame('2026-07', $comparison['tariff_reference_month']);
+                    $this->assertSame($comparison['current_contract_cost'], $comparison['optimal_contract_cost']);
+                }
+            }
+            foreach ($result['comparison']['2026-03'] as $comparison) {
+                $this->assertGreaterThan((float) $comparison['historical_invoiced_cost'], (float) $comparison['current_contract_cost']);
+            }
+        }
+    }
+
+    public function test_manual_demand_preserves_negative_savings_for_a_more_expensive_contract(): void
+    {
+        $invoices = [$this->invoice('2026-01', 'green', ['unique' => ['contracted' => '100.000', 'measured' => '80.000', 'rate' => '10.00000']])];
+        $result = $this->calculate($invoices, null, ['unique' => '120']);
+        $this->assertSame('120', $result['optimal']['unique']);
+        $this->assertSame('-164.00', $result['savings']['2026-01']);
+        $this->assertSame('1128.00', $result['comparison']['2026-01']['unique']['optimal_contract_cost']);
+    }
+
     public static function historicalPriceChanges(): array
     {
         return [
@@ -250,7 +287,7 @@ class ReportDemandOptimizationServiceTest extends TestCase
     }
 
     /** @param list<ExtractedInvoiceData> $invoices */
-    private function calculate(array $invoices, ?int $distributorId = null): array
+    private function calculate(array $invoices, ?int $distributorId = null, array $overrides = []): array
     {
         $months = array_map(fn (ExtractedInvoiceData $invoice): DemandMonthData => DemandMonthData::fromInvoice($invoice, $invoice->referenceMonth), $invoices);
         $entries = [];
@@ -260,7 +297,7 @@ class ReportDemandOptimizationServiceTest extends TestCase
             }
         }
 
-        return app(ReportDemandOptimizationService::class)->calculate($invoices, $months, new IdleDemandRatioResolution($entries), $distributorId);
+        return app(ReportDemandOptimizationService::class)->calculate($invoices, $months, new IdleDemandRatioResolution($entries), $distributorId, $overrides);
     }
 
     /** @param array<string, array<string, string>> $slots */

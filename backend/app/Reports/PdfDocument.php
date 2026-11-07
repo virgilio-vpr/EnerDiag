@@ -63,6 +63,34 @@ final class PdfDocument
         $this->y += 7;
     }
 
+    public function callout(string $title, string $text, string $contact): void
+    {
+        $width = self::CONTENT_WIDTH - 36;
+        $titleLines = $this->wrap($title, $width, 13, true);
+        $bodyLines = $this->wrap($text, $width, 10);
+        $contactLines = $this->wrap($contact, $width, 9, true);
+        $height = 44 + count($titleLines) * 18 + count($bodyLines) * 15 + count($contactLines) * 13;
+        $this->ensureSpace($height + 14);
+        $this->rectangle(self::MARGIN, $this->y, self::CONTENT_WIDTH, $height, '#eef8f4');
+        $this->rectangle(self::MARGIN, $this->y, 4, $height, '#0b8f6a');
+        $lineY = $this->y + 16;
+        foreach ($titleLines as $line) {
+            $this->textAt(self::MARGIN + 18, $lineY, 13, $line, '#087452', true);
+            $lineY += 18;
+        }
+        $lineY += 8;
+        foreach ($bodyLines as $line) {
+            $this->textAt(self::MARGIN + 18, $lineY, 10, $line, '#334155');
+            $lineY += 15;
+        }
+        $lineY += 10;
+        foreach ($contactLines as $line) {
+            $this->textAt(self::MARGIN + 18, $lineY, 9, $line, '#087452', true);
+            $lineY += 13;
+        }
+        $this->y += $height + 14;
+    }
+
     /** @param list<array{label: string, value: string}> $cards */
     public function cards(array $cards): void
     {

@@ -23,7 +23,7 @@ final class ReportDemandOptimizationService
      * @param  list<DemandMonthData>  $months
      * @return array{optimal: array<string, string>, savings: array<string, string>, comparison: array<string, array<string, array<string, string>>>, parameter_id: ?int, tariff_ids: list<int>, warnings: list<string>}
      */
-    public function calculate(array $invoices, array $months, IdleDemandRatioResolution $ratios, ?int $distributorId = null): array
+    public function calculate(array $invoices, array $months, IdleDemandRatioResolution $ratios, ?int $distributorId = null, array $demandOverrides = []): array
     {
         $unavailable = ['optimal' => [], 'savings' => [], 'comparison' => [], 'parameter_id' => null, 'tariff_ids' => [], 'warnings' => [self::UNAVAILABLE_WARNING]];
         if ($invoices === [] || count($invoices) !== count($months)) {
@@ -90,6 +90,12 @@ final class ReportDemandOptimizationService
             $optimal[$slot] = $resultSlot->optimalDemand;
         }
 
+        foreach ($demandOverrides as $slot => $demand) {
+            if (in_array($slot, $slots, true)) {
+                $optimal[$slot] = (string) $demand;
+            }
+        }
+
         $savings = [];
         $comparison = [];
         $total = '0.00';
@@ -121,7 +127,7 @@ final class ReportDemandOptimizationService
             $savings[$invoice->referenceMonth] = bcsub($currentContractCost, $simulated, 2);
             $total = bcadd($total, $savings[$invoice->referenceMonth], 2);
         }
-        if (bccomp($total, '0', 2) < 0) {
+        if ($demandOverrides === [] && bccomp($total, '0', 2) < 0) {
             $savings = array_fill_keys(array_keys($savings), '0.00');
         }
 

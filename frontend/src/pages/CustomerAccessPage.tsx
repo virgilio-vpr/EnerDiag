@@ -173,6 +173,7 @@ export function VerifyEmailPage({ email: initialEmail }: { email: string }) {
 export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const [totpCode, setTotpCode] = useState('')
   const [requiresTotp, setRequiresTotp] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -229,7 +230,7 @@ export function LoginPage() {
       <p className="access-intro">Acesse suas análises e acompanhe suas oportunidades de economia.</p>
       <form className="access-form" onSubmit={submit} noValidate>
         <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-        <label>Senha<input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        <label>Senha<span className="password-input-wrap"><input autoComplete="current-password" type={passwordVisible ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} required /><button className="password-visibility-toggle" type="button" aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'} aria-pressed={passwordVisible} onClick={() => setPasswordVisible((visible) => !visible)}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{passwordVisible ? <><path d="M3 3l18 18" /><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.9 5.2A11 11 0 0 1 12 5c5 0 9 5 9 7a9.8 9.8 0 0 1-2.1 3.1M6.2 6.2C3.6 7.8 2 10.4 2 12c0 2 4 7 10 7 1 0 2-.2 2.9-.5" /></> : <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>}</svg></button></span></label>
         {requiresTotp && <label>Código do autenticador<input autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={totpCode} onChange={(event) => setTotpCode(event.target.value.replace(/[^0-9]/g, ''))} required /></label>}
         {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
         <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Entrando…' : 'Entrar'}</button>

@@ -9,7 +9,7 @@
     "idle_demand_ratio_unavailable": "Não foi possível determinar a proporção aplicável à demanda ociosa em todos os períodos.",
     "idle_demand_pis_cofins_inconsistent": "Os componentes de PIS e COFINS da demanda ociosa divergem do valor normal da fatura.",
     "idle_demand_post_matching_unresolved": "Não foi possível associar com segurança as linhas de demanda ociosa aos postos tarifários.",
-    "demand_invoice_reconciliation_mismatch": "Algumas cobranças de demanda nas faturas precisam de conferência. Antes de alterar a demanda contratada, confirme esses valores com a distribuidora.",
+    "demand_invoice_reconciliation_mismatch": "Os resultados são estimativas baseadas nas faturas. Antes de recontratar a demanda ou alterar a modalidade tarifária, recomenda-se uma avaliação detalhada por engenheiro consultor, com medição específica por analisador de energia, quando necessária, para identificar os horários de maior carga e validar os ajustes propostos.",
     "demand_invoice_reconciliation_unavailable": "Não foi possível comparar todos os valores de demanda calculados com as faturas.",
     "migration_unavailable": "Ainda não foi possível indicar se o plano Azul ou Verde custa menos. Precisamos completar os dados de consumo ou atualizar as tarifas da distribuidora para concluir essa comparação.",
     "tariff_migration_unavailable_pending_section_9_rules": "Ainda não foi possível indicar se o plano Azul ou Verde custa menos. Precisamos completar os dados de consumo ou atualizar as tarifas da distribuidora para concluir essa comparação.",
@@ -24,8 +24,11 @@
     "tax_calibration_factor_unavailable": "Não foi possível validar a conversão entre tarifas com e sem tributos em todos os períodos."
   },
   "fallback_warning": "A análise identificou um ponto que merece atenção.",
+  "consultation_title": "Transforme sua análise em um plano de economia",
+  "consultation_contact": "Fale com a equipe EnerDiag",
   "demand_comparison_note": "Na comparação de demanda, o contrato atual e o simulado usam as mesmas tarifas da fatura de {month}. A mudança de tarifa ao longo do histórico não é contabilizada como economia da redução de demanda.",
   "internal_warnings": [
+    "idle_demand_post_matching_unresolved",
     "idle_demand_pis_cofins_inconsistent",
     "tax_calibration_factor_divergence",
     "free_market_invoice"

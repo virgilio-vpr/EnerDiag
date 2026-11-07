@@ -1,4 +1,5 @@
 import { NavigationLink } from './components/NavigationControl'
+import { CompanyContactDetails } from './components/CompanyContactDetails'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useViewport } from './hooks/useViewport'
@@ -216,7 +217,7 @@ function App() {
         </> : <section className="access-page"><h1>Página não encontrada</h1><NavigationLink direction="back" href="/">Voltar ao início</NavigationLink></section>}
       </Suspense>
       </main>
-      <footer className="app-footer"><span>Eficiência energética para sua empresa</span>{isLandingPage && <a href="#contato">Contato</a>}<a href={isLandingPage ? '/register' : '/'}>{isLandingPage ? 'Começar análise' : 'Página inicial'}</a></footer>
+      <footer className={`app-footer app-footer--with-contact${isLandingPage ? ' app-footer--landing' : ''}`}>{!isLandingPage && <CompanyContactDetails />}<div className="app-footer-links"><span>Eficiência energética para sua empresa</span>{isLandingPage && <a href="#contato">Contato</a>}<a href={isLandingPage ? '/register' : '/'}>{isLandingPage ? 'Começar análise' : 'Página inicial'}</a></div></footer>
     </div>
   )
 }

@@ -18,7 +18,11 @@ class PdfReportGeneratorTest extends TestCase
         $text = $this->text(app(PdfReportGenerator::class)->generate($report));
 
         $this->assertStringContainsString('Com os dados analisados, trocar entre os planos Azul e Verde não reduz os custos.', $text);
-        $this->assertStringContainsString('Antes de alterar a demanda contratada, confirme esses valores com a distribuidora.', $text);
+        $this->assertStringContainsString('avaliação detalhada por engenheiro consultor', $text);
+        $this->assertStringContainsString('medição específica por analisador de energia', $text);
+        $this->assertStringContainsString('Transforme sua análise em um plano de economia', $text);
+        $this->assertStringContainsString('Fale com a equipe EnerDiag', $text);
+        $this->assertStringNotContainsString('confirme esses valores com a distribuidora', $text);
         $this->assertStringNotContainsString('Os componentes de PIS e COFINS', $text);
         $this->assertStringNotContainsString('divergência de calibração tributária', $text);
         $this->assertSame($warnings, $report->warnings);

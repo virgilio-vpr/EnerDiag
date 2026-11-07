@@ -165,6 +165,21 @@ class IdleDemandRatioServiceTest extends TestCase
         $this->assertTrue($entry->inherited);
     }
 
+    public function test_saved_unresolved_rows_are_matched_by_tariff_even_when_amounts_do_not_reconcile(): void
+    {
+        $peak = $this->item('measured_demand', 'peak', '90.000', '40.00000', '3600.00', '0.00', '0.1800', '3600.00');
+        $offPeak = $this->item('measured_demand', 'off_peak', '90.000', '20.00000', '1800.00', '0.00', '0.1800', '1800.00');
+        $idleOffPeak = $this->item('idle_demand', 'unresolved_0', '100.000', '16.40000', '1640.00', '0.00', '0.0000', '0.00');
+        $idlePeak = $this->item('idle_demand', 'unresolved_1', '1.000', '32.80000', '32.80', '0.00', '0.0000', '0.00');
+        $month = $this->month('2025-08', '2025-01-01', ['peak' => '100.000', 'off_peak' => '100.000'], ['peak' => '90.000', 'off_peak' => '90.000'], ['peak' => $peak, 'off_peak' => $offPeak], [$idleOffPeak, $idlePeak]);
+
+        $resolution = $this->service()->resolve([$month], false);
+
+        $this->assertSame(1, $resolution->forMonthAndTimeSlot('2025-08', 'peak')->idleItemIndex);
+        $this->assertSame(0, $resolution->forMonthAndTimeSlot('2025-08', 'off_peak')->idleItemIndex);
+        $this->assertNotContains(IdleDemandRatioService::MATCHING_WARNING, $resolution->warnings());
+    }
+
     private function service(): IdleDemandRatioService
     {
         return new IdleDemandRatioService(new RegulatoryParameterService);

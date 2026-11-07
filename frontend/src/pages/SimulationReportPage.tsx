@@ -1,5 +1,5 @@
 import { NavigationLink } from '../components/NavigationControl'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Bar,
   BarChart,
@@ -14,7 +14,6 @@ import {
 } from 'recharts'
 import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
 import reportTexts from '../../../backend/resources/report-texts.json'
-import { CompanyContactDetails } from '../components/CompanyContactDetails'
 
 type ChartPoint = {
   reference_month?: string
@@ -31,21 +30,21 @@ type ChartPoint = {
   green?: string | null
 }
 
-type Report = {
+export type Report = {
   id: number
   simulation_id: number
   months_count: number
-  total_monthly_savings: string
-  total_yearly_savings: string
+  total_monthly_savings: string | null
+  total_yearly_savings: string | null
   savings_percentage: string | null
-  demand_savings_monthly: string
-  demand_savings_yearly: string
-  overrun_savings_monthly: string
-  overrun_savings_yearly: string
-  reactive_savings_monthly: string
-  reactive_savings_yearly: string
-  migration_savings_monthly: string
-  migration_savings_yearly: string
+  demand_savings_monthly: string | null
+  demand_savings_yearly: string | null
+  overrun_savings_monthly: string | null
+  overrun_savings_yearly: string | null
+  reactive_savings_monthly: string | null
+  reactive_savings_yearly: string | null
+  migration_savings_monthly: string | null
+  migration_savings_yearly: string | null
   recommended_modality: string | null
   optimal_demand_peak: string | null
   optimal_demand_off_peak: string | null
@@ -85,8 +84,6 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   const [report, setReport] = useState<Report | null>(() => getCachedApiResponse<{ data: Report }>(`/simulations/${simulationId}/report`)?.data ?? null)
   const [loading, setLoading] = useState(() => !getCachedApiResponse(`/simulations/${simulationId}/report`))
   const [errorMessage, setErrorMessage] = useState('')
-  const [pdfMessage, setPdfMessage] = useState('')
-  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -128,6 +125,22 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
     }
   }, [simulationId])
 
+  if (loading) return <section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>
+  if (errorMessage || !report) return <section className="access-page" aria-labelledby="report-error-title"><h1 id="report-error-title">Relatório indisponível</h1><p className="field-error" role="alert">{errorMessage || 'Não foi possível carregar este relatório.'}</p><NavigationLink direction="back" href="/upload-faturas">Voltar às faturas</NavigationLink></section>
+  return <SimulationReportView report={report} simulationId={simulationId} />
+}
+
+export function SimulationReportView({ report, simulationId, backHref = '/minhas-simulacoes', backLabel = 'Minhas simulações', pdfEndpoint = `/simulations/${simulationId}/pdf`, pdfDemands, children }: {
+  report: Report
+  simulationId: string
+  backHref?: string
+  backLabel?: string
+  pdfEndpoint?: string
+  pdfDemands?: Record<string, string>
+  children?: ReactNode
+}) {
+  const [pdfMessage, setPdfMessage] = useState('')
+  const [downloading, setDownloading] = useState(false)
   const demandData = useMemo(() => (report?.chart_series.demand ?? []).map((point) => {
     const contracted = numeric(point.contracted)
     const optimal = numeric(point.optimal) ?? numeric(
@@ -160,8 +173,10 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
     setDownloading(true)
     try {
       const token = getAuthToken()
-      const response = await fetch(`/api/v1/simulations/${simulationId}/pdf`, {
-        headers: token ? { Authorization: `Bearer ${token}`, Accept: 'application/pdf' } : { Accept: 'application/pdf' },
+      const response = await fetch(`/api/v1${pdfEndpoint}`, {
+        method: pdfDemands ? 'POST' : 'GET',
+        body: pdfDemands ? JSON.stringify({ demands: pdfDemands }) : undefined,
+        headers: token ? { Authorization: `Bearer ${token}`, Accept: 'application/pdf', ...(pdfDemands ? { 'Content-Type': 'application/json' } : {}) } : { Accept: 'application/pdf', ...(pdfDemands ? { 'Content-Type': 'application/json' } : {}) },
       })
       if (!response.ok) throw new Error('Não foi possível preparar o PDF. Tente novamente.')
       const blob = await response.blob()
@@ -182,13 +197,11 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
   }
 
 
-  if (loading) return <section className="access-page" aria-live="polite"><p>Carregando seu relatório…</p></section>
-  if (errorMessage || !report) return <section className="access-page" aria-labelledby="report-error-title"><h1 id="report-error-title">Relatório indisponível</h1><p className="field-error" role="alert">{errorMessage || 'Não foi possível carregar este relatório.'}</p><NavigationLink direction="back" href="/upload-faturas">Voltar às faturas</NavigationLink></section>
-
   const warnings = [...report.warnings]
   if (report.months_count > 0 && report.months_count < 12) warnings.unshift('incomplete_invoice_series')
   const uniqueWarnings = [...new Set(warnings)]
-  const customerWarnings = uniqueWarnings.filter((warning) => !reportTexts.internal_warnings.includes(warning))
+  const consultationWarning = 'demand_invoice_reconciliation_mismatch'
+  const customerWarnings = uniqueWarnings.filter((warning) => !reportTexts.internal_warnings.includes(warning) && warning !== consultationWarning)
   const reserveValues = report.r_values.filter((value) => value.source === 'fallback' && value.ratio !== null && value.ratio !== '')
   const demandUnavailable = uniqueWarnings.includes('demand_savings_unavailable_pending_section_9_limits')
     || uniqueWarnings.includes('demand_optimization_unavailable_pending_section_9_limits')
@@ -204,10 +217,12 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
 
   return <section className="report-page" aria-labelledby="report-title">
     <div className="report-heading">
-      <div><p className="section-eyebrow">Análise concluída · Protocolo {simulationId}</p><h1 id="report-title">Seu relatório de energia</h1><p className="access-intro">Resultados calculados para {report.months_count} {report.months_count === 1 ? 'fatura' : 'faturas'}.</p><CompanyContactDetails /></div>
-      <div className="report-actions"><NavigationLink direction="back" href="/minhas-simulacoes">Minhas simulações</NavigationLink><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button></div>
+      <div><p className="section-eyebrow">Análise concluída · Protocolo {simulationId}</p><h1 id="report-title">Seu relatório de energia</h1><p className="access-intro">Resultados calculados para {report.months_count} {report.months_count === 1 ? 'fatura' : 'faturas'}.</p></div>
+      <div className="report-actions"><NavigationLink direction="back" href={backHref}>{backLabel}</NavigationLink><button className="button button--secondary" type="button" disabled={downloading} onClick={downloadPdf}>{downloading ? 'Preparando PDF…' : 'Baixar relatório em PDF'}</button></div>
     </div>
     {pdfMessage && <p className="form-success" role="status">{pdfMessage}</p>}
+
+    {children}
 
     <section className="report-highlights" aria-label="Indicadores principais">
       <article className="report-highlight"><span>Economia mensal média</span><strong>{amount(report.total_monthly_savings)}</strong></article>
@@ -215,14 +230,25 @@ export function SimulationReportPage({ simulationId }: { simulationId: string })
       <article className="report-highlight"><span>{report.explanatory_texts.percentage || '% do valor médio pago no período'}</span><strong>{percentageText}</strong><small>{report.explanatory_texts.percentage_observation?.replace('A economia usa tarifas atuais e o valor pago usa as tarifas históricas.', 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.') || 'A economia usa tarifas de referência; o valor pago usa as tarifas históricas.'}</small></article>
     </section>
 
-    <section className="report-components" aria-labelledby="components-title"><h2 id="components-title">Economia por componente</h2><dl>
-      <div><dt>Demanda</dt><dd>{demandUnavailable ? 'Indisponível' : `${amount(report.demand_savings_monthly)} / mês · ${amount(report.demand_savings_yearly)} / ano`}</dd></div>
-      <div><dt>Ultrapassagem</dt><dd>{amount(report.overrun_savings_monthly)} / mês · {amount(report.overrun_savings_yearly)} / ano</dd></div>
-      <div><dt>Reativos</dt><dd>{amount(report.reactive_savings_monthly)} / mês · {amount(report.reactive_savings_yearly)} / ano</dd></div>
-      <div><dt>Migração de modalidade</dt><dd>{migrationUnavailable ? 'Indisponível' : `${amount(report.migration_savings_monthly)} / mês · ${amount(report.migration_savings_yearly)} / ano`}</dd></div>
-      {report.recommended_modality && <div><dt>Modalidade recomendada</dt><dd>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</dd></div>}
-    </dl>{demandReferences.length > 0 ? <div className="report-chart-note"><p>{reportTexts.demand_reference_note}</p>{demandReferences.map((point) => <p key={point.time_slot}>{point.time_slot === 'peak' ? 'Ponta' : point.time_slot === 'off_peak' ? 'Fora de ponta' : 'Única'}: {point.reference_tariff?.replace('.', ',')} R$/kW · {reportTexts.demand_reference_sources[point.tariff_reference_source as keyof typeof reportTexts.demand_reference_sources] ?? 'Tarifa de referência'} · {monthLabel(point.tariff_reference_month ?? undefined)}.</p>)}</div> : demandReferenceMonth && <p className="report-chart-note">{reportTexts.demand_comparison_note.replace('{month}', monthLabel(demandReferenceMonth))}</p>}</section>
+    <section className="report-components" aria-labelledby="components-title">
+      <div className="report-components-heading"><div><h2 id="components-title">Economia por componente</h2><p>Veja onde estão as oportunidades de economia.</p></div>
+        {report.recommended_modality && <div className="report-modality-badge"><span>Modalidade recomendada</span><strong>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</strong></div>}
+      </div>
+      <dl>
+        {[
+          { label: 'Demanda', monthly: report.demand_savings_monthly, yearly: report.demand_savings_yearly, unavailable: demandUnavailable },
+          { label: 'Ultrapassagem', monthly: report.overrun_savings_monthly, yearly: report.overrun_savings_yearly, unavailable: false },
+          { label: 'Reativos', monthly: report.reactive_savings_monthly, yearly: report.reactive_savings_yearly, unavailable: false },
+          { label: 'Migração de modalidade', monthly: report.migration_savings_monthly, yearly: report.migration_savings_yearly, unavailable: migrationUnavailable },
+        ].map((component) => <div key={component.label} className={`report-component${!component.unavailable && Number(component.monthly) > 0 ? ' report-component--positive' : ''}`}><dt>{component.label}</dt><dd>{component.unavailable ? <strong className="report-component-unavailable">Indisponível</strong> : <><div className="report-component-monthly"><strong>{amount(component.monthly)}</strong><span>/ mês</span></div><div className="report-component-yearly"><strong>{amount(component.yearly)}</strong><span>/ ano</span></div></>}</dd></div>)}
+      </dl>
+      {demandReferences.length > 0 ? <div className="report-tariff-note"><h3>Tarifas utilizadas na comparação</h3><p>{reportTexts.demand_reference_note}</p><div className="report-tariff-references">{demandReferences.map((point) => <p key={point.time_slot}><strong>{point.time_slot === 'peak' ? 'Ponta' : point.time_slot === 'off_peak' ? 'Fora de ponta' : 'Única'}: {point.reference_tariff?.replace('.', ',')} R$/kW</strong><span>{reportTexts.demand_reference_sources[point.tariff_reference_source as keyof typeof reportTexts.demand_reference_sources] ?? 'Tarifa de referência'} · {monthLabel(point.tariff_reference_month ?? undefined)}</span></p>)}</div></div> : demandReferenceMonth && <p className="report-chart-note">{reportTexts.demand_comparison_note.replace('{month}', monthLabel(demandReferenceMonth))}</p>}
+    </section>
 
+    {uniqueWarnings.includes(consultationWarning) && <section className="report-consultation" aria-labelledby="consultation-title">
+      <div className="report-consultation-content"><p className="section-eyebrow">Consultoria especializada</p><h2 id="consultation-title">{reportTexts.consultation_title}</h2><p>{reportTexts.warnings.demand_invoice_reconciliation_mismatch}</p></div>
+      <NavigationLink href="#enerdiag-contact" variant="primary">{reportTexts.consultation_contact}</NavigationLink>
+    </section>}
     {customerWarnings.length > 0 && <section className="report-warnings" aria-labelledby="warnings-title"><h2 id="warnings-title">Avisos da análise</h2><ul>{customerWarnings.map((warning) => <li key={warning}>{warningText[warning] ?? reportTexts.fallback_warning}</li>)}</ul></section>}
     {reserveValues.length > 0 && <section className="report-ratio" aria-label="Reserva da demanda ociosa"><h2>Reserva aplicada à demanda ociosa</h2><p>Foi usada a proporção r = {decimal.format(Number(reserveValues[0].ratio) * 100)}% nos períodos em que a fatura não indicou essa proporção.</p></section>}
 

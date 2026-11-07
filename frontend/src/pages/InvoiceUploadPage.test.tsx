@@ -53,7 +53,8 @@ describe('sequential invoice import', () => {
     window.localStorage.setItem('enerdiag_invoice_import_id', '12')
     const fetchMock = setupFetch((url, options) => json(200, { data: session(url.endsWith('/invoices/3') && options?.method === 'DELETE' ? [] : ['2026-03']) }))
     render(<InvoiceUploadPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Remover fatura de 03/2026', hidden: true }))
+    const summaryTable = await screen.findByRole('region', { name: 'Resumo das faturas salvas' })
+    fireEvent.click(within(summaryTable).getByRole('button', { name: 'Remover fatura de 03/2026' }))
     await screen.findByText('0 de 12 faturas lidas e salvas')
     expect(screen.getByRole('button', { name: 'Envie ao menos uma fatura' })).toBeDisabled()
     expect(fetchMock.mock.calls.some(([url, options]) => url.endsWith('/invoices/3') && options?.method === 'DELETE')).toBe(true)
@@ -116,6 +117,8 @@ describe('sequential invoice import', () => {
     render(<InvoiceUploadPage />)
     expect(await screen.findByRole('button', { name: 'Simular relatório' })).toBeDisabled()
     expect(screen.getByRole('alert')).toHaveTextContent('A leitura precisa ser revisada')
+    expect(screen.getByRole('alert')).toHaveTextContent('03/2026 · 2026-03.pdf')
+    expect(screen.getByRole('alert')).toHaveTextContent('Encargos de bandeira tarifária ou outros ajustes podem explicar a diferença')
     expect(window.localStorage.getItem('enerdiag_invoice_import_id')).toBe('12')
   })
 

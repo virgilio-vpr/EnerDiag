@@ -68,7 +68,16 @@ class PdfReportGenerator
             $document->paragraph('Modalidade recomendada: '.$modality);
         }
 
-        $customerWarnings = array_values(array_diff($warnings, $texts['internal_warnings']));
+        $consultationWarning = 'demand_invoice_reconciliation_mismatch';
+        if (in_array($consultationWarning, $warnings, true)) {
+            $document->callout(
+                $texts['consultation_title'],
+                $texts['warnings'][$consultationWarning],
+                $texts['consultation_contact'].($contacts === [] ? '' : ' · '.implode(' · ', $contacts)),
+            );
+        }
+
+        $customerWarnings = array_values(array_diff($warnings, $texts['internal_warnings'], [$consultationWarning]));
         if ($customerWarnings !== []) {
             $document->heading('Avisos da análise');
             foreach ($customerWarnings as $warning) {

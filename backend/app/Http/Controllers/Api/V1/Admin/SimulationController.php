@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Calculation\Exceptions\ExpiredSimulationException;
 use App\Calculation\Services\ReportRecalculationService;
+use App\Calculation\Services\SimulationReportCalculationEngine;
 use App\Http\Controllers\Controller;
 use App\Models\Simulation;
+use App\Reports\PdfReportGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -79,6 +81,63 @@ class SimulationController extends Controller
         }
 
         return response()->json(['data' => $report]);
+    }
+
+    /** Preview a demand scenario without changing the customer's report. */
+    public function previewDemand(Request $request, int $id, SimulationReportCalculationEngine $engine): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+        $simulation = Simulation::query()->with(['invoices.items', 'report', 'user.profile'])->findOrFail($id);
+        abort_unless($simulation->report !== null && $simulation->status === 'completed', 422, 'É necessário um relatório de simulação concluída.');
+
+        return response()->json(['data' => $this->previewAttributes($request, $simulation, $engine)]);
+    }
+
+    /** Download the saved report or a temporary demand scenario using the customer's PDF layout. */
+    public function pdf(Request $request, int $id, PdfReportGenerator $generator, SimulationReportCalculationEngine $engine): \Symfony\Component\HttpFoundation\Response
+    {
+        $this->authorizeAdmin($request);
+        $simulation = Simulation::query()->with(['report', 'invoices.items', 'user.profile'])->findOrFail($id);
+        if ($simulation->status !== 'completed' || $simulation->report === null) {
+            return response()->json([
+                'message' => 'O relatório ainda não está disponível.',
+                'code' => 'REPORT_NOT_READY',
+                'errors' => null,
+            ], 409);
+        }
+
+        $report = $simulation->report;
+        if ($request->isMethod('post')) {
+            $report = clone $report;
+            $report->fill($this->previewAttributes($request, $simulation, $engine));
+        }
+        $report->setRelation('simulation', $simulation);
+
+        return response($generator->generate($report), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="relatorio-enerdiag-'.$simulation->id.'.pdf"',
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function previewAttributes(Request $request, Simulation $simulation, SimulationReportCalculationEngine $engine): array
+    {
+        $slots = match ($simulation->invoices->sortBy('reference_month')->last()?->tariff_modality) {
+            'blue' => ['peak', 'off_peak'],
+            'green' => ['unique'],
+            default => [],
+        };
+        abort_if($slots === [], 422, 'Modalidade indisponível para simular demandas.');
+        $rules = ['demands' => ['required', 'array:'.implode(',', $slots)]];
+        foreach ($slots as $slot) {
+            $rules['demands.'.$slot] = ['required', 'integer', 'min:0', 'max:1000000'];
+        }
+        $validated = $request->validate($rules);
+        $demands = array_map(static fn ($value): string => number_format((float) $value, 3, '.', ''), $validated['demands']);
+        $result = $engine->calculate($simulation, $demands);
+        abort_if(in_array('demand_optimization_unavailable', $result->calculatedAttributes['warnings'], true), 422, 'Dados insuficientes para simular as demandas.');
+
+        return $result->calculatedAttributes;
     }
 
     private function authorizeAdmin(Request $request): void

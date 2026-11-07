@@ -97,6 +97,15 @@ class AdminSimulationRecalculationTest extends TestCase
             ->assertJsonPath('code', 'SIMULATION_EXPIRED');
     }
 
+    public function test_demand_preview_is_restricted_to_admin(): void
+    {
+        $customer = User::factory()->create();
+        $simulation = $customer->simulations()->create(['status' => 'completed']);
+        $url = '/api/v1/admin/simulations/'.$simulation->id.'/preview-demand';
+        $this->postJson($url, ['demands' => ['peak' => 100]])->assertUnauthorized();
+        $this->actingAs($customer)->postJson($url, ['demands' => ['peak' => 100]])->assertForbidden();
+    }
+
     public function test_only_admin_can_recalculate_a_simulation(): void
     {
         $customer = User::factory()->create();

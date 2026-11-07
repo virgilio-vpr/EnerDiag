@@ -32,6 +32,60 @@ class EnelInvoiceReaderTest extends TestCase
         $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
     }
 
+    public function test_it_matches_idle_tariffs_by_order_when_the_reference_column_has_rounding_differences(): void
+    {
+        $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');
+        $text = str_replace(['0,009,52000', '0,0015,87500'], ['0,009,51000', '0,0015,87000'], $text);
+
+        $invoice = (new EnelInvoiceReader)->read($text);
+
+        $this->assertSame('10.05771', $this->item($invoice->items, 'idle_demand', 'off_peak')->unitPriceTaxed);
+        $this->assertSame('16.77221', $this->item($invoice->items, 'idle_demand', 'peak')->unitPriceTaxed);
+        $this->assertNotContains('idle_demand_post_matching_unresolved', $invoice->warnings);
+    }
+
+    public function test_it_includes_flag_charges_in_full_or_short_format_when_reconciling_the_invoice_total(): void
+    {
+        foreach ([
+            'ADIC. BANDEIRA TARIFÁRIA FP 0,000 0,00000 100,00 0,00 0,00 0% 0,00 0,00000',
+            'ADICIONAL DE BANDEIRA TARIFÁRIA FORA DE PONTA KWH 100,000 1,00000 100,00 0,00 0,00 0% 0,00 1,00000',
+            'ADICIONAL BANDEIRA VERMELHA PATAMAR 2 PONTA 100,00 0,00 0,00 0% 0,00',
+            'ADICIONAL BANDEIRA AMARELA 100,00 0,00 0,00 0% 0,00',
+        ] as $flagLine) {
+            $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');
+            $text = str_replace('COSIP -', $flagLine."\nCOSIP -", $text);
+            $text = str_replace(['42.446,32', '50.626,45'], ['42.546,32', '50.726,45'], $text);
+
+            $invoice = (new EnelInvoiceReader)->read($text);
+            $flags = array_values(array_filter($invoice->items, static fn ($item): bool => str_contains($item->sourceLabel ?? '', 'BANDEIRA')));
+
+            $this->assertCount(1, $flags, $flagLine);
+            $this->assertSame('100.00', $flags[0]->amount);
+            $this->assertSame('other_charge', $flags[0]->itemType);
+            $this->assertSame('42546.32', $invoice->totalPaid);
+            $this->assertNotContains('invoice_billing_total_mismatch', $invoice->warnings);
+            $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
+        }
+    }
+
+    public function test_it_reads_the_tusd_billing_adjustment_that_otherwise_blocks_the_october_invoice(): void
+    {
+        foreach (['DIF.FATUR.TUSD - HOMOLOG. CCEE', 'DIF. FATUR. TUSD - HOMOLOG. CCEE'] as $label) {
+            $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');
+            $text = str_replace('CONSUMO ATIVO PONTA TUSD', $label."\t0,000 0,00000 93,08 0,01 0,00 0% 0,000,00000\nCONSUMO ATIVO PONTA TUSD", $text);
+            $text = str_replace(['42.446,32', '50.626,45'], ['42.539,40', '50.719,53'], $text);
+
+            $invoice = (new EnelInvoiceReader)->read($text);
+            $adjustments = array_values(array_filter($invoice->items, static fn ($item): bool => str_contains($item->sourceLabel ?? '', 'HOMOLOG. CCEE')));
+
+            $this->assertCount(1, $adjustments);
+            $this->assertSame('93.08', $adjustments[0]->amount);
+            $this->assertSame('other_charge', $adjustments[0]->itemType);
+            $this->assertNotContains('invoice_billing_total_mismatch', $invoice->warnings);
+            $this->assertNull((new InvoiceExtractionValidator)->validate([$invoice]));
+        }
+    }
+
     public function test_it_warns_when_a_billing_row_is_missing_instead_of_silently_accepting_a_partial_table(): void
     {
         $text = file_get_contents(__DIR__.'/../Fixtures/enel-discounted-text-blue.txt');

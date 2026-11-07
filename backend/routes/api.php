@@ -46,6 +46,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/customers/{id}', [AdminCustomerController::class, 'show'])->whereNumber('id');
     Route::get('/simulations', [AdminSimulationController::class, 'index']);
     Route::get('/simulations/{id}', [AdminSimulationController::class, 'show'])->whereNumber('id');
+    Route::get('/simulations/{id}/pdf', [AdminSimulationController::class, 'pdf'])->whereNumber('id');
+    Route::post('/simulations/{id}/preview-demand/pdf', [AdminSimulationController::class, 'pdf'])->whereNumber('id');
+    Route::post('/simulations/{id}/preview-demand', [AdminSimulationController::class, 'previewDemand'])->whereNumber('id');
     Route::post('/simulations/{id}/recalculate', [AdminSimulationController::class, 'recalculate'])->whereNumber('id');
     Route::get('/tariffs', [AdminTariffController::class, 'index']);
     Route::post('/tariffs', [AdminTariffController::class, 'store']);

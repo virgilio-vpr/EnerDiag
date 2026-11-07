@@ -1,7 +1,6 @@
 import { simulationStatusLabel } from '../services/presentation'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState } from 'react'
-import { CompanyContactDetails } from '../components/CompanyContactDetails'
 import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
 import { loadSimulationReport } from './reportLoader'
 
@@ -96,7 +95,7 @@ export function CustomerSimulationsPage() {
   const toRemove = Math.max(1, total - limit + 1)
   const canCreate = result?.meta.can_create === true && !loading && busy === null
   return <section className="simulations-page" aria-labelledby="simulations-title">
-    <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p><CompanyContactDetails /></div>
+    <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p></div>
       <div className="simulation-card-actions">{canCreate ? <NavigationLink variant="primary" href="/upload-faturas?new=1">Nova simulação</NavigationLink> : <button className="button" disabled type="button">Nova simulação</button>}<button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => setReload((value) => value + 1)}>Atualizar</button></div>
     </div>
     {error && <p className="field-error" role="alert">{error}</p>}

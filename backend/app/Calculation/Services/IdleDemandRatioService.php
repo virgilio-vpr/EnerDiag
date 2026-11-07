@@ -149,7 +149,12 @@ final class IdleDemandRatioService
                 }
             }
 
-            foreach ($month->idleDemandItems as $idleItem) {
+            $tariffAssignment = $this->idleAssignmentsByTariff($month, array_keys($month->idleDemandItems));
+            foreach ($month->idleDemandItems as $index => $idleItem) {
+                $assignedSlot = $tariffAssignment[$index] ?? $idleItem->timeSlot;
+                if (in_array($assignedSlot, ['peak', 'off_peak', 'unique'], true) && $assignedSlot !== $timeSlot) {
+                    continue;
+                }
                 if ($idleItem->unitPriceTaxed === null || $normalItem->unitPriceTaxed === null
                     || bccomp($normalItem->unitPriceTaxed, '0', 5) <= 0) {
                     continue;
@@ -286,6 +291,15 @@ final class IdleDemandRatioService
             return [$assignments, []];
         }
 
+        $tariffAssignment = $this->idleAssignmentsByTariff($month, $unmatched, array_keys($assignments));
+        if ($tariffAssignment !== null) {
+            foreach ($tariffAssignment as $position => $slot) {
+                $assignments[$slot] = $unmatched[$position];
+            }
+
+            return [$assignments, []];
+        }
+
         $eligibleSlots = array_values(array_filter($timeSlots, function (string $timeSlot) use ($month, $resolved): bool {
             if (! isset($month->contractedDemandByTimeSlot[$timeSlot], $month->measuredDemandByTimeSlot[$timeSlot])
                 || ! isset($month->normalDemandItemsByTimeSlot[$timeSlot])
@@ -322,6 +336,26 @@ final class IdleDemandRatioService
         }
 
         return [$assignments + $best['assignments'], []];
+    }
+
+    /**
+     * @param  list<int>  $indexes
+     * @param  list<string>  $assignedSlots
+     * @return list<string>|null
+     */
+    private function idleAssignmentsByTariff(DemandMonthData $month, array $indexes, array $assignedSlots = []): ?array
+    {
+        return (new IdleDemandTariffMatcher)->match(
+            array_map(static fn (int $index): array => [
+                'tariff_rate' => $month->idleDemandItems[$index]->tariffRate,
+                'unit_price_taxed' => $month->idleDemandItems[$index]->unitPriceTaxed,
+            ], $indexes),
+            array_map(static fn (ExtractedInvoiceItemData $item): array => [
+                'tariff_rate' => $item->tariffRate,
+                'unit_price_taxed' => $item->unitPriceTaxed,
+                'icms_rate' => $item->icmsRate,
+            ], array_diff_key($month->normalDemandItemsByTimeSlot, array_flip($assignedSlots))),
+        );
     }
 
     /**

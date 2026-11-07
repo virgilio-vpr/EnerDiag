@@ -3,6 +3,7 @@
 namespace App\Invoices\Readers;
 
 use App\Calculation\Data\ExtractedInvoiceData;
+use App\Calculation\Services\IdleDemandTariffMatcher;
 use InvalidArgumentException;
 
 final class EnelInvoiceReader implements InvoiceReader
@@ -134,7 +135,8 @@ final class EnelInvoiceReader implements InvoiceReader
 
         foreach ([
             ['~(?:DEDU[CÇ][AÃ]O\s+)?ENERGIA\s+ACL\s+KWH\s*~iu', 'regular', 'kWh'],
-            ['~(?:ADICIONAL|ADIC\.)\s+BANDEIRA\s+(?:TARIF[AÁ]RIA\s+|AMARELA\s+|VERMELHA\s+)?(?:FP|PT)\s*~iu', 'regular', null],
+            ['~(?:ADICIONAL|ADIC\.?)\s+(?:DE\s+)?BANDEIRA(?:\s+TARIF[AÁ]RIA)?(?:\s+(?:AMARELA|VERMELHA)(?:\s+PATAMAR\s+[12])?)?(?:\s+(?:FORA\s+(?:DE\s+)?PONTA|F\.?\s*PONTA|PONTA|FP|PT))?\s*(?:KWH\s*)?(?=[+-]?\d)~iu', 'short_charge', null],
+            ['~DIF\.?\s*FATUR\.?\s*TUSD\s*[-–]\s*HOMOLOG\.?\s*CCEE\s*(?:KWH\s*)?~iu', 'short_charge', null],
             ['~ENCARGO\s+(?:CONTA\s+)?ESCASSEZ\s+H[IÍ]DRICA\s+KWH\s*~iu', 'regular', 'kWh'],
             ['~BENEF[IÍ]CIO\s+TARIF[AÁ]RIO\s+(?:BRUTO|L[IÍ]QUIDO)\s*~iu', 'regular', null],
             ['~COSIP\s*-\s*S[AÃ]O\s+PAULO\s*-\s*MUNICIPAL\s*~iu', 'short_charge', null],
@@ -290,7 +292,7 @@ final class EnelInvoiceReader implements InvoiceReader
         }
 
         $slots = $modality === 'green' ? ['unique'] : ['peak', 'off_peak'];
-        $tariffAssignment = $this->idleRowsByTariff($idleRows, $slots, $normalDemandBySlot);
+        $tariffAssignment = (new IdleDemandTariffMatcher)->match($idleRows, $normalDemandBySlot);
         if ($tariffAssignment !== null) {
             return [$this->idleDemandItems($idleRows, $tariffAssignment), []];
         }
@@ -347,49 +349,6 @@ final class EnelInvoiceReader implements InvoiceReader
         }
 
         return $items;
-    }
-
-    /**
-     * @param  list<array<string, mixed>>  $idleRows
-     * @param  list<string>  $slots
-     * @param  array<string, array<string, mixed>>  $normalDemandBySlot
-     * @return list<string>|null
-     */
-    private function idleRowsByTariff(array $idleRows, array $slots, array $normalDemandBySlot): ?array
-    {
-        if (count($idleRows) !== count($slots)) {
-            return null;
-        }
-
-        $assignment = [];
-        $usedSlots = [];
-        foreach ($idleRows as $row) {
-            if (! is_string($row['tariff_rate'] ?? null)) {
-                return null;
-            }
-
-            $matchedSlot = null;
-            foreach ($slots as $slot) {
-                $normalTariffRate = $normalDemandBySlot[$slot]['tariff_rate'] ?? null;
-                if (isset($usedSlots[$slot]) || ! is_string($normalTariffRate)) {
-                    continue;
-                }
-
-                if (bccomp($row['tariff_rate'], $normalTariffRate, 5) === 0) {
-                    $matchedSlot = $slot;
-                    break;
-                }
-            }
-
-            if ($matchedSlot === null) {
-                return null;
-            }
-
-            $assignment[] = $matchedSlot;
-            $usedSlots[$matchedSlot] = true;
-        }
-
-        return $assignment;
     }
 
     /** @param list<string> $slots

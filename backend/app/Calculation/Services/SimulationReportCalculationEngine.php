@@ -23,7 +23,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
         private readonly RegulatoryParameterService $parameterService,
     ) {}
 
-    public function calculate(Simulation $simulation): RecalculatedReportData
+    public function calculate(Simulation $simulation, array $demandOverrides = []): RecalculatedReportData
     {
         $invoices = $simulation->invoices->sortBy('reference_month')->values()->map(
             static fn ($invoice): ExtractedInvoiceData => ExtractedInvoiceData::fromArray([
@@ -58,7 +58,7 @@ final class SimulationReportCalculationEngine implements ReportCalculationEngine
             $invoices,
         );
         $ratios = $this->idleDemandRatioService->resolve($demandMonths, true);
-        $demandOptimization = $this->reportDemandOptimizationService->calculate($invoices, $demandMonths, $ratios, $simulation->user?->profile?->distributor_id);
+        $demandOptimization = $this->reportDemandOptimizationService->calculate($invoices, $demandMonths, $ratios, $simulation->user?->profile?->distributor_id, $demandOverrides);
         $migration = $this->reportTariffMigrationService->compare($simulation, $invoices, $demandMonths, $ratios);
         $migrationMonthly = $migration->savings !== null && count($invoices) > 0
             ? bcadd(bcdiv($migration->savings, (string) count($invoices), 8), '0.005', 2)

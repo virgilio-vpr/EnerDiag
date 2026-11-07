@@ -71,6 +71,20 @@ class SequentialInvoiceImportTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_a_recognized_tusd_adjustment_is_saved_and_does_not_block_calculation(): void
+    {
+        $id = $this->startImport();
+        $text = file_get_contents(base_path('tests/Fixtures/enel-discounted-text-blue.txt'));
+        $text = str_replace('CONSUMO ATIVO PONTA TUSD', "DIF.FATUR.TUSD - HOMOLOG. CCEE\t0,000 0,00000 93,08 0,01 0,00 0% 0,000,00000\nCONSUMO ATIVO PONTA TUSD", $text);
+        $text = str_replace(['42.446,32', '50.626,45'], ['42.539,40', '50.719,53'], $text);
+        $this->mock(PdfTextParser::class)->shouldReceive('extract')->once()->andReturn($text);
+
+        $this->postJson("/api/v1/invoice-imports/{$id}/invoices", ['invoice' => $this->pdf('october-adjustment.pdf')])->assertCreated();
+        $this->assertDatabaseHas('invoice_items', ['source_label' => 'DIF.FATUR.TUSD - HOMOLOG. CCEE', 'amount' => '93.08']);
+        $this->postJson("/api/v1/invoice-imports/{$id}/complete")->assertOk()->assertJsonPath('data.status', 'completed');
+        $this->assertDatabaseCount('reports', 1);
+    }
+
     public function test_it_preserves_incomplete_reading_for_review_but_blocks_calculation(): void
     {
         $id = $this->startImport();

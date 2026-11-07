@@ -1,7 +1,8 @@
-import { simulationStatusLabel, modalityLabel, adminWarningTexts, formatDecimal } from '../services/presentation'
+import { simulationStatusLabel } from '../services/presentation'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { ApiError, apiRequest } from '../services/api/client'
+import { SimulationReportView, type Report as CustomerReport } from './SimulationReportPage'
 
 type PageMeta = { current_page: number; last_page: number; per_page: number; total: number }
 type SimulationRow = {
@@ -19,16 +20,7 @@ type Revision = {
   explanatory_texts: string[] | Record<string, string> | null
   recommendations: string[] | Record<string, string> | null
 }
-type Report = {
-  id: number
-  total_monthly_savings: string | null
-  total_yearly_savings: string | null
-  savings_percentage: string | null
-  demand_savings_monthly: string | null
-  overrun_savings_monthly: string | null
-  reactive_savings_monthly: string | null
-  migration_savings_monthly: string | null
-  recommended_modality: string | null
+type Report = Omit<CustomerReport, 'explanatory_texts' | 'recommendations' | 'warnings' | 'months_count' | 'simulation_id'> & {
   algorithm_version: string | null
   explanatory_texts: string[] | Record<string, string> | null
   recommendations: string[] | Record<string, string> | null
@@ -38,7 +30,9 @@ type Report = {
 type SimulationReportData = {
   id: number
   status: string
+  months_count?: number | null
   customer: { id: number; name: string; email: string } | null
+  invoices?: { tariff_modality: string; reference_month: string; items?: { item_type: string; time_slot: string; quantity: string }[] }[]
   report: Report | null
 }
 
@@ -49,6 +43,21 @@ function money(value: string | null) {
 function textList(value: string[] | Record<string, string> | null | undefined) {
   if (!value) return []
   return (Array.isArray(value) ? value : Object.values(value)).filter((text): text is string => typeof text === 'string')
+}
+
+function contractedDemands(simulation: SimulationReportData) {
+  const latest = simulation.invoices?.slice().sort((a, b) => a.reference_month.localeCompare(b.reference_month)).at(-1)
+  return Object.fromEntries((latest?.items ?? []).filter((item) => item.item_type === 'contracted_demand').map((item) => [item.time_slot, String(Number(item.quantity))]))
+}
+
+function optimalDemands(simulation: SimulationReportData) {
+  const contracted = contractedDemands(simulation)
+  const modality = simulation.invoices?.slice().sort((a, b) => a.reference_month.localeCompare(b.reference_month)).at(-1)?.tariff_modality
+  const recommendations = modality === 'blue'
+    ? { peak: simulation.report?.optimal_demand_peak, off_peak: simulation.report?.optimal_demand_off_peak }
+    : modality === 'green' ? { unique: simulation.report?.optimal_demand_single } : {}
+
+  return Object.fromEntries(Object.entries(recommendations).map(([slot, demand]) => [slot, demand ? String(Number(demand)) : contracted[slot] ?? '']))
 }
 
 function ReportFrame({ title, children }: { title: string; children: ReactNode }) {
@@ -108,11 +117,18 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
   const [recommendations, setRecommendations] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState<'save' | 'resend' | 'recalculate' | null>(null)
+  const [busy, setBusy] = useState<'save' | 'resend' | 'recalculate' | 'preview' | null>(null)
+
+  const [demands, setDemands] = useState<Record<string, string>>({})
+  const [previewDemands, setPreviewDemands] = useState<Record<string, string> | undefined>()
+  const [preview, setPreview] = useState<Partial<CustomerReport> | null>(null)
 
   async function loadSimulation() {
     const response = await apiRequest<{ data: SimulationReportData }>(`/admin/simulations/${simulationId}`)
     setSimulation(response.data)
+    setDemands(optimalDemands(response.data))
+    setPreview(null)
+    setPreviewDemands(undefined)
     setExplanatoryText(textList(response.data.report?.explanatory_texts).join('\n'))
     setRecommendations(textList(response.data.report?.recommendations).join('\n'))
   }
@@ -123,6 +139,7 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
       .then((response) => {
         if (!active) return
         setSimulation(response.data)
+        setDemands(optimalDemands(response.data))
         setExplanatoryText(textList(response.data.report?.explanatory_texts).join('\n'))
         setRecommendations(textList(response.data.report?.recommendations).join('\n'))
       })
@@ -177,6 +194,26 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
     } finally { setBusy(null) }
   }
 
+  async function previewDemand(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBusy('preview')
+    setError('')
+    setPreview(null)
+    try {
+      const response = await apiRequest<{ data: Partial<CustomerReport> }>(`/admin/simulations/${simulationId}/preview-demand`, {
+        method: 'POST', body: JSON.stringify({ demands }),
+      })
+      setPreview(response.data)
+      setPreviewDemands({ ...demands })
+    } catch (reason) {
+      setError(reason instanceof ApiError ? reason.message : 'Não foi possível simular as demandas.')
+    } finally { setBusy(null) }
+  }
+
+  const modality = simulation?.invoices?.slice().sort((a, b) => a.reference_month.localeCompare(b.reference_month)).at(-1)?.tariff_modality
+  const demandSlots = modality === 'blue'
+    ? [{ key: 'peak', label: 'Demanda de ponta (kW)' }, { key: 'off_peak', label: 'Demanda fora de ponta (kW)' }]
+    : modality === 'green' ? [{ key: 'unique', label: 'Demanda única (kW)' }] : []
   const report = simulation?.report
   return <ReportFrame title="Relatório da simulação">
     {error && <p className="field-error" role="alert">{error}</p>}
@@ -185,21 +222,35 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
     {simulation && !report && <p>Esta simulação ainda não possui relatório.</p>}
     {simulation && report && <>
       <p className="access-intro">Simulação #{simulation.id} · {simulation.customer?.name ?? 'Cliente não identificado'} · Situação: {simulationStatusLabel(simulation.status)}</p>
-      <section className="admin-report-results" aria-labelledby="admin-report-results-title">
-        <h2 id="admin-report-results-title">Resultados calculados (somente leitura)</h2>
-        <dl className="admin-details">
-          <div><dt>Economia mensal</dt><dd>{money(report.total_monthly_savings)}</dd></div>
-          <div><dt>Economia anual</dt><dd>{money(report.total_yearly_savings)}</dd></div>
-          <div><dt>Percentual do valor médio pago</dt><dd>{report.savings_percentage === null ? '—' : `${formatDecimal(report.savings_percentage, 2)}%`}</dd></div>
-          <div><dt>Modalidade recomendada</dt><dd>{modalityLabel(report.recommended_modality)}</dd></div>
-          <div><dt>Economia mensal por demanda</dt><dd>{money(report.demand_savings_monthly)}</dd></div>
-          <div><dt>Economia mensal por ultrapassagem</dt><dd>{money(report.overrun_savings_monthly)}</dd></div>
-          <div><dt>Economia mensal por reativos</dt><dd>{money(report.reactive_savings_monthly)}</dd></div>
-          <div><dt>Economia mensal por troca entre Azul e Verde</dt><dd>{money(report.migration_savings_monthly)}</dd></div>
-          <div><dt>Versão do algoritmo</dt><dd>{report.algorithm_version ?? '—'}</dd></div>
-        </dl>
-        {adminWarningTexts(textList(report.warnings)).length > 0 && <div className="admin-report-warnings"><h3>Avisos</h3><ul>{adminWarningTexts(textList(report.warnings)).map((warning, index) => <li key={`${index}-${warning}`}>{warning}</li>)}</ul></div>}
-      </section>
+      <SimulationReportView
+        report={{
+          ...report, ...preview,
+          simulation_id: simulation.id,
+          months_count: simulation.months_count ?? 0,
+          chart_series: preview?.chart_series ?? report.chart_series ?? {},
+          warnings: textList(preview?.warnings ?? report.warnings),
+          explanatory_texts: !Array.isArray(report.explanatory_texts) ? report.explanatory_texts ?? {} : {},
+          recommendations: textList(report.recommendations),
+          r_values: preview?.r_values ?? report.r_values ?? [],
+        }}
+        simulationId={simulationId}
+        backHref="/admin/simulations"
+        backLabel="Simulações"
+        pdfEndpoint={preview ? `/admin/simulations/${simulationId}/preview-demand/pdf` : `/admin/simulations/${simulationId}/pdf`}
+        pdfDemands={preview ? previewDemands : undefined}
+      >
+        {simulation.status === 'completed' && demandSlots.length > 0 && <form className="admin-report-form" onSubmit={previewDemand}>
+          <h2>Simular demandas online</h2>
+          <p>Os campos começam com as demandas ótimas indicadas pelo motor. Ajuste os valores para testar outros cenários. A prévia é exclusiva do admin e não altera o relatório do cliente.</p>
+          {demandSlots.map((slot) => <label key={slot.key}>{slot.label}
+            <input type="number" min="0" max="1000000" step="1" required disabled={busy !== null} value={demands[slot.key] ?? ''} onChange={(event) => { setDemands({ ...demands, [slot.key]: event.target.value }); setPreview(null); setPreviewDemands(undefined) }} />
+          </label>)}
+          <button className="button" type="submit" disabled={busy !== null}>{busy === 'preview' ? 'Simulando…' : 'Simular demandas'}</button>
+          {preview && <p role="status">Prévia das demandas aplicadas ao relatório e aos gráficos. Valores negativos indicam aumento de custo.</p>}
+          <button className="button button--secondary" type="button" disabled={busy !== null || !preview} onClick={() => { setPreview(null); setPreviewDemands(undefined); setDemands(optimalDemands(simulation)) }}>Restaurar relatório original</button>
+        </form>}
+
+      </SimulationReportView>
 
       <form className="admin-report-form" onSubmit={saveText}>
         <h2>Textos explicativos e recomendações</h2>
