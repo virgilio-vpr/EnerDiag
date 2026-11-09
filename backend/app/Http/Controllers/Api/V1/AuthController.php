@@ -34,8 +34,8 @@ class AuthController extends Controller
     #[BodyParam('name', 'string', 'Nome do responsável.', required: true, example: 'Ana Souza')]
     #[BodyParam('email', 'string', 'E-mail de acesso.', required: true, example: 'ana@empresa.com.br')]
     #[BodyParam('company_name', 'string', 'Nome da empresa.', required: true, example: 'Empresa Exemplo Ltda.')]
-    #[BodyParam('password', 'string', 'Senha com pelo menos 10 caracteres, letras e números.', required: true, example: 'EnergiaSegura2026')]
-    #[BodyParam('password_confirmation', 'string', 'Confirmação da senha.', required: true, example: 'EnergiaSegura2026')]
+    #[BodyParam('password', 'string', 'Senha com pelo menos 8 caracteres, letras maiúsculas e minúsculas, números e pelo menos um caractere especial.', required: true, example: 'EnergiaSegura2026!')]
+    #[BodyParam('password_confirmation', 'string', 'Confirmação da senha.', required: true, example: 'EnergiaSegura2026!')]
     #[BodyParam('terms_accepted', 'boolean', 'Aceite dos Termos de Uso e da Política de Privacidade.', required: true, example: true)]
     #[Response(
         status: 201,
@@ -102,7 +102,7 @@ class AuthController extends Controller
      */
     #[Endpoint('Entrar', 'Autentica a conta confirmada e devolve um token Bearer válido por duas horas.')]
     #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
-    #[BodyParam('password', 'string', 'Senha da conta.', required: true, example: 'EnergiaSegura2026')]
+    #[BodyParam('password', 'string', 'Senha da conta.', required: true, example: 'EnergiaSegura2026!')]
     #[BodyParam('totp_code', 'string', 'Código do autenticador, obrigatório para admin com TOTP ativo.', required: false, example: '123456')]
     #[Response(status: 422, content: '{"message":"Informe o código do seu autenticador.","code":"VALIDATION_ERROR","errors":{"totp_code":["Informe o código do seu autenticador."]}}', description: 'Código TOTP ausente, inválido, expirado ou já utilizado')]
     #[Response(status: 200, content: '{"token":"1|token-em-texto-plano","token_type":"Bearer","expires_at":"2026-10-24T18:00:00Z","user":{"id":1,"name":"Ana Souza","email":"ana@empresa.com.br","role":"customer"}}', description: 'Autenticação concluída')]
@@ -179,8 +179,8 @@ class AuthController extends Controller
     #[Endpoint('Redefinir senha', 'Redefine a senha usando o link de uso único recebido por e-mail.')]
     #[BodyParam('email', 'string', 'E-mail da conta.', required: true, example: 'ana@empresa.com.br')]
     #[BodyParam('token', 'string', 'Token recebido no link de redefinição.', required: true, example: 'token-de-uso-unico')]
-    #[BodyParam('password', 'string', 'Nova senha com pelo menos 10 caracteres, letras e números.', required: true, example: 'NovaSenhaSegura2026')]
-    #[BodyParam('password_confirmation', 'string', 'Confirmação da nova senha.', required: true, example: 'NovaSenhaSegura2026')]
+    #[BodyParam('password', 'string', 'Nova senha com pelo menos 8 caracteres, letras maiúsculas e minúsculas, números e pelo menos um caractere especial.', required: true, example: 'NovaSenhaSegura2026!')]
+    #[BodyParam('password_confirmation', 'string', 'Confirmação da nova senha.', required: true, example: 'NovaSenhaSegura2026!')]
     #[Response(status: 200, content: '{"message":"Senha redefinida com sucesso."}', description: 'Senha atualizada')]
     #[Response(status: 422, content: '{"message":"Os dados informados são inválidos.","code":"VALIDATION_ERROR","errors":{"token":["O link é inválido ou expirou."]}}', description: 'Link inválido, expirado ou já utilizado')]
     public function resetPassword(ResetPasswordRequest $request): JsonResponse

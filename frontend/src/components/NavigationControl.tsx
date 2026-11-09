@@ -1,3 +1,4 @@
+import { SectionLink } from './SectionLink'
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 
 type Direction = 'back' | 'forward'
@@ -16,7 +17,7 @@ function navigationClass(direction: Direction, variant: 'secondary' | 'primary',
 }
 
 export function NavigationLink({ direction = 'forward', variant = 'secondary', className = '', children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & NavigationOptions) {
-  return <a {...props} className={navigationClass(direction, variant, className)}><NavigationContent direction={direction}>{children}</NavigationContent></a>
+  return <SectionLink {...props} className={navigationClass(direction, variant, className)}><NavigationContent direction={direction}>{children}</NavigationContent></SectionLink>
 }
 
 export function NavigationButton({ direction = 'forward', variant = 'secondary', className = '', children, type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & NavigationOptions) {

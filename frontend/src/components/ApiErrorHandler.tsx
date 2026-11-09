@@ -9,7 +9,8 @@ export function ApiErrorHandler() {
     function handleApiError(event: Event) {
       const apiError = (event as CustomEvent<ApiError>).detail
       if (apiError.status === 401) {
-        window.history.pushState({}, '', '/login')
+        setError(null)
+        return
       }
       setError(apiError)
     }

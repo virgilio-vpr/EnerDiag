@@ -1,3 +1,4 @@
+import { MessageDialog } from '../components/MessageDialog'
 import { simulationStatusLabel } from '../services/presentation'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState } from 'react'
@@ -28,6 +29,7 @@ export function CustomerSimulationsPage() {
   const [confirmation, setConfirmation] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [showLimitMessage, setShowLimitMessage] = useState(false)
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -96,11 +98,16 @@ export function CustomerSimulationsPage() {
   const canCreate = result?.meta.can_create === true && !loading && busy === null
   return <section className="simulations-page" aria-labelledby="simulations-title">
     <div className="simulations-heading"><div className="simulations-heading-copy"><p className="section-eyebrow">Suas análises de energia</p><h1 id="simulations-title">Minhas simulações</h1><p>Você pode manter até {limit} simulações, incluindo os envios em andamento.</p></div>
-      <div className="simulation-card-actions">{canCreate ? <NavigationLink variant="primary" href="/upload-faturas?new=1">Nova simulação</NavigationLink> : <button className="button" disabled type="button">Nova simulação</button>}<button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => setReload((value) => value + 1)}>Atualizar</button></div>
+      <div className="simulation-card-actions">{canCreate ? <NavigationLink variant="primary" href="/upload-faturas?new=1">Nova simulação</NavigationLink> : <button className="button" disabled={loading || busy !== null || !result} type="button" onClick={() => setShowLimitMessage(true)}>Nova simulação</button>}</div>
     </div>
-    {error && <p className="field-error" role="alert">{error}</p>}
+    {error && <div><p className="field-error" role="alert">{error}</p><button className="text-button" type="button" disabled={loading || busy !== null} onClick={() => { setError(''); setReload((value) => value + 1) }}>Tentar novamente</button></div>}
     {notice && <p className="form-success" role="status">{notice}</p>}
     <p aria-live="polite">{total} {total === 1 ? 'simulação salva' : 'simulações salvas'} · Limite de {limit}</p>
+    {showLimitMessage && <MessageDialog title="Limite de simulações atingido" onClose={() => setShowLimitMessage(false)}>
+      <p>Você já tem {total} {total === 1 ? 'simulação salva' : 'simulações salvas'}. O limite é de {limit} por conta, incluindo os envios em andamento.</p>
+      <p>Para iniciar uma nova, exclua {toRemove === 1 ? 'uma das simulações' : `${toRemove} simulações`} usando a opção <strong>Excluir</strong> na lista abaixo.</p>
+      <p>A exclusão remove as faturas e o relatório daquela simulação e precisa da sua confirmação.</p>
+    </MessageDialog>}
     {total >= limit && <p className="simulation-limit-message">Exclua {toRemove} {toRemove === 1 ? 'simulação' : 'simulações'} para iniciar uma nova. A exclusão remove as faturas lidas e o relatório dessa análise.</p>}
     {result?.data.length === 0 && <p className="simulation-empty">Você ainda não tem simulações. Clique em Nova simulação para enviar suas faturas.</p>}
     <div className="simulation-cards">{result?.data.map((simulation) => <article className="simulation-card" key={simulation.id} aria-labelledby={`simulation-${simulation.id}`}>

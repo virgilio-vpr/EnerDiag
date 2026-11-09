@@ -48,7 +48,7 @@ class PasswordResetTest extends TestCase
             ->assertOk()
             ->assertJsonPath('message', 'Senha redefinida com sucesso.');
 
-        $this->assertTrue(Hash::check('NovaSenhaSegura2026', $user->fresh()->password_hash));
+        $this->assertTrue(Hash::check('Abcd12!x', $user->fresh()->password_hash));
         $this->assertDatabaseCount('password_reset_tokens', 0);
         $this->assertDatabaseCount('personal_access_tokens', 0);
 
@@ -110,7 +110,7 @@ class PasswordResetTest extends TestCase
     /**
      * @return array{email: string, token: string, password: string, password_confirmation: string}
      */
-    private function resetPayload(User $user, string $token, string $password = 'NovaSenhaSegura2026'): array
+    private function resetPayload(User $user, string $token, string $password = 'Abcd12!x'): array
     {
         return [
             'email' => $user->email,

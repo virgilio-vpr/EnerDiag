@@ -1,3 +1,4 @@
+import './pages/SimulationReportPage'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -92,17 +93,48 @@ describe('application shell', () => {
     await waitFor(() => expect(getAuthToken()).toBeNull())
   })
 
-  it('preserves the in-memory session when navigating through an internal link', async () => {
+  it.each(['customer', 'admin'] as const)('preserves the %s session and disables navigation to the current profile', async (role) => {
     setAuthToken('customer-session')
-    setAuthenticatedUser({ id: 1, role: 'customer' })
+    setAuthenticatedUser({ id: 1, role })
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify({
-      data: String(input).endsWith('/distributors') ? [] : { name: 'Cliente', email: 'customer@example.test', phone: '', profile: null },
+      data: String(input).endsWith('/distributors') ? [] : { role, name: 'Cliente', email: 'customer@example.test', phone: '', profile: null },
     }), { status: 200, headers: { 'Content-Type': 'application/json' } })))
     render(<App />)
     fireEvent.click(screen.getByRole('link', { name: 'Meu perfil' }))
     expect(window.location.pathname).toBe('/perfil')
     expect(await screen.findByRole('heading', { name: 'Meu perfil' })).toBeInTheDocument()
     expect(getAuthToken()).toBe('customer-session')
+    fireEvent.change(screen.getByLabelText('Nome do responsável'), { target: { value: 'Nome em edição' } })
+    const currentProfile = screen.getByRole('button', { name: 'Meu perfil' })
+    expect(currentProfile).toBeDisabled()
+    expect(currentProfile).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('link', { name: 'Meu perfil' })).not.toBeInTheDocument()
+    const historyLength = window.history.length
+    for (let click = 0; click < 2; click++) {
+      fireEvent.click(currentProfile)
+    }
+    expect(window.history.length).toBe(historyLength)
+    expect(window.location.pathname).toBe('/perfil')
+    expect(getAuthToken()).toBe('customer-session')
+    expect(screen.getByRole('heading', { name: 'Meu perfil' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Nome do responsável')).toHaveValue('Nome em edição')
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('link', { name: 'EnerDiag' }))
+    expect(window.location.pathname).toBe('/')
+    expect(screen.getByRole('link', { name: 'Meu perfil' })).toHaveAttribute('href', '/perfil')
+  })
+
+  it('shows login and clears the header when opening a report with an expired session', async () => {
+    window.history.replaceState({}, '', '/simulations/10/report')
+    setAuthToken('expired-token')
+    setAuthenticatedUser({ id: 1, role: 'customer' })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ message: 'Não autenticado.' }), { status: 401 })))
+    render(<App />)
+    expect(await screen.findByRole('heading', { name: 'Entre na sua conta' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/login')
+    expect(getAuthToken()).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Relatório indisponível' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
   })
 
   it('renders the landing page sections and links to registration', () => {

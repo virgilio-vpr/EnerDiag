@@ -23,8 +23,8 @@ describe('customer registration', () => {
     fireEvent.change(screen.getByLabelText('Nome do responsável'), { target: { value: 'Ana Souza' } })
     fireEvent.change(screen.getByLabelText('Nome da empresa'), { target: { value: 'Empresa Exemplo' } })
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@example.com' } })
-    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'EnergiaSegura2026' } })
-    fireEvent.change(screen.getByLabelText('Confirme sua senha'), { target: { value: 'EnergiaSegura2026' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'Abcd12!x' } })
+    fireEvent.change(screen.getByLabelText('Confirme sua senha'), { target: { value: 'Abcd12!x' } })
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
 
     expect(await screen.findByText(/É necessário aceitar/)).toBeInTheDocument()
@@ -40,8 +40,8 @@ describe('customer registration', () => {
     fireEvent.change(screen.getByLabelText('Nome da empresa'), { target: { value: 'Empresa Exemplo' } })
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@example.com' } })
     fireEvent.change(screen.getByLabelText('Telefone (opcional)'), { target: { value: '11999990000' } })
-    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'EnergiaSegura2026' } })
-    fireEvent.change(screen.getByLabelText('Confirme sua senha'), { target: { value: 'EnergiaSegura2026' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'Abcd12!x' } })
+    fireEvent.change(screen.getByLabelText('Confirme sua senha'), { target: { value: 'Abcd12!x' } })
     fireEvent.click(screen.getByRole('checkbox', { name: /Li e aceito/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
 
@@ -60,7 +60,7 @@ describe('customer registration', () => {
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'curta' } })
     fireEvent.change(screen.getByLabelText('Confirme sua senha'), { target: { value: 'outra' } })
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
-    expect(await screen.findByText('Use pelo menos 10 caracteres, incluindo letras e números.')).toBeInTheDocument()
+    expect(await screen.findByText('Use pelo menos 8 caracteres, incluindo letras maiúsculas e minúsculas, números e pelo menos um caractere especial.')).toBeInTheDocument()
   })
 })
 
@@ -155,15 +155,26 @@ describe('login and password recovery', () => {
 
     window.history.replaceState({}, '', '/reset-password?email=ana%40example.com&token=reset-123')
     render(<App />)
-    fireEvent.change(screen.getByLabelText('Nova senha'), { target: { value: 'NovaSenhaSegura123' } })
-    fireEvent.change(screen.getByLabelText('Confirme a nova senha'), { target: { value: 'NovaSenhaSegura123' } })
+    fireEvent.change(screen.getByLabelText('Nova senha'), { target: { value: 'Abcd12!x' } })
+    fireEvent.change(screen.getByLabelText('Confirme a nova senha'), { target: { value: 'Abcd12!x' } })
     fireEvent.click(screen.getByRole('button', { name: 'Redefinir senha' }))
     expect(await screen.findByText(/Você já pode entrar com sua nova senha/)).toBeInTheDocument()
   })
 
+  it.each(['Abc12!x', 'abcd12!x', 'ABCD12!X', 'Abcdef!x', 'Abcd123x'])('rejects a new password that fails the policy: %s', async (password) => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    render(<ResetPasswordPage email="ana@example.com" token="reset-123" />)
+    fireEvent.change(screen.getByLabelText('Nova senha'), { target: { value: password } })
+    fireEvent.change(screen.getByLabelText('Confirme a nova senha'), { target: { value: password } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Redefinir senha' }).closest('form')!)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Use pelo menos 8 caracteres')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('blocks a mismatched password confirmation', async () => {
     render(<ResetPasswordPage email="ana@example.com" token="reset-123" />)
-    fireEvent.change(screen.getByLabelText('Nova senha'), { target: { value: 'NovaSenhaSegura123' } })
+    fireEvent.change(screen.getByLabelText('Nova senha'), { target: { value: 'Abcd12!x' } })
     fireEvent.change(screen.getByLabelText('Confirme a nova senha'), { target: { value: 'SenhaDiferente123' } })
     fireEvent.click(screen.getByRole('button', { name: 'Redefinir senha' }))
     expect(await screen.findByText('A confirmação da senha não corresponde.')).toBeInTheDocument()

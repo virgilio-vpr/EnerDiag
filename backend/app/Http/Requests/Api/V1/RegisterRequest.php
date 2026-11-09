@@ -35,7 +35,7 @@ class RegisterRequest extends FormRequest
             'substation_same_address' => ['required', 'boolean'],
             'substation_address' => ['nullable', 'required_if:substation_same_address,false', 'string', 'max:5000'],
             'terms_accepted' => ['accepted'],
-            'password' => ['required', 'confirmed', Password::min(10)->letters()->numbers()->uncompromised()],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
         ];
     }
 

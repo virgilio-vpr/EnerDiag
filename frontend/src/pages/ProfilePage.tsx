@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { AdminAccountAccess } from '../components/AdminAccountAccess'
+import { AccountAccess } from '../components/AccountAccess'
 import { ApiError, apiRequest, getAuthToken, setAuthToken } from '../services/api/client'
 
 type Distributor = { id: number; name: string; state: string }
@@ -154,7 +154,7 @@ export function ProfilePage() {
       <button className="button access-submit" type="submit" disabled={saving}>{saving ? 'Salvando…' : 'Salvar alterações'}</button>
     </form>
 
-    {account.role === 'admin' && <AdminAccountAccess onEmailChanged={(email) => setAccount((current) => current ? { ...current, email } : current)} />}
+    <AccountAccess onEmailChanged={account.role === 'admin' ? (email) => setAccount((current) => current ? { ...current, email } : current) : undefined} />
 
     {account.role !== 'admin' && <section className="delete-account" aria-labelledby="delete-account-title">
       <h2 id="delete-account-title">Excluir conta e dados</h2>

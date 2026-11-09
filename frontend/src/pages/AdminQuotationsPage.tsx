@@ -1,7 +1,7 @@
 import { unitLabel } from '../services/presentation'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent } from 'react'
-import { ApiError, apiRequest, getAuthToken } from '../services/api/client'
+import { ApiError, apiRequest, expireAuthSession, getAuthToken } from '../services/api/client'
 
 type Customer = { id: number; name: string; email: string; profile: { company_name: string } | null }
 type QuotationBaseItem = { id: number; item_key: string; name: string; unit: string; unit_price: string }
@@ -110,6 +110,7 @@ export function AdminQuotationsPage() {
       const token = getAuthToken()
       if (token) headers.set('Authorization', `Bearer ${token}`)
       const response = await fetch(`/api/v1/admin/quotations/${quotation.id}/pdf`, { headers })
+      if (response.status === 401) expireAuthSession(token)
       if (!response.ok) throw new Error('Não foi possível gerar a prévia do PDF.')
       const objectUrl = URL.createObjectURL(await response.blob())
       const link = document.createElement('a')

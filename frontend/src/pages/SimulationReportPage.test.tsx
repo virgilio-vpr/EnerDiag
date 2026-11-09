@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { CompanyContactDetails } from '../components/CompanyContactDetails'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SimulationReportPage } from './SimulationReportPage'
 import { setAuthToken } from '../services/api/client'
@@ -75,8 +76,8 @@ describe('simulation report', () => {
     })) } })
     render(<SimulationReportPage simulationId="12" />)
 
-    expect(await screen.findByText(/Ponta: 40,51689 R\$\/kW/)).toHaveTextContent('Maior tarifa unitária com tributos da série')
-    expect(screen.getByText(/Fora de ponta: 24,23136 R\$\/kW/)).toHaveTextContent('Tarifa vigente cadastrada, com tributos')
+    expect((await screen.findByText(/Ponta: 40,51689 R\$\/kW/)).parentElement).toHaveTextContent('Maior tarifa unitária com tributos da série')
+    expect(screen.getByText(/Fora de ponta: 24,23136 R\$\/kW/).parentElement).toHaveTextContent('Tarifa vigente cadastrada, com tributos')
     expect(screen.getByText(/As bandeiras tarifárias não compõem a tarifa de demanda/)).toBeInTheDocument()
     expect(screen.queryByText(/não a condição atual do contrato/)).not.toBeInTheDocument()
   })
@@ -90,7 +91,7 @@ describe('simulation report', () => {
     render(<SimulationReportPage simulationId="12" />)
 
     expect(await screen.findByText(/Precisamos completar os dados de consumo ou atualizar as tarifas/)).toBeInTheDocument()
-    expect(screen.getByText(/confirme esses valores com a distribuidora/)).toBeInTheDocument()
+    expect(screen.getByText(/avaliação detalhada por engenheiro consultor/)).toBeInTheDocument()
     expect(screen.queryByText(/mercado livre/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Os planos Azul e Verde são comparados com as tarifas da distribuidora/)).toBeInTheDocument()
     expect(screen.queryByText(/recálculo histórico/)).not.toBeInTheDocument()
@@ -102,12 +103,12 @@ describe('simulation report', () => {
     const fetchMock = setupFetch()
     const { unmount } = render(<SimulationReportPage simulationId="12" />)
     await screen.findByRole('heading', { name: 'Seu relatório de energia' })
-    await waitFor(() => expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument())
+    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Indicadores principais' })).getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument())
 
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: { ...report, total_monthly_savings: '984.36', total_yearly_savings: '11812.32' } }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     fireEvent(window, new Event('focus'))
 
-    await waitFor(() => expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('984,36')))).toBeInTheDocument())
+    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Indicadores principais' })).getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('984,36')))).toBeInTheDocument())
     expect(fetchMock).toHaveBeenLastCalledWith('/api/v1/simulations/12/report', expect.objectContaining({ cache: 'no-store' }))
     unmount()
     const requests = fetchMock.mock.calls.length
@@ -145,7 +146,7 @@ describe('simulation report', () => {
     render(<SimulationReportPage simulationId="12" />)
 
     expect(await screen.findByRole('heading', { name: 'Seu relatório de energia' })).toBeInTheDocument()
-    expect(screen.getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Indicadores principais' })).getByText((_, element) => element?.tagName === 'STRONG' && Boolean(element.textContent?.includes('1.250,40')))).toBeInTheDocument()
     expect(screen.getByText('12,5%')).toBeInTheDocument()
     expect(screen.getByText('A economia usa tarifas de referência; o valor pago usa as tarifas históricas.')).toBeInTheDocument()
     expect(screen.getByText(/menos de 12 faturas/)).toBeInTheDocument()
@@ -185,7 +186,10 @@ describe('simulation report', () => {
   it('downloads the PDF from the simulation endpoint', async () => {
     setAuthToken('customer-token')
     const fetchMock = setupFetch({ '/api/v1/simulations/12/pdf': new Response('%PDF-1.4', { status: 200, headers: { 'Content-Type': 'application/pdf' } }) })
-    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:report'), revokeObjectURL: vi.fn() })
+    vi.stubGlobal('URL', class extends URL {
+      static createObjectURL = vi.fn(() => 'blob:report')
+      static revokeObjectURL = vi.fn()
+    })
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     render(<SimulationReportPage simulationId="12" />)
     fireEvent.click(await screen.findByRole('button', { name: 'Baixar relatório em PDF' }))
@@ -199,10 +203,10 @@ describe('simulation report', () => {
   it('shows direct company contacts without an extra icon or contact request button', async () => {
     setAuthToken('customer-token')
     setupFetch()
-    render(<SimulationReportPage simulationId="12" />)
+    render(<><SimulationReportPage simulationId="12" /><CompanyContactDetails /></>)
 
     await screen.findByRole('heading', { name: 'Seu relatório de energia' })
-    expect(screen.getByRole('link', { name: 'contato@enerdiag.example' })).toHaveAttribute('href', 'mailto:contato@enerdiag.example')
+    expect(screen.getByRole('link', { name: /contato@enerdiag.example/ })).toHaveAttribute('href', 'mailto:contato@enerdiag.example')
     expect(screen.queryByRole('img', { name: 'Ícone da EnerDiag' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Solicitar contato comercial' })).not.toBeInTheDocument()
   })

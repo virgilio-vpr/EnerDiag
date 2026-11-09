@@ -96,6 +96,13 @@ export function getAuthenticatedUser() {
   return authenticatedUser
 }
 
+export function expireAuthSession(requestToken: string | null) {
+  if (!requestToken || getAuthToken() !== requestToken) return
+  setAuthToken(null)
+  window.history.replaceState({}, '', '/login')
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -122,6 +129,9 @@ export async function apiRequest<T>(
     const response = await fetch(`/api/v1${path}`, { ...options, headers })
     const payload = await response.json().catch(() => ({})) as ApiErrorPayload
     if (!response.ok) {
+      if (response.status === 401 && !path.startsWith('/auth/')) {
+        expireAuthSession(headers.get('Authorization')?.replace(/^Bearer /, '') ?? null)
+      }
       throw new ApiError(response.status, payload.message || errorMessages[response.status] || errorMessages[500], payload.code, payload.errors)
     }
     return payload
@@ -145,7 +155,7 @@ export async function apiRequest<T>(
     }
     return payload as T
   } catch (error) {
-    if (error instanceof ApiError && config.notifyGlobalError !== false) window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
+    if (error instanceof ApiError && error.status !== 401 && config.notifyGlobalError !== false) window.dispatchEvent(new CustomEvent('enerdiag:api-error', { detail: error }))
     throw error
   }
 }

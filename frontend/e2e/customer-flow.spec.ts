@@ -119,7 +119,10 @@ for (const invoiceCount of [1, 12]) {
         await page.getByRole('link', { name: 'Voltar para minhas simulações', exact: true }).click()
       }
     }
-    await expect(page.getByRole('button', { name: 'Nova simulação', exact: true })).toBeDisabled()
+    await page.getByRole('button', { name: 'Nova simulação', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Limite de simulações atingido' })).toContainText('exclua uma das simulações')
+    await page.getByRole('button', { name: 'Entendi', exact: true }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByText(/Exclua 1 simulação para iniciar uma nova/)).toBeVisible()
     const draft = page.getByRole('article').filter({ has: page.getByRole('link', { name: 'Continuar envio', exact: true }) }).first()
     await draft.getByRole('button', { name: /^Excluir simulação/ }).click()

@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class RegisterTest extends TestCase
@@ -19,7 +20,7 @@ class RegisterTest extends TestCase
     {
         parent::setUp();
 
-        $compromisedHash = strtoupper(sha1('CompromisedPass123'));
+        $compromisedHash = strtoupper(sha1('CompromisedPass123!'));
         Http::fake([
             'api.pwnedpasswords.com/range/*' => Http::response(substr($compromisedHash, 5).':42', 200),
         ]);
@@ -39,7 +40,7 @@ class RegisterTest extends TestCase
 
         $this->assertNull($user->email_verified_at);
         $this->assertSame('customer', $user->role);
-        $this->assertTrue(Hash::check('EnergiaSegura2026', $user->password_hash));
+        $this->assertTrue(Hash::check('Abcd12!x', $user->password_hash));
         $this->assertDatabaseHas('customer_profiles', [
             'user_id' => $user->id,
             'company_name' => 'Empresa Exemplo Ltda.',
@@ -64,11 +65,12 @@ class RegisterTest extends TestCase
         $this->assertTrue($storedCode->expires_at->isFuture());
     }
 
-    public function test_registration_rejects_weak_password(): void
+    #[DataProvider('invalidPasswords')]
+    public function test_registration_rejects_weak_password(string $password): void
     {
         $response = $this->postJson('/api/v1/auth/register', $this->validPayload([
-            'password' => 'weak',
-            'password_confirmation' => 'weak',
+            'password' => $password,
+            'password_confirmation' => $password,
         ]));
 
         $response->assertUnprocessable()
@@ -78,9 +80,21 @@ class RegisterTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    /** @return array<string, array{string}> */
+    public static function invalidPasswords(): array
+    {
+        return [
+            'too short' => ['Abc12!x'],
+            'missing uppercase' => ['abcd12!x'],
+            'missing lowercase' => ['ABCD12!X'],
+            'missing number' => ['Abcdef!x'],
+            'missing special character' => ['Abcd123x'],
+        ];
+    }
+
     public function test_registration_rejects_a_compromised_password(): void
     {
-        $password = 'CompromisedPass123';
+        $password = 'CompromisedPass123!';
         $response = $this->postJson('/api/v1/auth/register', $this->validPayload([
             'password' => $password,
             'password_confirmation' => $password,
@@ -131,8 +145,8 @@ class RegisterTest extends TestCase
             'company_name' => 'Empresa Exemplo Ltda.',
             'substation_same_address' => true,
             'terms_accepted' => true,
-            'password' => 'EnergiaSegura2026',
-            'password_confirmation' => 'EnergiaSegura2026',
+            'password' => 'Abcd12!x',
+            'password_confirmation' => 'Abcd12!x',
         ], $overrides);
     }
 }

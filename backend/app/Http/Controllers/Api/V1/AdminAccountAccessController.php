@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ConfirmAdminEmailChangeRequest;
 use App\Http\Requests\Api\V1\RequestAdminEmailChangeRequest;
-use App\Http\Requests\Api\V1\UpdateAdminPasswordRequest;
+use App\Http\Requests\Api\V1\UpdatePasswordRequest;
 use App\Services\AdminAccountAccessService;
 use Illuminate\Http\JsonResponse;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AdminAccountAccessController extends Controller
 {
-    public function updatePassword(UpdateAdminPasswordRequest $request, AdminAccountAccessService $service): JsonResponse
+    public function updatePassword(UpdatePasswordRequest $request, AdminAccountAccessService $service): JsonResponse
     {
         $token = $request->user()->currentAccessToken();
         $service->updatePassword($request->user(), $request->validated('password'), $token instanceof PersonalAccessToken ? $token->id : null);

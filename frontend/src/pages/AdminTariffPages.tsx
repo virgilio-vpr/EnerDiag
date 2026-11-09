@@ -1,3 +1,4 @@
+import { SectionLink } from '../components/SectionLink'
 import { modalityLabel, timeSlotLabel, componentLabel, formatDecimal, formatDate } from '../services/presentation'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
@@ -59,7 +60,7 @@ function AdminToolFrame({ title, children }: { title: string; children: ReactNod
     <NavigationLink direction="back" href="/admin" aria-label="Voltar ao painel administrativo">Painel administrativo</NavigationLink>
     <p className="section-eyebrow">Área administrativa</p>
     <h1 id="admin-tool-title">{title}</h1>
-    <nav className="admin-subnav" aria-label="Tarifas e parâmetros"><a href="/admin/tariffs">Tarifas e importação ANEEL</a><a href="/admin/parameters">Parâmetros regulatórios</a></nav>
+    <nav className="admin-subnav" aria-label="Tarifas e parâmetros"><SectionLink href="/admin/tariffs">Tarifas e importação ANEEL</SectionLink><SectionLink href="/admin/parameters">Parâmetros regulatórios</SectionLink></nav>
     {children}
   </section>
 }

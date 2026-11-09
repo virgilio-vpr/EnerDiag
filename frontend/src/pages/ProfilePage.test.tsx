@@ -131,21 +131,21 @@ it('keeps the old administrator email until the confirmation code is accepted', 
   expect(JSON.parse(String(call?.[1]?.body))).toEqual({ code: '123456' })
 })
 
-it('submits administrator password changes and clears password inputs', async () => {
+it.each(['admin', 'customer'])('submits %s password changes and clears password inputs', async (role) => {
   setAuthToken('admin-token')
   const fetchMock = setupFetch({
-    'GET /api/v1/me': jsonResponse(200, { data: { ...account, role: 'admin', profile: null } }),
+    'GET /api/v1/me': jsonResponse(200, { data: { ...account, role, profile: role === 'admin' ? null : account.profile } }),
     'PUT /api/v1/me/password': jsonResponse(200, { message: 'Senha atualizada.' }),
   })
   render(<ProfilePage />)
   fireEvent.change(await screen.findByLabelText('Senha atual', { exact: true }), { target: { value: 'OriginalAdminPassword2026!' } })
-  fireEvent.change(screen.getByLabelText('Nova senha', { exact: true }), { target: { value: 'UpdatedAdminPassword2026!' } })
-  fireEvent.change(screen.getByLabelText('Confirmar nova senha'), { target: { value: 'UpdatedAdminPassword2026!' } })
+  fireEvent.change(screen.getByLabelText('Nova senha', { exact: true }), { target: { value: 'Abcd12!x' } })
+  fireEvent.change(screen.getByLabelText('Confirmar nova senha'), { target: { value: 'Abcd12!x' } })
   fireEvent.click(screen.getByRole('button', { name: 'Salvar nova senha' }))
   await screen.findByText('Senha atualizada.')
   expect(screen.getByLabelText('Nova senha', { exact: true })).toHaveValue('')
   const call = fetchMock.mock.calls.find(([url]) => url === '/api/v1/me/password')
-  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ current_password: 'OriginalAdminPassword2026!', password: 'UpdatedAdminPassword2026!', password_confirmation: 'UpdatedAdminPassword2026!' })
+  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ current_password: 'OriginalAdminPassword2026!', password: 'Abcd12!x', password_confirmation: 'Abcd12!x' })
 })
 
 it('shows access validation errors without changing the administrator email', async () => {
@@ -161,4 +161,23 @@ it('shows access validation errors without changing the administrator email', as
   expect(await screen.findByRole('alert')).toHaveTextContent('A senha atual está incorreta.')
   expect(screen.getByLabelText('E-mail')).toHaveValue(account.email)
   expect(screen.queryByRole('button', { name: 'Confirmar novo e-mail' })).not.toBeInTheDocument()
+})
+
+it('toggles each customer password independently without submitting the form', async () => {
+  setAuthToken('customer-token')
+  const fetchMock = setupFetch()
+  render(<ProfilePage />)
+  const current = await screen.findByLabelText('Senha atual', { exact: true })
+  const password = screen.getByLabelText('Nova senha', { exact: true })
+  const confirmation = screen.getByLabelText('Confirmar nova senha')
+  const buttons = screen.getAllByRole('button', { name: 'Mostrar senha' })
+  for (const [index, input] of [current, password, confirmation].entries()) {
+    expect(input).toHaveAttribute('type', 'password')
+    fireEvent.click(buttons[index])
+    expect(input).toHaveAttribute('type', 'text')
+    expect(buttons[index]).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(buttons[index])
+    expect(input).toHaveAttribute('type', 'password')
+  }
+  expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'PUT')).toBe(false)
 })

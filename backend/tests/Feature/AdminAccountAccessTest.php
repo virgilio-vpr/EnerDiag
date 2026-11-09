@@ -20,7 +20,7 @@ class AdminAccountAccessTest extends TestCase
 
     private const string CURRENT_PASSWORD = 'OriginalAdminPassword2026!';
 
-    private const string NEW_PASSWORD = 'UpdatedAdminPassword2026!';
+    private const string NEW_PASSWORD = 'Abcd12!x';
 
     protected function setUp(): void
     {
@@ -29,14 +29,14 @@ class AdminAccountAccessTest extends TestCase
         Http::fake(['api.pwnedpasswords.com/range/*' => Http::response('', 200)]);
     }
 
-    public function test_access_changes_require_authentication_and_admin_permission(): void
+    public function test_access_changes_require_authentication_and_email_changes_require_admin_permission(): void
     {
         $this->putJson('/api/v1/me/password')->assertUnauthorized();
         $this->postJson('/api/v1/me/email-change')->assertUnauthorized();
         $this->postJson('/api/v1/me/email-change/confirm')->assertUnauthorized();
         $customer = User::factory()->create(['role' => 'customer']);
         $token = $customer->createToken('customer')->plainTextToken;
-        $this->withToken($token)->putJson('/api/v1/me/password')->assertForbidden();
+        $this->withToken($token)->putJson('/api/v1/me/password')->assertUnprocessable();
         $this->withToken($token)->postJson('/api/v1/me/email-change')->assertForbidden();
         $this->withToken($token)->postJson('/api/v1/me/email-change/confirm')->assertForbidden();
         Mail::assertNothingSent();
@@ -77,6 +77,24 @@ class AdminAccountAccessTest extends TestCase
         $this->assertSame(1, $admin->tokens()->count());
         $this->assertDatabaseMissing('personal_access_tokens', ['id' => $otherSession->id]);
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $admin->email]);
+        $this->withToken($token)->getJson('/api/v1/me')->assertOk();
+    }
+
+    public function test_customer_changes_password_only_with_valid_current_password_and_confirmation(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer', 'password_hash' => Hash::make(self::CURRENT_PASSWORD)]);
+        $token = $customer->createToken('customer')->plainTextToken;
+        $otherSession = $customer->createToken('other-session')->accessToken;
+        $payload = ['current_password' => self::CURRENT_PASSWORD, 'password' => self::NEW_PASSWORD, 'password_confirmation' => self::NEW_PASSWORD];
+        $this->withToken($token)->putJson('/api/v1/me/password', array_replace($payload, ['current_password' => 'incorrect']))
+            ->assertUnprocessable()->assertJsonValidationErrors('current_password');
+        $this->withToken($token)->putJson('/api/v1/me/password', array_replace($payload, ['password_confirmation' => 'different']))
+            ->assertUnprocessable()->assertJsonValidationErrors('password');
+        $this->assertTrue(Hash::check(self::CURRENT_PASSWORD, $customer->fresh()->password_hash));
+        $this->withToken($token)->putJson('/api/v1/me/password', $payload)->assertOk();
+        $this->assertTrue(Hash::check(self::NEW_PASSWORD, $customer->fresh()->password_hash));
+        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $otherSession->id]);
+        $this->assertSame(1, $customer->tokens()->count());
         $this->withToken($token)->getJson('/api/v1/me')->assertOk();
     }
 

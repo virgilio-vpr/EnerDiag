@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiErrorHandler } from '../../components/ApiErrorHandler'
-import { apiRequest, getAuthToken, getCachedApiResponse, setAuthToken } from './client'
+import { apiRequest, getAuthToken, getAuthenticatedUser, getCachedApiResponse, setAuthenticatedUser, setAuthToken } from './client'
 
 function RequestButton({ path }: { path: string }) {
   return <button onClick={() => void apiRequest(path).catch(() => undefined)}>Enviar</button>
@@ -69,7 +69,7 @@ describe('API client', () => {
     expect(getCachedApiResponse('/simulations')).toBeUndefined()
   })
 
-  it('keeps the token in memory and redirects to login after a 401', async () => {
+  it('clears the expired session and redirects to login after a 401', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'Sessão expirada.' }), { status: 401 }))
     vi.stubGlobal('fetch', fetchMock)
     setAuthToken('memory-token')
@@ -79,7 +79,41 @@ describe('API client', () => {
 
     await waitFor(() => expect(window.location.pathname).toBe('/login'))
     expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization')).toBe('Bearer memory-token')
-    expect(getAuthToken()).toBe('memory-token')
+    expect(getAuthToken()).toBeNull()
+  })
+
+  it('redirects after an expired report request even when global errors are disabled', async () => {
+    setAuthToken('expired-token')
+    setAuthenticatedUser({ id: 1, role: 'customer' })
+    window.history.replaceState({}, '', '/simulations/10/report')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response('{"data":[]}', { status: 200 }))
+      .mockResolvedValueOnce(new Response('{"message":"Não autenticado."}', { status: 401 })))
+    await apiRequest('/simulations', {}, { cacheTtlMs: 60_000 })
+    await expect(apiRequest('/simulations/10/report', {}, { notifyGlobalError: false })).rejects.toMatchObject({ status: 401 })
+    expect(window.location.pathname).toBe('/login')
+    expect(getAuthToken()).toBeNull()
+    expect(getAuthenticatedUser()).toBeNull()
+    expect(getCachedApiResponse('/simulations')).toBeUndefined()
+  })
+
+  it('does not terminate a newer session when an old request returns unauthorized', async () => {
+    let release!: (response: Response) => void
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => { release = resolve })))
+    setAuthToken('old-token')
+    const request = apiRequest('/me', {}, { notifyGlobalError: false })
+    setAuthToken('new-token')
+    release(new Response('{}', { status: 401 }))
+    await expect(request).rejects.toMatchObject({ status: 401 })
+    expect(getAuthToken()).toBe('new-token')
+    expect(window.location.pathname).toBe('/')
+  })
+
+  it('keeps invalid login credentials on the login form without clearing the session', async () => {
+    setAuthToken('existing-token')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 401 })))
+    await expect(apiRequest('/auth/login', { method: 'POST' }, { notifyGlobalError: false })).rejects.toMatchObject({ status: 401 })
+    expect(getAuthToken()).toBe('existing-token')
+    expect(window.location.pathname).toBe('/')
   })
 
   it.each([

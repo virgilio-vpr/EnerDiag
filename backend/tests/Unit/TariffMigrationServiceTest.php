@@ -120,6 +120,37 @@ class TariffMigrationServiceTest extends TestCase
         $this->assertContains(TariffService::MISSING_TARIFF_WARNING, $result->warnings);
     }
 
+    public function test_green_to_blue_comparison_applies_the_invoice_tax_factor_to_blue_base_tariffs(): void
+    {
+        $distributor = $this->distributor();
+        foreach ([
+            ['peak', 'demand', '0.50000'], ['off_peak', 'demand', '0.50000'],
+            ['peak', 'energy_te', '0.20000'], ['off_peak', 'energy_te', '0.20000'],
+            ['peak', 'energy_tusd', '0.30000'], ['off_peak', 'energy_tusd', '0.30000'],
+        ] as [$slot, $component, $rate]) {
+            Tariff::create([
+                'distributor_id' => $distributor->id, 'subgroup' => 'A4', 'tariff_modality' => 'blue',
+                'time_slot' => $slot, 'component' => $component, 'rate' => $rate, 'includes_taxes' => false,
+                'source' => 'aneel_import', 'valid_from' => '2025-01-01',
+            ]);
+        }
+        $source = $this->month();
+        $month = new TariffMigrationMonthData(
+            $source->referenceMonth, $source->measuredDemandByModality, $source->idleDemandRatioByModality,
+            ['unique' => '5.00000'], $source->consumptionKwhByTimeSlot,
+            $source->currentEnergyItemsByComponentAndTimeSlot, '2.000000',
+        );
+
+        $result = $this->service()->compare($distributor->id, 'A4', 'green', [$month], 100, 100);
+
+        $this->assertTrue($result->available);
+        $this->assertSame('500.40', $result->greenCost);
+        $this->assertSame('202.00', $result->blueCost);
+        $this->assertSame('blue', $result->selectedModality);
+        $this->assertSame('298.40', $result->savings);
+        $this->assertCount(6, $result->tariffVersionIds);
+    }
+
     private function service(): TariffMigrationService
     {
         RegulatoryParameter::create(['key' => 'overrun_tolerance', 'value' => '0.05000', 'state' => null, 'valid_from' => '2025-01-01']);

@@ -64,7 +64,7 @@ class AdminTotpTest extends TestCase
         $this->partialMock(TotpService::class)->shouldReceive('generateSecret')->once()->andReturn(self::SECRET);
         $code = (new TotpService)->code(self::SECRET, now()->timestamp);
         $this->artisan('admin:configure-security', ['email' => $admin->email])
-            ->expectsQuestion('Nova senha (mínimo 14 caracteres, maiúsculas, minúsculas, números e símbolos)', self::PASSWORD)
+            ->expectsQuestion('Nova senha (mínimo 8 caracteres, maiúsculas, minúsculas, números e símbolos)', self::PASSWORD)
             ->expectsQuestion('Confirme a nova senha', self::PASSWORD)
             ->expectsQuestion('Código atual do autenticador (6 números)', $code)
             ->assertExitCode(0);
@@ -78,7 +78,7 @@ class AdminTotpTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $hash = $admin->password_hash;
         $this->artisan('admin:configure-security', ['email' => $admin->email])
-            ->expectsQuestion('Nova senha (mínimo 14 caracteres, maiúsculas, minúsculas, números e símbolos)', 'weak')
+            ->expectsQuestion('Nova senha (mínimo 8 caracteres, maiúsculas, minúsculas, números e símbolos)', 'weak')
             ->expectsQuestion('Confirme a nova senha', 'weak')->assertExitCode(1);
         $this->assertNull($admin->fresh()->totp_secret);
         $this->assertSame($hash, $admin->fresh()->password_hash);
@@ -92,7 +92,7 @@ class AdminTotpTest extends TestCase
         $hash = $admin->password_hash;
         $this->partialMock(TotpService::class)->shouldReceive('generateSecret')->once()->andReturn(self::SECRET);
         $this->artisan('admin:configure-security', ['email' => $admin->email])
-            ->expectsQuestion('Nova senha (mínimo 14 caracteres, maiúsculas, minúsculas, números e símbolos)', 'AnotherStrongPassword2026!')
+            ->expectsQuestion('Nova senha (mínimo 8 caracteres, maiúsculas, minúsculas, números e símbolos)', 'AnotherStrongPassword2026!')
             ->expectsQuestion('Confirme a nova senha', 'AnotherStrongPassword2026!')
             ->expectsQuestion('Código atual do autenticador (6 números)', 'invalid')->assertExitCode(1);
         $this->assertSame($hash, $admin->fresh()->password_hash);
@@ -114,7 +114,7 @@ class AdminTotpTest extends TestCase
         $token = Password::broker()->createToken($admin);
         $payload = ['email' => $admin->email, 'token' => $token, 'password' => 'CustomerPassword2026', 'password_confirmation' => 'CustomerPassword2026'];
         $this->postJson('/api/v1/auth/reset-password', $payload)->assertUnprocessable()->assertJsonValidationErrors('password');
-        $payload['password'] = $payload['password_confirmation'] = 'NewStrongAdminPassword2026!';
+        $payload['password'] = $payload['password_confirmation'] = 'Abcd12!x';
         $this->postJson('/api/v1/auth/reset-password', $payload)->assertOk();
         $this->assertSame(self::SECRET, $admin->fresh()->totp_secret);
     }
@@ -125,7 +125,7 @@ class AdminTotpTest extends TestCase
         $admin = $this->admin();
         $this->postJson('/api/v1/auth/reset-password', [
             'email' => $admin->email, 'token' => 'invalid-token',
-            'password' => 'CustomerPassword2026', 'password_confirmation' => 'CustomerPassword2026',
+            'password' => 'CustomerPassword2026!', 'password_confirmation' => 'CustomerPassword2026!',
         ])->assertUnprocessable()->assertJsonValidationErrors('token')->assertJsonMissingValidationErrors('password');
     }
 

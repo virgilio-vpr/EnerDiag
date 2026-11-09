@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { apiRequest, getAuthToken, getCachedApiResponse } from '../services/api/client'
+import { apiRequest, expireAuthSession, getAuthToken, getCachedApiResponse } from '../services/api/client'
 import reportTexts from '../../../backend/resources/report-texts.json'
 
 type ChartPoint = {
@@ -178,6 +178,7 @@ export function SimulationReportView({ report, simulationId, backHref = '/minhas
         body: pdfDemands ? JSON.stringify({ demands: pdfDemands }) : undefined,
         headers: token ? { Authorization: `Bearer ${token}`, Accept: 'application/pdf', ...(pdfDemands ? { 'Content-Type': 'application/json' } : {}) } : { Accept: 'application/pdf', ...(pdfDemands ? { 'Content-Type': 'application/json' } : {}) },
       })
+      if (response.status === 401) expireAuthSession(token)
       if (!response.ok) throw new Error('Não foi possível preparar o PDF. Tente novamente.')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
@@ -232,7 +233,7 @@ export function SimulationReportView({ report, simulationId, backHref = '/minhas
 
     <section className="report-components" aria-labelledby="components-title">
       <div className="report-components-heading"><div><h2 id="components-title">Economia por componente</h2><p>Veja onde estão as oportunidades de economia.</p></div>
-        {report.recommended_modality && <div className="report-modality-badge"><span>Modalidade recomendada</span><strong>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</strong></div>}
+        {report.recommended_modality && <div className="report-modality-badge" data-modality={report.recommended_modality}><span>Modalidade recomendada</span><strong>{report.recommended_modality === 'blue' ? 'Azul' : report.recommended_modality === 'green' ? 'Verde' : report.recommended_modality}</strong></div>}
       </div>
       <dl>
         {[

@@ -1,3 +1,4 @@
+import { SectionLink } from './components/SectionLink'
 import { NavigationLink } from './components/NavigationControl'
 import { CompanyContactDetails } from './components/CompanyContactDetails'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
@@ -66,8 +67,11 @@ function App() {
       if (!(anchor instanceof HTMLAnchorElement) || anchor.hasAttribute('download') || (anchor.target && anchor.target !== '_self')) return
       const url = new URL(anchor.href, window.location.href)
       if (url.origin !== window.location.origin || url.pathname.startsWith('/api/')) return
-      if (url.pathname === window.location.pathname && url.search === window.location.search) return
       event.preventDefault()
+      if (url.pathname === window.location.pathname && url.search === window.location.search) {
+        if (url.hash) window.location.hash = url.hash
+        return
+      }
       window.history.pushState({}, '', url.pathname + url.search + url.hash)
       window.dispatchEvent(new PopStateEvent('popstate'))
     }
@@ -97,7 +101,11 @@ function App() {
           <span className="brand-name">Ener<span>Diag</span></span>
         </a>
         <nav className="header-actions" aria-label="Acesso">
-          {isAuthenticated ? <><a className="header-login" href={session.user?.role === 'admin' ? '/admin' : '/minhas-simulacoes'}>{session.user?.role === 'admin' ? 'Painel administrativo' : 'Minhas simulações'}</a><a className="header-login" href="/perfil">Meu perfil</a><button className="header-login header-logout" type="button" disabled={signingOut} onClick={() => void logout()}>{signingOut ? 'Saindo…' : 'Sair'}</button></> : <><a className="header-login" href="/login">Login</a><a className="button button--small" href="/register">Criar conta</a></>}
+          {isAuthenticated ? <>
+            <SectionLink className="header-login" href={session.user?.role === 'admin' ? '/admin' : '/minhas-simulacoes'}>{session.user?.role === 'admin' ? 'Painel administrativo' : 'Minhas simulações'}</SectionLink>
+            <SectionLink className="header-login" href="/perfil">Meu perfil</SectionLink>
+            <button className="header-login header-logout" type="button" disabled={signingOut} onClick={() => void logout()}>{signingOut ? 'Saindo…' : 'Sair'}</button>
+          </> : <><SectionLink className="header-login" href="/login">Login</SectionLink><SectionLink className="button button--small" href="/register">Criar conta</SectionLink></>}
         </nav>
         <button
           type="button"

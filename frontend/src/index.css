@@ -6,6 +6,9 @@
   --bg: #f5f8fc;
   --border: #cbd8e6;
   --code-bg: #ffffff;
+  --surface: #ffffff;
+  --field-text: #26374b;
+  --field-placeholder: #64748b;
   --accent: #0f766e;
   --secondary: #4f46e5;
   --tertiary: #b45309;
@@ -48,6 +51,9 @@
   --bg: #192331;
   --border: #42556e;
   --code-bg: #233247;
+  --surface: #1c2b3d;
+  --field-text: #d8e3f0;
+  --field-placeholder: #9bacc1;
   --accent: #5eead4;
   --secondary: #a5b4fc;
   --tertiary: #fbbf24;
@@ -110,6 +116,24 @@ input,
 select,
 textarea {
   font-family: var(--sans);
+  color-scheme: inherit;
+}
+
+select option,
+select optgroup {
+  color: var(--field-text);
+  background-color: var(--surface);
+}
+
+select option:checked {
+  color: var(--field-text);
+  background-color: color-mix(in srgb, var(--accent) 18%, var(--surface));
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--field-placeholder);
+  opacity: 1;
 }
 
 h1 {

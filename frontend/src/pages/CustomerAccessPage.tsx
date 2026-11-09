@@ -1,3 +1,4 @@
+import { isValidPassword, passwordHint } from '../services/password'
 import { NavigationLink, NavigationButton } from '../components/NavigationControl'
 import { useState, type FormEvent } from 'react'
 import { ApiError, apiRequest, setAuthToken, setAuthenticatedUser } from '../services/api/client'
@@ -28,11 +29,8 @@ export function RegistrationPage() {
   const [requestError, setRequestError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const hasLength = form.password.length >= 10
-  const hasLettersAndNumbers = /[a-z]/i.test(form.password) && /\d/.test(form.password)
-  const passwordStrength = !form.password ? 'Informe uma senha com pelo menos 10 caracteres, letras e números.'
-    : hasLength && hasLettersAndNumbers ? 'Senha atende aos requisitos básicos.'
-      : 'Use pelo menos 10 caracteres, incluindo letras e números.'
+  const validPassword = isValidPassword(form.password)
+  const passwordStrength = validPassword ? 'Senha atende aos requisitos básicos.' : passwordHint
 
   function update<K extends keyof RegisterData>(field: K, value: RegisterData[K]) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -56,8 +54,8 @@ export function RegistrationPage() {
       setErrors({ terms_accepted: 'É necessário aceitar os Termos de Uso e a Política de Privacidade.' })
       return
     }
-    if (!hasLength || !hasLettersAndNumbers) {
-      setErrors({ password: 'Use pelo menos 10 caracteres, incluindo letras e números.' })
+    if (!validPassword) {
+      setErrors({ password: passwordHint })
       return
     }
     if (form.password !== form.password_confirmation) {
@@ -95,10 +93,10 @@ export function RegistrationPage() {
         <label>E-mail<input autoComplete="email" name="email" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} required aria-invalid={Boolean(errors.email)} /></label>
         {errors.email && <p className="field-error">{errors.email}</p>}
         <label>Telefone <span className="optional-label">(opcional)</span><input autoComplete="tel" name="phone" type="tel" value={form.phone} onChange={(event) => update('phone', event.target.value)} /></label>
-        <label>Senha<input autoComplete="new-password" name="password" type="password" value={form.password} onChange={(event) => update('password', event.target.value)} required aria-describedby="password-help" aria-invalid={Boolean(errors.password)} /></label>
-        <p id="password-help" className={hasLength && hasLettersAndNumbers ? 'password-hint password-hint--valid' : 'password-hint'}>{passwordStrength}</p>
+        <label>Senha<input autoComplete="new-password" minLength={8} name="password" type="password" value={form.password} onChange={(event) => update('password', event.target.value)} required aria-describedby="password-help" aria-invalid={Boolean(errors.password)} /></label>
+        <p id="password-help" className={validPassword ? 'password-hint password-hint--valid' : 'password-hint'}>{passwordStrength}</p>
         {errors.password && <p className="field-error">{errors.password}</p>}
-        <label>Confirme sua senha<input autoComplete="new-password" name="password_confirmation" type="password" value={form.password_confirmation} onChange={(event) => update('password_confirmation', event.target.value)} required aria-invalid={Boolean(errors.password_confirmation)} /></label>
+        <label>Confirme sua senha<input autoComplete="new-password" minLength={8} name="password_confirmation" type="password" value={form.password_confirmation} onChange={(event) => update('password_confirmation', event.target.value)} required aria-invalid={Boolean(errors.password_confirmation)} /></label>
         {errors.password_confirmation && <p className="field-error">{errors.password_confirmation}</p>}
         <label className="consent-control"><input name="terms_accepted" type="checkbox" checked={form.terms_accepted} onChange={(event) => update('terms_accepted', event.target.checked)} /> <span>Li e aceito os Termos de Uso e a Política de Privacidade.</span></label>
         {errors.terms_accepted && <p className="field-error">{errors.terms_accepted}</p>}
@@ -298,8 +296,8 @@ export function ResetPasswordPage({ email: initialEmail, token }: { email: strin
       setErrorMessage('O link está incompleto. Solicite uma nova redefinição de senha.')
       return
     }
-    if (password.length < 10 || !/[a-z]/i.test(password) || !/\d/.test(password)) {
-      setErrorMessage('Use pelo menos 10 caracteres, incluindo letras e números.')
+    if (!isValidPassword(password)) {
+      setErrorMessage(passwordHint)
       return
     }
     if (password !== confirmation) {
@@ -325,9 +323,9 @@ export function ResetPasswordPage({ email: initialEmail, token }: { email: strin
       <h1 id="reset-title">Defina uma nova senha</h1>
       <form className="access-form" onSubmit={submit} noValidate>
         <label>E-mail<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-        <label>Nova senha<input autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
-        <p className="password-hint">Use pelo menos 10 caracteres, incluindo letras e números.</p>
-        <label>Confirme a nova senha<input autoComplete="new-password" type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required /></label>
+        <label>Nova senha<input autoComplete="new-password" minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+        <p className="password-hint">{passwordHint}</p>
+        <label>Confirme a nova senha<input autoComplete="new-password" minLength={8} type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required /></label>
         {message && <p className="form-success" role="status">{message}</p>}
         {errorMessage && <p className="field-error" role="alert">{errorMessage}</p>}
         <button className="button access-submit" type="submit" disabled={submitting}>{submitting ? 'Salvando…' : 'Redefinir senha'}</button>

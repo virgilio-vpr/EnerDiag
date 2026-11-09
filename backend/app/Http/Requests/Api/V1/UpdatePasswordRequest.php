@@ -5,11 +5,11 @@ namespace App\Http\Requests\Api\V1;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
-class UpdateAdminPasswordRequest extends FormRequest
+class UpdatePasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'admin';
+        return in_array($this->user()?->role, ['admin', 'customer'], true);
     }
 
     /** @return array<string, array<mixed>> */
@@ -17,7 +17,7 @@ class UpdateAdminPasswordRequest extends FormRequest
     {
         return [
             'current_password' => ['required', 'string', 'current_password:sanctum'],
-            'password' => ['required', 'string', 'confirmed', Password::min(14)->mixedCase()->numbers()->symbols()->uncompromised()],
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()],
         ];
     }
 
@@ -30,7 +30,7 @@ class UpdateAdminPasswordRequest extends FormRequest
             'password.required' => 'Informe a nova senha.',
             'password.string' => 'Informe uma senha válida.',
             'password.confirmed' => 'A confirmação da nova senha não corresponde.',
-            'password.min' => 'A nova senha deve ter pelo menos 14 caracteres.',
+            'password.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
             'password.password.mixed' => 'A nova senha deve conter letras maiúsculas e minúsculas.',
             'password.password.numbers' => 'A nova senha deve conter números.',
             'password.password.symbols' => 'A nova senha deve conter símbolos.',

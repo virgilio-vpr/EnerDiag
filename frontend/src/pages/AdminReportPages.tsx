@@ -245,9 +245,11 @@ export function AdminReportDetailPage({ simulationId }: { simulationId: string }
           {demandSlots.map((slot) => <label key={slot.key}>{slot.label}
             <input type="number" min="0" max="1000000" step="1" required disabled={busy !== null} value={demands[slot.key] ?? ''} onChange={(event) => { setDemands({ ...demands, [slot.key]: event.target.value }); setPreview(null); setPreviewDemands(undefined) }} />
           </label>)}
-          <button className="button" type="submit" disabled={busy !== null}>{busy === 'preview' ? 'Simulando…' : 'Simular demandas'}</button>
+          <div className="admin-demand-actions">
+            <button className="button" type="submit" disabled={busy !== null}>{busy === 'preview' ? 'Simulando…' : 'Simular demandas'}</button>
+            <button className="button button--secondary" type="button" disabled={busy !== null || !preview} onClick={() => { setPreview(null); setPreviewDemands(undefined); setDemands(optimalDemands(simulation)) }}>Restaurar relatório original</button>
+          </div>
           {preview && <p role="status">Prévia das demandas aplicadas ao relatório e aos gráficos. Valores negativos indicam aumento de custo.</p>}
-          <button className="button button--secondary" type="button" disabled={busy !== null || !preview} onClick={() => { setPreview(null); setPreviewDemands(undefined); setDemands(optimalDemands(simulation)) }}>Restaurar relatório original</button>
         </form>}
 
       </SimulationReportView>

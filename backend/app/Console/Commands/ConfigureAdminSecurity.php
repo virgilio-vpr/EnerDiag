@@ -29,11 +29,11 @@ class ConfigureAdminSecurity extends Command
             return self::FAILURE;
         }
 
-        $password = $this->secret('Nova senha (mínimo 14 caracteres, maiúsculas, minúsculas, números e símbolos)');
+        $password = $this->secret('Nova senha (mínimo 8 caracteres, maiúsculas, minúsculas, números e símbolos)');
         $confirmation = $this->secret('Confirme a nova senha');
         $validator = Validator::make([
             'password' => $password, 'password_confirmation' => $confirmation,
-        ], ['password' => ['required', 'confirmed', Password::min(14)->mixedCase()->numbers()->symbols()->uncompromised()]]);
+        ], ['password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised()]]);
         if ($validator->fails()) {
             $this->error('Senha recusada. Use uma senha forte, não comprometida e confirme-a corretamente.');
 
